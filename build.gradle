@@ -1,0 +1,28 @@
+apply plugin: 'kotlin'
+
+version = '0.1'
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+    compile 'org.jetbrains.kotlin:kotlin-stdlib:0.7.+'
+    compile 'io.netty:netty-all:4.0.21.Final'
+}
+jar {
+    manifest {
+        attributes "Main-Class": 'beholder.BeholderPackage'
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:0.7.+'
+  }
+}

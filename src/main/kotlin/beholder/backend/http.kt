@@ -1,4 +1,4 @@
-package beholder.http
+package beholder.backend.http
 
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.bootstrap.ServerBootstrap

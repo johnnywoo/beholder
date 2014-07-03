@@ -1,0 +1,78 @@
+apply plugin: 'download-task'
+
+// relative to 'frontend' dir
+def JS_PATH = '../src/main/resources/beholder/backend/web'
+
+def KOTLINC_ZIP_URL  = 'https://github.com/JetBrains/kotlin/releases/download/build-0.8.11/kotlin-compiler-0.8.11.zip'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'de.undercouch:gradle-download-task:1.+'
+    }
+}
+
+task assemble(dependsOn: 'compileJs') {
+}
+
+task clean << {
+    delete 'build'
+    delete 'libs/kotlin-jslib.jar'
+    delete "${JS_PATH}/kotlin.js"
+    delete "${JS_PATH}/script.js"
+}
+
+task downloadKotlinCompiler << {
+    def zipfile = file('build/kotlin-compiler.zip')
+    if (!zipfile.exists()) {
+        download {
+            src KOTLINC_ZIP_URL
+            dest zipfile
+        }
+    }
+}
+
+task setupKotlinJsCompiler(dependsOn: 'downloadKotlinCompiler') << {
+    if (!file('build/kotlinc/bin/kotlinc-js').exists()) {
+        def zipfile = file('build/kotlin-compiler.zip')
+        assert zipfile.exists(), "Downloading kotlin compiler failed"
+
+        copy {
+            from zipTree(zipfile)
+            into 'build'
+        }
+
+        assert file('build/kotlinc/bin/kotlinc-js').exists(), 'Downloaded kotlin compiler is corrupt'
+    }
+
+    if (!file("${JS_PATH}/kotlin.js").exists()) {
+        copy {
+            from 'build/kotlinc/lib/kotlin.js'
+            into JS_PATH
+        }
+    }
+
+    if (!file('libs/kotlin-jslib.jar').exists()) {
+        copy {
+            from 'build/kotlinc/lib/kotlin-jslib.jar'
+            into 'libs'
+        }
+    }
+}
+
+task compileJs(dependsOn: 'setupKotlinJsCompiler') << {
+    assert file('build/kotlinc/bin/kotlinc-js').exists(), 'Downloaded kotlin compiler is corrupt'
+
+    // ./koco/kotlinc/bin/kotlinc-js -sourceFiles src/main/kotlin/web.kt -output ./script/kkk.js -libraryFiles koco/kotlinc/lib/kotlin-jslib.jar
+    def kotlinc = file('build/kotlinc').canonicalPath
+    def out     = file("${JS_PATH}/script.js").canonicalPath
+    def source  = file('src/main/kotlin').canonicalPath
+
+    def command = "${kotlinc}/bin/kotlinc-js -output ${out} -libraryFiles ${kotlinc}/lib/kotlin-jslib.jar -sourceFiles ${source}"
+
+    def proc = command.execute()
+    proc.waitFor()
+    assert proc.exitValue() == 0, "Command failed: ${command}\nCommand output:\n${proc.text}"
+}

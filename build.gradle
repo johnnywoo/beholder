@@ -9,7 +9,11 @@ dependencies {
     compile 'org.jetbrains.kotlin:kotlin-stdlib:0.8.+'
     compile 'io.netty:netty-all:4.0.21.Final'
 }
+
+clean.dependsOn 'frontend:clean'
+
 jar {
+    dependsOn 'frontend:assemble'
     manifest {
         attributes "Main-Class": 'beholder.BeholderPackage'
     }

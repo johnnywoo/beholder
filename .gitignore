@@ -19,3 +19,6 @@ build/
 # oh-my-zsh gradle plugin
 .gradletasknamecache
 
+/src/main/resources/beholder/backend/web/kotlin.js
+/src/main/resources/beholder/backend/web/script.js
+/frontend/libs/kotlin-jslib.jar

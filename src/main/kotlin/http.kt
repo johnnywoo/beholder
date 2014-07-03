@@ -10,17 +10,20 @@ import io.netty.channel.ChannelInitializer
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.handler.codec.http.DefaultFullHttpResponse
-import io.netty.handler.codec.http.HttpRequest
 
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.codec.http.HttpHeaders
-import io.netty.handler.codec.http.HttpHeaders.Values
 import io.netty.handler.codec.http.HttpHeaders.Names
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.channel.ChannelHandler.Sharable
+import io.netty.channel.SimpleChannelInboundHandler
+import io.netty.handler.codec.http.FullHttpRequest
+import java.util.logging.Logger
+import java.util.logging.Level
+import io.netty.handler.codec.http.FullHttpResponse
+import io.netty.util.CharsetUtil
 
 fun startServer(port: Int) {
     val bossGroup   = NioEventLoopGroup(1)
@@ -56,27 +59,38 @@ class ServerInitializer : ChannelInitializer<SocketChannel>() {
     }
 }
 
-Sharable class ServerHandler : ChannelInboundHandlerAdapter() {
-    val CONTENT = "Hello World".getBytes()
+Sharable class ServerHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
+    class object {
+        val LOGGER = Logger.getLogger(ServerHandler.javaClass.getName())
 
-    override fun channelRead(ctx: ChannelHandlerContext?, msg: Any?): Unit {
-        if (msg !is HttpRequest)
-            return
+        val CONTENT = "Hello World".getBytes()
 
-        if (HttpHeaders.is100ContinueExpected(msg)) {
-            ctx?.write(DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE))
+        fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean) {
+            sendHttpResponse(ctx, response, isKeepAlive, "text/plain")
         }
 
-        val response = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(CONTENT))
-        response.headers()?.set(Names.CONTENT_TYPE, "text/plain")
-        response.headers()?.set(Names.CONTENT_LENGTH, response.content()?.readableBytes())
+        fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean, contentType: String) {
+            // generate an error page if response.getStatus() is not OK (200) and content is empty
+            if (response.getStatus()?.code() != 200) {
+                if (response.content()?.readableBytes() == 0) {
+                    val buf = Unpooled.copiedBuffer(response.getStatus().toString(), CharsetUtil.UTF_8)
+                    response.content()?.writeBytes(buf)
+                    buf?.release()
+                }
+            }
 
-        if (!HttpHeaders.isKeepAlive(msg)) {
-            ctx?.write(response)?.addListener(ChannelFutureListener.CLOSE)
-        } else {
-            response.headers()?.set(Names.CONNECTION, Values.KEEP_ALIVE)
-            ctx?.write(response)
+            // send the response and close the connection if necessary
+            HttpHeaders.setContentLength(response, response.content()?.readableBytes()?.toLong()!!)
+            response.headers()?.set(Names.CONTENT_TYPE, contentType)
+            val writeFuture = ctx?.channel()?.writeAndFlush(response)
+            if (!isKeepAlive || !response.getStatus().equals(HttpResponseStatus.OK)) {
+                writeFuture?.addListener(ChannelFutureListener.CLOSE)
+            }
         }
+    }
+
+    override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
+        sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(CONTENT)), HttpHeaders.isKeepAlive(msg))
     }
 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {
@@ -84,7 +98,7 @@ Sharable class ServerHandler : ChannelInboundHandlerAdapter() {
     }
 
     override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-        cause?.printStackTrace()
+        LOGGER.log(Level.WARNING, "Exception caught", cause)
         ctx?.close()
     }
 }

@@ -33,8 +33,12 @@ import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
+import org.reflections.Reflections
+import org.reflections.scanners.ResourcesScanner
+import io.netty.channel.ChannelHandler
+import java.util.HashMap
 
-fun startServer(port: Int) {
+fun startServer(port: Int, packageName: String) {
     val bossGroup   = NioEventLoopGroup(1)
     val workerGroup = NioEventLoopGroup()
     try {
@@ -42,7 +46,12 @@ fun startServer(port: Int) {
         b.group(bossGroup, workerGroup)
             ?.channel(javaClass<NioServerSocketChannel>())
             //?.handler(LoggingHandler(LogLevel.INFO))
-            ?.childHandler(ServerInitializer())
+            ?.childHandler(ServerInitializer(arrayListOf(
+                WebsocketHttpHandler(),
+                StaticContentHandler(packageName + ".web"),
+                WebsocketHandler(),
+                ErrorHandler()
+            )))
 
         val ch = b.bind(port)?.sync()?.channel()
 
@@ -55,82 +64,59 @@ fun startServer(port: Int) {
     }
 }
 
-class ServerInitializer : ChannelInitializer<SocketChannel>() {
-    class object {
-        val WEBSOCKET_HTTP_HANDLER = WebsocketHttpHandler()
-        val STATIC_CONTENT_HANDLER = StaticContentHandler()
-        val WEBSOCKET_HANDLER      = WebsocketHandler()
-        val ERROR_HANDLER          = ErrorHandler()
-    }
-
+class ServerInitializer(val handlers: List<ChannelHandler>) : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel?): Unit {
         val p = ch?.pipeline()
+
         p?.addLast(HttpServerCodec())
         p?.addLast(HttpObjectAggregator(1024 * 1024)) // aggregate HttpContents into a single FullHttpRequest, maxContentLength = 1mb
-        p?.addLast(WEBSOCKET_HTTP_HANDLER)
-        p?.addLast(STATIC_CONTENT_HANDLER)
-        p?.addLast(WEBSOCKET_HANDLER)
-        p?.addLast(ERROR_HANDLER)
-    }
-}
 
-fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean, contentType: String = "text/plain") {
-    // generate an error page if response.getStatus() is not OK (200) and content is empty
-    if (!response.getStatus()?.equals(HttpResponseStatus.OK)!! && response.content()?.readableBytes() == 0) {
-        val buf = Unpooled.copiedBuffer(response.getStatus().toString(), CharsetUtil.UTF_8)
-        response.content()?.writeBytes(buf)
-        buf?.release()
-    }
-
-    // send the response and close the connection if necessary
-    HttpHeaders.setContentLength(response, response.getContentLength())
-    response.headers()?.set(Names.CONTENT_TYPE, contentType)
-    val writeFuture = ctx?.channel()?.writeAndFlush(response)
-    if (!isKeepAlive || !response.getStatus().equals(HttpResponseStatus.OK)) {
-        writeFuture?.addListener(ChannelFutureListener.CLOSE)
-    }
-}
-
-Sharable class ErrorHandler : SimpleChannelInboundHandler<Any>() {
-    class object {
-        val LOGGER = Logger.getLogger(ErrorHandler.javaClass.getName())
-    }
-
-    override fun channelRead0(ctx: ChannelHandlerContext?, msg: Any?) {
-        if (msg == null) {
-            return
+        for (handler in handlers) {
+            p?.addLast(handler)
         }
-
-        sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST), false)
-    }
-
-    override fun channelReadComplete(ctx: ChannelHandlerContext?) {
-        ctx?.flush()
-    }
-
-    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-        LOGGER.log(Level.WARNING, "Exception caught", cause)
-        ctx?.close()
     }
 }
 
-Sharable class StaticContentHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
+class StaticResource(val path: String) {
+    fun getContentType()
+        = when (path.substringAfterLast(".")) {
+            "html" -> "text/html"
+            else -> "text/plain"
+        }
+    fun getContent(): ByteArray {
+        val inputStream1 = this.javaClass.getResourceAsStream(path)
+        try {
+            return inputStream1?.readBytes() ?: ByteArray(0)
+        } finally {
+            inputStream1?.close()
+        }
+    }
+}
+
+Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleChannelInboundHandler<FullHttpRequest>() {
+    val staticContent = HashMap<String, StaticResource>(); {
+        val resources = Reflections(resourcesPackageName, ResourcesScanner()) // resourcesPackageName is "beholder.web" which maps to src/main/resources/beholder/web path
+            .getResources({ true }) // predicate receives only filename, no path, so it's useless
+        if (resources != null) {
+            for (path in resources) {
+                val resource = StaticResource("/" + path) // absolute filename under classpath (/beholder/web/blah/blah.html)
+                val uri = path.substring(resourcesPackageName.length) // beholder/web/blah/blah.html -> /blah/blah.html
+                staticContent[uri] = resource
+            }
+        }
+    }
+
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
-        if (msg == null || !msg.isSuccess()) {
-            ctx?.fireChannelRead(msg?.retain())
-            return
+        if (msg != null && msg.isSuccess && msg.isMethodGet) {
+            val uri = msg.getUri()?.substringBefore("?") ?: ""
+            val resource = staticContent[if (staticContent.contains(uri)) uri else uri.addUriPathComponent("index.html")]
+            if (resource != null) {
+                ctx?.sendHttpResponse(msg, resource.getContent(), HttpResponseStatus.OK, resource.getContentType())
+                return
+            }
         }
 
-        if (!msg.isMethodGet()) {
-            ctx?.fireChannelRead(msg.retain())
-            return
-        }
-
-        val path = msg.getUri()
-        // TODO static
-        //sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(CONTENT)), HttpHeaders.isKeepAlive(msg))
-
-        ctx?.fireChannelRead(msg.retain())
+        ctx?.fireChannelRead(msg?.retain())
     }
 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {
@@ -144,18 +130,17 @@ Sharable class WebsocketHttpHandler : SimpleChannelInboundHandler<FullHttpReques
         val WEBSOCKET_PATH = "/ws"
         val LOGGER = Logger.getLogger(WebsocketHttpHandler.javaClass.getName())
 
-        fun getWebSocketLocation(request: FullHttpRequest): String {
-            return "ws://" + request.headers()?.get(HttpHeaders.Names.HOST) + WEBSOCKET_PATH
-        }
+        fun getWebsocketLocation(request: FullHttpRequest)
+            = "ws://" + request.headers()?.get(HttpHeaders.Names.HOST) + WEBSOCKET_PATH
     }
 
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
-        if (msg == null || !msg.isSuccess()) {
+        if (msg == null || !msg.isSuccess) {
             ctx?.fireChannelRead(msg?.retain())
             return
         }
 
-        if (!msg.isMethodGet()) {
+        if (!msg.isMethodGet) {
             ctx?.fireChannelRead(msg.retain())
             return
         }
@@ -165,7 +150,7 @@ Sharable class WebsocketHttpHandler : SimpleChannelInboundHandler<FullHttpReques
             return
         }
 
-        val webSocketFactory = WebSocketServerHandshakerFactory(getWebSocketLocation(msg), null, false)
+        val webSocketFactory = WebSocketServerHandshakerFactory(getWebsocketLocation(msg), null, false)
         val handshaker       = webSocketFactory.newHandshaker(msg)
 
         if (handshaker == null) {
@@ -218,12 +203,72 @@ Sharable class WebsocketHandler : SimpleChannelInboundHandler<WebSocketFrame>() 
     }
 }
 
+Sharable class ErrorHandler : SimpleChannelInboundHandler<Any>() {
+    class object {
+        val LOGGER = Logger.getLogger(ErrorHandler.javaClass.getName())
+    }
+
+    override fun channelRead0(ctx: ChannelHandlerContext?, msg: Any?) {
+        if (msg == null) {
+            return
+        }
+
+        if (msg is FullHttpRequest && msg.isSuccess) {
+            ctx?.sendHttpResponse(null, "Not found", HttpResponseStatus.NOT_FOUND)
+            return
+        }
+
+        ctx?.sendHttpResponse(null, "", HttpResponseStatus.BAD_REQUEST)
+    }
+
+    override fun channelReadComplete(ctx: ChannelHandlerContext?) {
+        ctx?.flush()
+    }
+
+    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
+        LOGGER.log(Level.WARNING, "Exception caught", cause)
+        ctx?.close()
+    }
+}
+
 
 //
 // SUGAR
 //
 
-fun FullHttpRequest.isSuccess()   = this.getDecoderResult()?.isSuccess() ?: false
-fun FullHttpRequest.isMethodGet() = this.getMethod()?.equals(HttpMethod.GET) ?: false
+fun String.addUriPathComponent(component: String)
+    = this + (if (this.endsWith("/")) "" else "/") + component
 
-fun FullHttpResponse.getContentLength() = this.content()?.readableBytes()?.toLong() ?: 0
+val FullHttpRequest.isSuccess: Boolean
+    get() = this.getDecoderResult()?.isSuccess() ?: false
+
+val FullHttpRequest.isMethodGet: Boolean
+    get() = this.getMethod()?.equals(HttpMethod.GET) ?: false
+
+
+val FullHttpResponse.contentLength: Long
+    get() = this.content()?.readableBytes()?.toLong() ?: 0
+
+
+fun ChannelHandlerContext.sendHttpResponse(request: FullHttpRequest?, content: String, status: HttpResponseStatus = HttpResponseStatus.OK, contentType: String = "text/plain")
+    = this.sendHttpResponse(request, content.getBytes(), status, contentType)
+
+fun ChannelHandlerContext.sendHttpResponse(request: FullHttpRequest?, content: ByteArray, status: HttpResponseStatus = HttpResponseStatus.OK, contentType: String = "text/plain") {
+    val response = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.wrappedBuffer(content))
+
+    // generate an error page if response.getStatus() is not OK (200) and content is empty
+    val isBadStatus = !status.equals(HttpResponseStatus.OK)
+    if (isBadStatus && content.isEmpty()) {
+        val buf = Unpooled.copiedBuffer(response.getStatus().toString(), CharsetUtil.UTF_8)
+        response.content()?.writeBytes(buf)
+        buf?.release()
+    }
+
+    // send the response and close the connection if necessary
+    HttpHeaders.setContentLength(response, response.contentLength)
+    response.headers()?.set(Names.CONTENT_TYPE, contentType)
+    val writeFuture = this.channel()?.writeAndFlush(response)
+    if (isBadStatus || !HttpHeaders.isKeepAlive(request)) {
+        writeFuture?.addListener(ChannelFutureListener.CLOSE)
+    }
+}

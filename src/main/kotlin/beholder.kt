@@ -8,5 +8,5 @@ fun main(args: Array<String>) {
         System.exit(1)
     }
 
-    startServer(args[0].toInt())
+    startServer(args[0].toInt(), "beholder")
 }

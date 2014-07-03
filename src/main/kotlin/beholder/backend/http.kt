@@ -104,7 +104,6 @@ class StaticResourceProvider(val resourcesPackageName: String, val storage: Hash
     fun get(uri: String): StaticResource? {
         if (!storage.containsKey(uri)) {
             val resourcePath = "/" + resourcesPackageName.replace(".", "/") + uri // /blah/blah.html -> /beholder/web/blah/blah.html
-            println(uri + " -> " + resourcePath)
             if (StaticResource.exists(resourcePath)) {
                 storage[uri] = StaticResource(resourcePath)
             }

@@ -15,7 +15,7 @@ clean.dependsOn 'frontend:clean'
 jar {
     dependsOn 'frontend:assemble'
     manifest {
-        attributes "Main-Class": 'beholder.BeholderPackage'
+        attributes "Main-Class": 'beholder.backend.BackendPackage'
     }
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }

@@ -57,77 +57,51 @@ fun startServer(port: Int) {
 
 class ServerInitializer : ChannelInitializer<SocketChannel>() {
     class object {
-        val SERVER_HANDLER    = ServerHandler()
-        val WEBSOCKET_HANDLER = WebSocketHandler()
+        val WEBSOCKET_HTTP_HANDLER = WebsocketHttpHandler()
+        val STATIC_CONTENT_HANDLER = StaticContentHandler()
+        val WEBSOCKET_HANDLER      = WebsocketHandler()
+        val ERROR_HANDLER          = ErrorHandler()
     }
 
     override fun initChannel(ch: SocketChannel?): Unit {
         val p = ch?.pipeline()
         p?.addLast(HttpServerCodec())
-        p?.addLast(HttpObjectAggregator(1048576)) // aggregate HttpContents into a single FullHttpRequest, maxContentLength = 1mb
-        p?.addLast(SERVER_HANDLER)
+        p?.addLast(HttpObjectAggregator(1024 * 1024)) // aggregate HttpContents into a single FullHttpRequest, maxContentLength = 1mb
+        p?.addLast(WEBSOCKET_HTTP_HANDLER)
+        p?.addLast(STATIC_CONTENT_HANDLER)
         p?.addLast(WEBSOCKET_HANDLER)
+        p?.addLast(ERROR_HANDLER)
     }
 }
 
-Sharable class ServerHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
-    class object {
-        val CHANNEL_ATTR_HANDSHAKER: AttributeKey<WebSocketServerHandshaker>? = AttributeKey.valueOf("handshaker")
-        val WEBSOCKET_PATH = "/ws"
-        val LOGGER = Logger.getLogger(ServerHandler.javaClass.getName())
-        val CONTENT = "Hello World".getBytes()
-
-        fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean, contentType: String = "text/plain") {
-            // generate an error page if response.getStatus() is not OK (200) and content is empty
-            if (!response.getStatus()?.equals(HttpResponseStatus.OK)!! && response.content()?.readableBytes() == 0) {
-                val buf = Unpooled.copiedBuffer(response.getStatus().toString(), CharsetUtil.UTF_8)
-                response.content()?.writeBytes(buf)
-                buf?.release()
-            }
-
-            // send the response and close the connection if necessary
-            HttpHeaders.setContentLength(response, response.content()?.readableBytes()?.toLong()!!)
-            response.headers()?.set(Names.CONTENT_TYPE, contentType)
-            val writeFuture = ctx?.channel()?.writeAndFlush(response)
-            if (!isKeepAlive || !response.getStatus().equals(HttpResponseStatus.OK)) {
-                writeFuture?.addListener(ChannelFutureListener.CLOSE)
-            }
-        }
-
-        fun getWebSocketLocation(request: FullHttpRequest): String {
-            return "ws://" + request.headers()?.get(HttpHeaders.Names.HOST) + WEBSOCKET_PATH
-        }
+fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean, contentType: String = "text/plain") {
+    // generate an error page if response.getStatus() is not OK (200) and content is empty
+    if (!response.getStatus()?.equals(HttpResponseStatus.OK)!! && response.content()?.readableBytes() == 0) {
+        val buf = Unpooled.copiedBuffer(response.getStatus().toString(), CharsetUtil.UTF_8)
+        response.content()?.writeBytes(buf)
+        buf?.release()
     }
 
-    override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
-        if (!msg!!.getDecoderResult()?.isSuccess()!!) {
-            sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST), false)
+    // send the response and close the connection if necessary
+    HttpHeaders.setContentLength(response, response.getContentLength())
+    response.headers()?.set(Names.CONTENT_TYPE, contentType)
+    val writeFuture = ctx?.channel()?.writeAndFlush(response)
+    if (!isKeepAlive || !response.getStatus().equals(HttpResponseStatus.OK)) {
+        writeFuture?.addListener(ChannelFutureListener.CLOSE)
+    }
+}
+
+Sharable class ErrorHandler : SimpleChannelInboundHandler<Any>() {
+    class object {
+        val LOGGER = Logger.getLogger(ErrorHandler.javaClass.getName())
+    }
+
+    override fun channelRead0(ctx: ChannelHandlerContext?, msg: Any?) {
+        if (msg == null) {
             return
         }
 
-        if (!msg.getMethod()?.equals(HttpMethod.GET)!!) {
-            sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.METHOD_NOT_ALLOWED), false)
-            return
-        }
-
-        val path = msg.getUri()
-
-        if (WEBSOCKET_PATH.equals(path)) {
-            val webSocketFactory = WebSocketServerHandshakerFactory(getWebSocketLocation(msg), null, false)
-            val handshaker       = webSocketFactory.newHandshaker(msg)
-
-            if (handshaker == null) {
-                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx?.channel())
-                return
-            }
-
-            handshaker.handshake(ctx?.channel(), msg)
-            LOGGER.log(Level.INFO, "WebSocket handshaked, channel " + ctx?.channel().toString())
-            ctx?.channel()?.attr(CHANNEL_ATTR_HANDSHAKER)?.set(handshaker)
-            return
-        }
-
-        sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(CONTENT)), HttpHeaders.isKeepAlive(msg))
+        sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST), false)
     }
 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {
@@ -140,13 +114,82 @@ Sharable class ServerHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
     }
 }
 
-Sharable class WebSocketHandler : SimpleChannelInboundHandler<WebSocketFrame>() {
+Sharable class StaticContentHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
+    override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
+        if (msg == null || !msg.isSuccess()) {
+            ctx?.fireChannelRead(msg?.retain())
+            return
+        }
+
+        if (!msg.isMethodGet()) {
+            ctx?.fireChannelRead(msg.retain())
+            return
+        }
+
+        val path = msg.getUri()
+        // TODO static
+        //sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(CONTENT)), HttpHeaders.isKeepAlive(msg))
+
+        ctx?.fireChannelRead(msg.retain())
+    }
+
+    override fun channelReadComplete(ctx: ChannelHandlerContext?) {
+        ctx?.flush()
+    }
+}
+
+Sharable class WebsocketHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
     class object {
-        val LOGGER = Logger.getLogger(WebSocketHandler.javaClass.getName())
+        val CHANNEL_ATTR_HANDSHAKER: AttributeKey<WebSocketServerHandshaker>? = AttributeKey.valueOf("handshaker")
+        val WEBSOCKET_PATH = "/ws"
+        val LOGGER = Logger.getLogger(WebsocketHttpHandler.javaClass.getName())
+
+        fun getWebSocketLocation(request: FullHttpRequest): String {
+            return "ws://" + request.headers()?.get(HttpHeaders.Names.HOST) + WEBSOCKET_PATH
+        }
+    }
+
+    override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
+        if (msg == null || !msg.isSuccess()) {
+            ctx?.fireChannelRead(msg?.retain())
+            return
+        }
+
+        if (!msg.isMethodGet()) {
+            ctx?.fireChannelRead(msg.retain())
+            return
+        }
+
+        if (!WEBSOCKET_PATH.equals(msg.getUri())) {
+            ctx?.fireChannelRead(msg.retain())
+            return
+        }
+
+        val webSocketFactory = WebSocketServerHandshakerFactory(getWebSocketLocation(msg), null, false)
+        val handshaker       = webSocketFactory.newHandshaker(msg)
+
+        if (handshaker == null) {
+            WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx?.channel())
+            return
+        }
+
+        handshaker.handshake(ctx?.channel(), msg)
+        LOGGER.log(Level.INFO, "WebSocket handshaked, channel " + ctx?.channel().toString())
+        ctx?.channel()?.attr(CHANNEL_ATTR_HANDSHAKER)?.set(handshaker)
+    }
+
+    override fun channelReadComplete(ctx: ChannelHandlerContext?) {
+        ctx?.flush()
+    }
+}
+
+Sharable class WebsocketHandler : SimpleChannelInboundHandler<WebSocketFrame>() {
+    class object {
+        val LOGGER = Logger.getLogger(WebsocketHandler.javaClass.getName())
     }
 
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: WebSocketFrame?) {
-        val handshaker = ctx!!.channel()?.attr(ServerHandler.CHANNEL_ATTR_HANDSHAKER)?.get()
+        val handshaker = ctx!!.channel()?.attr(WebsocketHttpHandler.CHANNEL_ATTR_HANDSHAKER)?.get()
         if (handshaker == null) {
             throw RuntimeException("No handshaker for incoming websocket frame")
         }
@@ -162,7 +205,8 @@ Sharable class WebSocketHandler : SimpleChannelInboundHandler<WebSocketFrame>() 
         }
 
         if (msg !is TextWebSocketFrame) {
-            throw UnsupportedOperationException("${msg.javaClass.getName()} frame types not supported")
+            ctx.fireChannelRead(msg?.retain())
+            return
         }
 
         val text = msg.text()
@@ -172,9 +216,14 @@ Sharable class WebSocketHandler : SimpleChannelInboundHandler<WebSocketFrame>() 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {
         ctx?.flush()
     }
-
-    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-        LOGGER.log(Level.WARNING, "Exception caught", cause)
-        ctx?.close()
-    }
 }
+
+
+//
+// SUGAR
+//
+
+fun FullHttpRequest.isSuccess()   = this.getDecoderResult()?.isSuccess() ?: false
+fun FullHttpRequest.isMethodGet() = this.getMethod()?.equals(HttpMethod.GET) ?: false
+
+fun FullHttpResponse.getContentLength() = this.content()?.readableBytes()?.toLong() ?: 0

@@ -6,7 +6,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    compile 'org.jetbrains.kotlin:kotlin-stdlib:0.7.+'
+    compile 'org.jetbrains.kotlin:kotlin-stdlib:0.8.+'
     compile 'io.netty:netty-all:4.0.21.Final'
 }
 jar {
@@ -24,6 +24,6 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:0.7.+'
+    classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:0.8.+'
   }
 }

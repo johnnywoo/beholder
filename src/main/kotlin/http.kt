@@ -18,12 +18,16 @@ import io.netty.handler.codec.http.HttpHeaders
 import io.netty.handler.codec.http.HttpHeaders.Names
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.channel.ChannelHandler.Sharable
+import io.netty.util.AttributeKey
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.http.FullHttpRequest
 import java.util.logging.Logger
 import java.util.logging.Level
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.util.CharsetUtil
+import io.netty.handler.codec.http.HttpMethod
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory
 
 fun startServer(port: Int) {
     val bossGroup   = NioEventLoopGroup(1)
@@ -61,8 +65,9 @@ class ServerInitializer : ChannelInitializer<SocketChannel>() {
 
 Sharable class ServerHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
     class object {
+        val CHANNEL_ATTR_HANDSHAKER: AttributeKey<WebSocketServerHandshaker>? = AttributeKey.valueOf("handshaker")
+        val WEBSOCKET_PATH = "/ws"
         val LOGGER = Logger.getLogger(ServerHandler.javaClass.getName())
-
         val CONTENT = "Hello World".getBytes()
 
         fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean) {
@@ -71,12 +76,10 @@ Sharable class ServerHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
 
         fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean, contentType: String) {
             // generate an error page if response.getStatus() is not OK (200) and content is empty
-            if (response.getStatus()?.code() != 200) {
-                if (response.content()?.readableBytes() == 0) {
-                    val buf = Unpooled.copiedBuffer(response.getStatus().toString(), CharsetUtil.UTF_8)
-                    response.content()?.writeBytes(buf)
-                    buf?.release()
-                }
+            if (!response.getStatus()?.equals(HttpResponseStatus.OK)!! && response.content()?.readableBytes() == 0) {
+                val buf = Unpooled.copiedBuffer(response.getStatus().toString(), CharsetUtil.UTF_8)
+                response.content()?.writeBytes(buf)
+                buf?.release()
             }
 
             // send the response and close the connection if necessary
@@ -87,9 +90,40 @@ Sharable class ServerHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
                 writeFuture?.addListener(ChannelFutureListener.CLOSE)
             }
         }
+
+        fun getWebSocketLocation(request: FullHttpRequest): String {
+            return "ws://" + request.headers()?.get(HttpHeaders.Names.HOST) + WEBSOCKET_PATH
+        }
     }
 
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
+        if (!msg!!.getDecoderResult()?.isSuccess()!!) {
+            sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST), false)
+            return
+        }
+
+        if (!msg.getMethod()?.equals(HttpMethod.GET)!!) {
+            sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.METHOD_NOT_ALLOWED), false)
+            return
+        }
+
+        val path = msg.getUri()
+
+        if (WEBSOCKET_PATH.equals(path)) {
+            val webSocketFactory = WebSocketServerHandshakerFactory(getWebSocketLocation(msg), null, false)
+            val handshaker       = webSocketFactory.newHandshaker(msg)
+
+            if (handshaker == null) {
+                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx?.channel())
+                return
+            }
+
+            handshaker.handshake(ctx?.channel(), msg)
+            LOGGER.log(Level.INFO, "WebSocket handshaked, channel " + ctx?.channel().toString())
+            ctx?.channel()?.attr(CHANNEL_ATTR_HANDSHAKER)?.set(handshaker)
+            return
+        }
+
         sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(CONTENT)), HttpHeaders.isKeepAlive(msg))
     }
 

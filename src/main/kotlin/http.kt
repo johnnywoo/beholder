@@ -2,10 +2,7 @@ package beholder.http
 
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.ChannelOption
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.handler.logging.LoggingHandler
-import io.netty.handler.logging.LogLevel
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.channel.ChannelInitializer
@@ -22,13 +19,14 @@ import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.codec.http.HttpHeaders
 import io.netty.handler.codec.http.HttpHeaders.Values
 import io.netty.handler.codec.http.HttpHeaders.Names
+import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.channel.ChannelHandler.Sharable
 
 fun startServer(port: Int) {
     val bossGroup   = NioEventLoopGroup(1)
     val workerGroup = NioEventLoopGroup()
     try {
         val b = ServerBootstrap()
-        b.option(ChannelOption.SO_BACKLOG, 1024)
         b.group(bossGroup, workerGroup)
             ?.channel(javaClass<NioServerSocketChannel>())
             //?.handler(LoggingHandler(LogLevel.INFO))
@@ -46,14 +44,19 @@ fun startServer(port: Int) {
 }
 
 class ServerInitializer : ChannelInitializer<SocketChannel>() {
+    class object {
+        val SERVER_HANDLER = ServerHandler()
+    }
+
     override fun initChannel(ch: SocketChannel?): Unit {
-        val p = ch?.pipeline();
-        p?.addLast(HttpServerCodec());
-        p?.addLast(ServerHandler());
+        val p = ch?.pipeline()
+        p?.addLast(HttpServerCodec())
+        p?.addLast(HttpObjectAggregator(1048576)) // aggregate HttpContents into a single FullHttpRequest, maxContentLength = 1mb
+        p?.addLast(SERVER_HANDLER)
     }
 }
 
-class ServerHandler : ChannelInboundHandlerAdapter() {
+Sharable class ServerHandler : ChannelInboundHandlerAdapter() {
     val CONTENT = "Hello World".getBytes()
 
     override fun channelRead(ctx: ChannelHandlerContext?, msg: Any?): Unit {

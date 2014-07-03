@@ -28,6 +28,11 @@ import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.util.CharsetUtil
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory
+import io.netty.handler.codec.http.websocketx.WebSocketFrame
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
+import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 
 fun startServer(port: Int) {
     val bossGroup   = NioEventLoopGroup(1)
@@ -52,7 +57,8 @@ fun startServer(port: Int) {
 
 class ServerInitializer : ChannelInitializer<SocketChannel>() {
     class object {
-        val SERVER_HANDLER = ServerHandler()
+        val SERVER_HANDLER    = ServerHandler()
+        val WEBSOCKET_HANDLER = WebSocketHandler()
     }
 
     override fun initChannel(ch: SocketChannel?): Unit {
@@ -60,6 +66,7 @@ class ServerInitializer : ChannelInitializer<SocketChannel>() {
         p?.addLast(HttpServerCodec())
         p?.addLast(HttpObjectAggregator(1048576)) // aggregate HttpContents into a single FullHttpRequest, maxContentLength = 1mb
         p?.addLast(SERVER_HANDLER)
+        p?.addLast(WEBSOCKET_HANDLER)
     }
 }
 
@@ -70,11 +77,7 @@ Sharable class ServerHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
         val LOGGER = Logger.getLogger(ServerHandler.javaClass.getName())
         val CONTENT = "Hello World".getBytes()
 
-        fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean) {
-            sendHttpResponse(ctx, response, isKeepAlive, "text/plain")
-        }
-
-        fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean, contentType: String) {
+        fun sendHttpResponse(ctx: ChannelHandlerContext?, response: FullHttpResponse, isKeepAlive: Boolean, contentType: String = "text/plain") {
             // generate an error page if response.getStatus() is not OK (200) and content is empty
             if (!response.getStatus()?.equals(HttpResponseStatus.OK)!! && response.content()?.readableBytes() == 0) {
                 val buf = Unpooled.copiedBuffer(response.getStatus().toString(), CharsetUtil.UTF_8)
@@ -125,6 +128,45 @@ Sharable class ServerHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
         }
 
         sendHttpResponse(ctx, DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(CONTENT)), HttpHeaders.isKeepAlive(msg))
+    }
+
+    override fun channelReadComplete(ctx: ChannelHandlerContext?) {
+        ctx?.flush()
+    }
+
+    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
+        LOGGER.log(Level.WARNING, "Exception caught", cause)
+        ctx?.close()
+    }
+}
+
+Sharable class WebSocketHandler : SimpleChannelInboundHandler<WebSocketFrame>() {
+    class object {
+        val LOGGER = Logger.getLogger(WebSocketHandler.javaClass.getName())
+    }
+
+    override fun channelRead0(ctx: ChannelHandlerContext?, msg: WebSocketFrame?) {
+        val handshaker = ctx!!.channel()?.attr(ServerHandler.CHANNEL_ATTR_HANDSHAKER)?.get()
+        if (handshaker == null) {
+            throw RuntimeException("No handshaker for incoming websocket frame")
+        }
+
+        if (msg is CloseWebSocketFrame) {
+            handshaker.close(ctx.channel(), msg.retain())
+            return
+        }
+
+        if (msg is PingWebSocketFrame) {
+            ctx.channel()?.write(PongWebSocketFrame(msg.content()?.retain()))
+            return
+        }
+
+        if (msg !is TextWebSocketFrame) {
+            throw UnsupportedOperationException("${msg.javaClass.getName()} frame types not supported")
+        }
+
+        val text = msg.text()
+        LOGGER.log(Level.INFO, "Incoming websocket frame: ${text}")
     }
 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {

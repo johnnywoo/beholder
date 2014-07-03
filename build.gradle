@@ -8,7 +8,6 @@ repositories {
 dependencies {
     compile 'org.jetbrains.kotlin:kotlin-stdlib:0.8.+'
     compile 'io.netty:netty-all:4.0.21.Final'
-    compile 'org.reflections:reflections:0.9.8'
 }
 jar {
     manifest {

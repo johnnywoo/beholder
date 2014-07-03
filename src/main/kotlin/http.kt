@@ -33,8 +33,6 @@ import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
-import org.reflections.Reflections
-import org.reflections.scanners.ResourcesScanner
 import io.netty.channel.ChannelHandler
 import java.util.HashMap
 
@@ -78,40 +76,57 @@ class ServerInitializer(val handlers: List<ChannelHandler>) : ChannelInitializer
 }
 
 class StaticResource(val path: String) {
+    class object {
+        fun exists(path: String): Boolean {
+            // TODO we need a better way to distinguish directories from files
+            if (!path.contains(".")) {
+                return false
+            }
+            return this.javaClass.getResource(path) != null
+        }
+    }
     fun getContentType()
         = when (path.substringAfterLast(".")) {
-            "html" -> "text/html"
-            else -> "text/plain"
-        }
+        "html" -> "text/html"
+        else -> "text/plain"
+    }
     fun getContent(): ByteArray {
-        val inputStream1 = this.javaClass.getResourceAsStream(path)
+        val inputStream = this.javaClass.getResourceAsStream(path)
         try {
-            return inputStream1?.readBytes() ?: ByteArray(0)
+            return inputStream?.readBytes() ?: ByteArray(0)
         } finally {
-            inputStream1?.close()
+            inputStream?.close()
         }
     }
 }
 
-Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleChannelInboundHandler<FullHttpRequest>() {
-    val staticContent = HashMap<String, StaticResource>(); {
-        val resources = Reflections(resourcesPackageName, ResourcesScanner()) // resourcesPackageName is "beholder.web" which maps to src/main/resources/beholder/web path
-            .getResources({ true }) // predicate receives only filename, no path, so it's useless
-        if (resources != null) {
-            for (path in resources) {
-                val resource = StaticResource("/" + path) // absolute filename under classpath (/beholder/web/blah/blah.html)
-                val uri = path.substring(resourcesPackageName.length) // beholder/web/blah/blah.html -> /blah/blah.html
-                staticContent[uri] = resource
+class StaticResourceProvider(val resourcesPackageName: String, val storage: HashMap<String, StaticResource> = hashMapOf()) {
+    fun get(uri: String): StaticResource? {
+        if (!storage.containsKey(uri)) {
+            val resourcePath = "/" + resourcesPackageName.replace(".", "/") + uri // /blah/blah.html -> /beholder/web/blah/blah.html
+            println(uri + " -> " + resourcePath)
+            if (StaticResource.exists(resourcePath)) {
+                storage[uri] = StaticResource(resourcePath)
             }
         }
+        return storage[uri]
     }
+}
+
+Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleChannelInboundHandler<FullHttpRequest>() {
+    val staticContent = StaticResourceProvider(resourcesPackageName)
 
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
         if (msg != null && msg.isSuccess && msg.isMethodGet) {
             val uri = msg.getUri()?.substringBefore("?") ?: ""
-            val resource = staticContent[if (staticContent.contains(uri)) uri else uri.addUriPathComponent("index.html")]
+            val resource = staticContent[uri]
             if (resource != null) {
                 ctx?.sendHttpResponse(msg, resource.getContent(), HttpResponseStatus.OK, resource.getContentType())
+                return
+            }
+            val resourceIndex = staticContent[uri.addUriPathComponent("index.html")]
+            if (resourceIndex != null) {
+                ctx?.sendHttpResponse(msg, resourceIndex.getContent(), HttpResponseStatus.OK, resourceIndex.getContentType())
                 return
             }
         }

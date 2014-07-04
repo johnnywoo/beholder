@@ -1,9 +1,10 @@
 apply plugin: 'download-task'
+apply plugin: 'kotlin'
 
 // relative to 'frontend' dir
 def JS_PATH = '../src/main/resources/beholder/backend/web'
 
-def KOTLINC_ZIP_URL  = 'https://github.com/JetBrains/kotlin/releases/download/build-0.8.11/kotlin-compiler-0.8.11.zip'
+def KOTLINC_ZIP_URL = 'https://github.com/JetBrains/kotlin/releases/download/build-0.8.11/kotlin-compiler-0.8.11.zip'
 
 buildscript {
     repositories {
@@ -11,16 +12,24 @@ buildscript {
     }
     dependencies {
         classpath 'de.undercouch:gradle-download-task:1.+'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
-task assemble(dependsOn: 'compileJs') {
+repositories {
+    mavenCentral()
+}
+dependencies {
+    compile 'org.jetbrains.kotlin:kotlin-js-library:0.7.+'
 }
 
-task clean << {
+// removing dependency on 'jar' because we don't want it, but still need 'kotlin' plugin for 'compile' in dependencies
+assemble.dependsOn = ['compileJs']
+
+clean.dependsOn 'cleanFrontend'
+
+task cleanFrontend << {
     delete 'build'
-    delete 'libs/kotlin-jslib.jar'
-    delete "${JS_PATH}/kotlin.js"
     delete "${JS_PATH}/script.js"
 }
 
@@ -43,36 +52,27 @@ task setupKotlinJsCompiler(dependsOn: 'downloadKotlinCompiler') << {
             from zipTree(zipfile)
             into 'build'
         }
-
-        assert file('build/kotlinc/bin/kotlinc-js').exists(), 'Downloaded kotlin compiler is corrupt'
     }
 
-    if (!file("${JS_PATH}/kotlin.js").exists()) {
-        copy {
-            from 'build/kotlinc/lib/kotlin.js'
-            into JS_PATH
-        }
-    }
+    assert file('build/kotlinc/bin/kotlinc-js').exists(), 'Downloaded kotlin compiler is corrupt'
 
-    if (!file('libs/kotlin-jslib.jar').exists()) {
-        copy {
-            from 'build/kotlinc/lib/kotlin-jslib.jar'
-            into 'libs'
-        }
-    }
+    // TODO copy kotlin-*.js from kotlin-js-library.jar to web resources
 }
 
 task compileJs(dependsOn: 'setupKotlinJsCompiler') << {
-    assert file('build/kotlinc/bin/kotlinc-js').exists(), 'Downloaded kotlin compiler is corrupt'
-
     // ./koco/kotlinc/bin/kotlinc-js -sourceFiles src/main/kotlin/web.kt -output ./script/kkk.js -libraryFiles koco/kotlinc/lib/kotlin-jslib.jar
-    def kotlinc = file('build/kotlinc').canonicalPath
+    def jsLib   = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
+    def kotlinc = file('build/kotlinc/bin/kotlinc-js').canonicalPath
     def out     = file("${JS_PATH}/script.js").canonicalPath
     def source  = file('src/main/kotlin').canonicalPath
 
-    def command = "${kotlinc}/bin/kotlinc-js -output ${out} -libraryFiles ${kotlinc}/lib/kotlin-jslib.jar -sourceFiles ${source}"
+    // TODO proper argument escaping if possible
+    def command = "${kotlinc} -output ${out} -libraryFiles ${jsLib} -sourceFiles ${source}"
 
     def proc = command.execute()
     proc.waitFor()
     assert proc.exitValue() == 0, "Command failed: ${command}\nCommand output:\n${proc.text}"
+}
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
 }

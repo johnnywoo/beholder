@@ -88,7 +88,9 @@ class StaticResource(val path: String) {
     fun getContentType()
         = when (path.substringAfterLast(".")) {
         "html" -> "text/html"
-        else -> "text/plain"
+        "js"   -> "text/javascript"
+        "map"  -> "application/json"
+        else   -> "text/plain"
     }
     fun getContent(): ByteArray {
         val inputStream = this.javaClass.getResourceAsStream(path)

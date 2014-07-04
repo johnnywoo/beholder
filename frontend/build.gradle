@@ -83,6 +83,20 @@ task setupKotlinJsCompiler {
 task compileJs {
     dependsOn 'setupKotlinJsCompiler'
     dependsOn 'copyBundledKotlinJs'
+    outputs.upToDateWhen {
+        def files = []
+        file('src/main/kotlin').eachFileRecurse {
+            if (it.name.endsWith('.kt')) {
+                files.add it
+            }
+        }
+        def lastModTime = files.inject(null, {
+            time, file ->
+                def lastModified = file.lastModified()
+                return (time == null || time < lastModified) ? lastModified : time
+        })
+        return lastModTime != null && lastModTime < file("${JS_PATH}/script.js").lastModified()
+    }
     doLast {
         def jsLib   = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
         def kotlinc = file('build/kotlinc/bin/kotlinc-js').canonicalPath

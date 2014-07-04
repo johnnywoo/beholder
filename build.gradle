@@ -10,7 +10,7 @@ dependencies {
     compile 'io.netty:netty-all:4.0.21.Final'
 }
 
-tasks.compileKotlin.dependsOn 'frontend:assemble'
+tasks.compileKotlin.dependsOn 'frontend:compileJs'
 tasks.clean.dependsOn 'frontend:clean'
 
 jar {

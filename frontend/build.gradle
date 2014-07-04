@@ -1,5 +1,4 @@
 apply plugin: 'download-task'
-apply plugin: 'kotlin'
 
 // relative to 'frontend' dir
 def JS_PATH = '../src/main/resources/beholder/backend/web'
@@ -15,6 +14,9 @@ buildscript {
     }
 }
 
+configurations {
+    compile
+}
 repositories {
     mavenCentral()
 }
@@ -22,28 +24,50 @@ dependencies {
     compile 'org.jetbrains.kotlin:kotlin-js-library:0.7.+'
 }
 
-// removing dependency on 'jar' because we don't want it, but still need 'kotlin' plugin for 'compile' in dependencies
-assemble.dependsOn = ['compileJs']
+task clean {}
 
-clean.dependsOn 'cleanFrontend'
+tasks.clean.dependsOn 'cleanFrontendBuild'
+tasks.clean.dependsOn 'cleanBundledKotlinJs'
+tasks.clean.dependsOn 'cleanCompiledJs'
 
-task cleanFrontend << {
-    delete 'build'
-    delete "${JS_PATH}/script.js"
+task cleanFrontendBuild {
+    doLast {
+        delete 'build'
+    }
 }
 
-task downloadKotlinCompiler << {
-    def zipfile = file('build/kotlin-compiler.zip')
-    if (!zipfile.exists()) {
+task downloadKotlinCompiler {
+    outputs.upToDateWhen {file('build/kotlin-compiler.zip').exists()}
+    doLast {
         download {
-            src KOTLINC_ZIP_URL
-            dest zipfile
+            src  KOTLINC_ZIP_URL
+            dest file('build/kotlin-compiler.zip')
         }
     }
 }
 
-task setupKotlinJsCompiler(dependsOn: 'downloadKotlinCompiler') << {
-    if (!file('build/kotlinc/bin/kotlinc-js').exists()) {
+def libJsFiles = ['kotlin-lib.js', 'kotlin-lib-ecma5.js', 'kotlin-maps.js']
+task copyBundledKotlinJs {
+    outputs.upToDateWhen { libJsFiles.find {!file(JS_PATH + '/' + it).exists()} == null }
+    doLast {
+        def jsLib = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
+        copy {
+            from zipTree(file(jsLib))
+            include libJsFiles
+            into JS_PATH
+        }
+    }
+}
+task cleanBundledKotlinJs {
+    doLast {
+        libJsFiles.each {delete JS_PATH + '/' + it}
+    }
+}
+
+task setupKotlinJsCompiler {
+    dependsOn 'downloadKotlinCompiler'
+    outputs.upToDateWhen {file('build/kotlinc/bin/kotlinc-js').exists()}
+    doLast {
         def zipfile = file('build/kotlin-compiler.zip')
         assert zipfile.exists(), "Downloading kotlin compiler failed"
 
@@ -51,27 +75,31 @@ task setupKotlinJsCompiler(dependsOn: 'downloadKotlinCompiler') << {
             from zipTree(zipfile)
             into 'build'
         }
+
+        assert file('build/kotlinc/bin/kotlinc-js').exists(), 'Downloaded kotlin compiler is corrupt'
     }
-
-    assert file('build/kotlinc/bin/kotlinc-js').exists(), 'Downloaded kotlin compiler is corrupt'
-
-    // TODO copy kotlin-*.js from kotlin-js-library.jar to web resources
 }
 
-task compileJs(dependsOn: 'setupKotlinJsCompiler') << {
-    // ./koco/kotlinc/bin/kotlinc-js -sourceFiles src/main/kotlin/web.kt -output ./script/kkk.js -libraryFiles koco/kotlinc/lib/kotlin-jslib.jar
-    def jsLib   = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
-    def kotlinc = file('build/kotlinc/bin/kotlinc-js').canonicalPath
-    def out     = file("${JS_PATH}/script.js").canonicalPath
-    def source  = file('src/main/kotlin').canonicalPath
+task compileJs {
+    dependsOn 'setupKotlinJsCompiler'
+    dependsOn 'copyBundledKotlinJs'
+    doLast {
+        def jsLib   = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
+        def kotlinc = file('build/kotlinc/bin/kotlinc-js').canonicalPath
+        def out     = file("${JS_PATH}/script.js").canonicalPath
+        def source  = file('src/main/kotlin').canonicalPath
 
-    // TODO proper argument escaping if possible
-    def command = "${kotlinc} -output ${out} -libraryFiles ${jsLib} -sourceFiles ${source}"
+        // TODO proper argument escaping if possible
+        def command = "${kotlinc} -sourcemap -output ${out} -libraryFiles ${jsLib} -sourceFiles ${source}"
 
-    def proc = command.execute()
-    proc.waitFor()
-    assert proc.exitValue() == 0, "Command failed: ${command}\nCommand output:\n${proc.text}"
+        def proc = command.execute()
+        proc.waitFor()
+        assert proc.exitValue() == 0, "Command failed: ${command}\nCommand output:\n${proc.text}"
+    }
 }
-sourceSets {
-    main.java.srcDirs += 'src/main/kotlin'
+task cleanCompiledJs {
+    doLast {
+        delete "${JS_PATH}/script.js"
+        delete "${JS_PATH}/script.js.map"
+    }
 }

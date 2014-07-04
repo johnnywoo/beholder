@@ -1,4 +1,5 @@
 apply plugin: 'download-task'
+apply plugin: 'kotlin' // we don't actually need this plugin, but IDEA won't even highlight kotlin syntax properly without it
 
 // relative to 'frontend' dir
 def JS_PATH = '../src/main/resources/beholder/backend/web'
@@ -14,17 +15,16 @@ buildscript {
     }
 }
 
-configurations {
-    compile
-}
+tasks.assemble.dependsOn = [] // essentially turning kotlin plugin off
 repositories {
     mavenCentral()
 }
 dependencies {
-    compile 'org.jetbrains.kotlin:kotlin-js-library:0.7.+'
+    compile 'org.jetbrains.kotlin:kotlin-js-library:0.8.11'
 }
 
-task clean {
+tasks.clean.dependsOn 'cleanFrontend'
+task cleanFrontent {
     dependsOn 'cleanBundledKotlinJs'
     dependsOn 'cleanCompiledJs'
     doLast {

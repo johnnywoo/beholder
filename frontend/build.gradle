@@ -24,13 +24,9 @@ dependencies {
     compile 'org.jetbrains.kotlin:kotlin-js-library:0.7.+'
 }
 
-task clean {}
-
-tasks.clean.dependsOn 'cleanFrontendBuild'
-tasks.clean.dependsOn 'cleanBundledKotlinJs'
-tasks.clean.dependsOn 'cleanCompiledJs'
-
-task cleanFrontendBuild {
+task clean {
+    dependsOn 'cleanBundledKotlinJs'
+    dependsOn 'cleanCompiledJs'
     doLast {
         delete 'build'
     }
@@ -84,9 +80,9 @@ task compileJs {
     dependsOn 'setupKotlinJsCompiler'
     dependsOn 'copyBundledKotlinJs'
     outputs.upToDateWhen {
-        def files = []
+        ArrayList<File> files = []
         file('src/main/kotlin').eachFileRecurse {
-            if (it.name.endsWith('.kt')) {
+            if (it.name.endsWith('.kt') || it.isDirectory()) {
                 files.add it
             }
         }

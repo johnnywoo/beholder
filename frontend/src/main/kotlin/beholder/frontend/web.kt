@@ -1,20 +1,24 @@
 package beholder.frontend
 
 import js.dom.html.*
-import beholder.frontend.sugar.alert
+import beholder.frontend.sugar.WebSocket
 
 fun main(args: Array<String>) {
     println("Our location: " + window.location.href) // this now goes to the console
-    window.alert("IT'S ALIVE!!!")
+    val webSocketLocation = "ws://" + window.location.host + "/ws" // host includes port, unlike hostname
+    println("Websocket location: " + webSocketLocation)
 
-    // this works, but in the IDE it's red
-//    val doc = js.dom.html.document
-//    doc.write("BLAH")
-//    val pre = doc.createElement("pre")
-//    pre.appendChild(doc.createTextNode("monospaced"))
-//    doc.getElementsByTagName("body").item(0).appendChild(pre)
+    val webSocket = WebSocket(webSocketLocation)
+    webSocket.onopen = {
+        println("open")
+        webSocket.onmessage = {
+            println("message")
+            println(it.data)
+        }
+        webSocket.onclose = {
+            println("close")
+        }
 
-    // this works and is green in the IDE
-//    val kdoc = kotlin.browser.document
-//    kdoc.getElementsByTagName("body")?.item(0)?.appendChild(kdoc.createTextNode("kotlin.browser.document also works")!!)
+        webSocket.send("{\"action\": \"echo\", \"data\": \"hello world\"}")
+    }
 }

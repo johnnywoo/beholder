@@ -17,15 +17,12 @@ Sharable class WebsocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
         val JSON_PARSER = JsonParser()
     }
 
-    private val actionListeners: MutableMap<String, Pair<(JsonElement) -> Any, (ChannelHandlerContext, String, Any) -> Unit>> = hashMapOf()
+    private class ActionListener(val parser: (JsonElement) -> Any, val callback: (ChannelHandlerContext, String, Any) -> String?)
 
-    fun onAction<T>(action: String, clazz: Class<T>, function: (ctx: ChannelHandlerContext, action: String, data: Any) -> Unit) {
-        actionListeners.put(action, Pair({
-                jsonElement ->
-                    GSON.fromJson(jsonElement, clazz) as Any
-            },
-            function
-        ))
+    private val actionListeners: MutableMap<String, ActionListener> = hashMapOf()
+
+    fun onAction<T>(action: String, clazz: Class<T>, callback: (ctx: ChannelHandlerContext, action: String, data: Any) -> String?) {
+        actionListeners.put(action, ActionListener({ GSON.fromJson(it, clazz) as Any }, callback))
     }
 
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: TextWebSocketFrame?) {
@@ -63,21 +60,20 @@ Sharable class WebsocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
             return
         }
 
-        val pair = actionListeners.get(action)
+        val pair = actionListeners[action]
         if (pair == null) {
             ctx.fireChannelRead(msg.retain())
             return
         }
-        val parseFunction = pair.first
-        val listener = pair.second
-
         val dataJson = rootJsonObject.get("data")
         if (dataJson == null) {
             ctx.fireChannelRead(msg.retain())
             return
         }
-        val data = parseFunction(dataJson)
-        listener.invoke(ctx, action, data)
+        val response = pair.callback(ctx, action, pair.parser(dataJson))
+        if (response != null) {
+            ctx.channel()?.writeAndFlush(TextWebSocketFrame(response))
+        }
     }
 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {

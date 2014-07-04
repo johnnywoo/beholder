@@ -37,12 +37,11 @@ import beholder.backend.WebsocketRouter
 import io.netty.util.CharsetUtil
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 
-fun startServer(port: Int, packageName: String) {
+fun startServer(port: Int, packageName: String, websocketRouter: WebsocketRouter) {
     val bossGroup   = NioEventLoopGroup(1)
     val workerGroup = NioEventLoopGroup()
     try {
         val b = ServerBootstrap()
-        val websocketRouter = WebsocketRouter()
         b.group(bossGroup, workerGroup)
             ?.channel(javaClass<NioServerSocketChannel>())
             //?.handler(LoggingHandler(LogLevel.INFO))
@@ -53,12 +52,6 @@ fun startServer(port: Int, packageName: String) {
                 websocketRouter,
                 ErrorHandler()
             )))
-
-        websocketRouter.onAction("echo", javaClass<String>(), {
-            ctx, action, data ->
-                val text = data as String
-                ctx.channel()?.writeAndFlush(TextWebSocketFrame(text))
-        })
 
         val ch = b.bind(port)?.sync()?.channel()
 

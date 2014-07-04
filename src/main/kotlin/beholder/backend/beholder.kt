@@ -8,5 +8,11 @@ fun main(args: Array<String>) {
         System.exit(1)
     }
 
-    startServer(args[0].toInt(), "beholder.backend")
+    val websocketRouter = WebsocketRouter()
+    websocketRouter.onAction("echo", javaClass<String>(), {
+        ctx, action, data ->
+            data as String
+    })
+
+    startServer(args[0].toInt(), "beholder.backend", websocketRouter)
 }

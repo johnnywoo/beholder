@@ -1,6 +1,7 @@
 package beholder.frontend
 
-import beholder.frontend.sugar.window
+import js.dom.html.*
+import beholder.frontend.sugar.alert
 
 fun main(args: Array<String>) {
     println("Our location: " + window.location.href) // this now goes to the console

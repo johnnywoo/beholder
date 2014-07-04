@@ -23,10 +23,14 @@ dependencies {
     compile 'org.jetbrains.kotlin:kotlin-js-library:0.8.11'
 }
 
+tasks.assemble.dependsOn 'compileJs'
+tasks.assemble.dependsOn 'setupKotlinJsLibraryForIdea'
+
 tasks.clean.dependsOn 'cleanFrontend'
 task cleanFrontent {
     dependsOn 'cleanBundledKotlinJs'
     dependsOn 'cleanCompiledJs'
+    dependsOn 'cleanKotlinJsLibraryForIdea'
     doLast {
         delete 'build'
     }
@@ -76,6 +80,27 @@ task setupKotlinJsCompiler {
     }
 }
 
+// unfortunately, IDEA seems to want .class files in jars, which kotlin-js-library doesn't have
+// since it's compiled into JavaScript, so we copy its sources into our src directory
+// to enable proper code completion and analysis
+task setupKotlinJsLibraryForIdea {
+    outputs.upToDateWhen {file('src/main/kotlin/kotlin-js-library').exists()}
+    doLast {
+        def jsLib = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
+        copy {
+            from(zipTree(file(jsLib))) {
+                include '**/*.kt'
+            }
+            into 'src/main/kotlin/kotlin-js-library'
+        }
+    }
+}
+task cleanKotlinJsLibraryForIdea {
+    doLast {
+        delete 'src/main/kotlin/kotlin-js-library'
+    }
+}
+
 task compileJs {
     dependsOn 'setupKotlinJsCompiler'
     dependsOn 'copyBundledKotlinJs'
@@ -97,7 +122,7 @@ task compileJs {
         def jsLib   = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
         def kotlinc = file('build/kotlinc/bin/kotlinc-js').canonicalPath
         def out     = file("${JS_PATH}/script.js").canonicalPath
-        def source  = file('src/main/kotlin').canonicalPath
+        def source  = file('src/main/kotlin/beholder').canonicalPath
 
         // TODO proper argument escaping if possible
         def command = "${kotlinc} -sourcemap -output ${out} -libraryFiles ${jsLib} -sourceFiles ${source}"

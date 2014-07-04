@@ -22,3 +22,5 @@ build/
 /src/main/resources/beholder/backend/web/kotlin-*.js
 /src/main/resources/beholder/backend/web/script.js
 /src/main/resources/beholder/backend/web/script.js.map
+
+/frontend/src/main/kotlin/kotlin-js-library

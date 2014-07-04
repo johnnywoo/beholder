@@ -11,7 +11,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.2.4'
 }
 
-tasks.compileKotlin.dependsOn 'frontend:compileJs'
+tasks.compileKotlin.dependsOn 'frontend:assemble'
 tasks.clean.dependsOn 'frontend:clean'
 
 jar {

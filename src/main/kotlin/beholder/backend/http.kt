@@ -25,22 +25,24 @@ import io.netty.handler.codec.http.FullHttpRequest
 import java.util.logging.Logger
 import java.util.logging.Level
 import io.netty.handler.codec.http.FullHttpResponse
-import io.netty.util.CharsetUtil
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.channel.ChannelHandler
 import java.util.HashMap
+import beholder.backend.WebsocketRouter
+import io.netty.util.CharsetUtil
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 
 fun startServer(port: Int, packageName: String) {
     val bossGroup   = NioEventLoopGroup(1)
     val workerGroup = NioEventLoopGroup()
     try {
         val b = ServerBootstrap()
+        val websocketRouter = WebsocketRouter()
         b.group(bossGroup, workerGroup)
             ?.channel(javaClass<NioServerSocketChannel>())
             //?.handler(LoggingHandler(LogLevel.INFO))
@@ -48,8 +50,15 @@ fun startServer(port: Int, packageName: String) {
                 WebsocketHttpHandler(),
                 StaticContentHandler(packageName + ".web"),
                 WebsocketHandler(),
+                websocketRouter,
                 ErrorHandler()
             )))
+
+        websocketRouter.onAction("echo", javaClass<String>(), {
+            ctx, action, data ->
+                val text = data as String
+                ctx.channel()?.writeAndFlush(TextWebSocketFrame(text))
+        })
 
         val ch = b.bind(port)?.sync()?.channel()
 
@@ -205,13 +214,7 @@ Sharable class WebsocketHandler : SimpleChannelInboundHandler<WebSocketFrame>() 
             return
         }
 
-        if (msg !is TextWebSocketFrame) {
-            ctx.fireChannelRead(msg?.retain())
-            return
-        }
-
-        val text = msg.text()
-        LOGGER.log(Level.INFO, "Incoming websocket frame: ${text}")
+        ctx.fireChannelRead(msg?.retain())
     }
 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {
@@ -270,14 +273,14 @@ fun ChannelHandlerContext.sendHttpResponse(request: FullHttpRequest?, content: S
     = this.sendHttpResponse(request, content.getBytes(), status, contentType)
 
 fun ChannelHandlerContext.sendHttpResponse(request: FullHttpRequest?, content: ByteArray, status: HttpResponseStatus = HttpResponseStatus.OK, contentType: String = "text/plain") {
-    val response = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.wrappedBuffer(content))
+    var response: FullHttpResponse
 
     // generate an error page if response.getStatus() is not OK (200) and content is empty
     val isBadStatus = !status.equals(HttpResponseStatus.OK)
     if (isBadStatus && content.isEmpty()) {
-        val buf = Unpooled.copiedBuffer(response.getStatus().toString(), CharsetUtil.UTF_8)
-        response.content()?.writeBytes(buf)
-        buf?.release()
+        response = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer(status.toString(), CharsetUtil.UTF_8))
+    } else {
+        response = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.wrappedBuffer(content))
     }
 
     // send the response and close the connection if necessary

@@ -1,4 +1,4 @@
-package beholder.backend
+package beholder.backend.http
 
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.SimpleChannelInboundHandler
@@ -7,7 +7,6 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.JsonElement
-import beholder.backend.http.tryNextHandler
 
 Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>() {
     class object {

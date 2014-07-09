@@ -1,4 +1,4 @@
-package beholder.backend
+package beholder.backend.http
 
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.SimpleChannelInboundHandler
@@ -8,10 +8,11 @@ import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.util.AttributeKey
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker
 import io.netty.handler.codec.http.HttpHeaders
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory
+
 import beholder.backend.http.isSuccess
 import beholder.backend.http.isMethodGet
-import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory
-import java.util.logging.Level
+import beholder.backend.log
 
 Sharable class WebSocketHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
     class object {
@@ -47,7 +48,7 @@ Sharable class WebSocketHttpHandler : SimpleChannelInboundHandler<FullHttpReques
         }
 
         handshaker.handshake(ctx?.channel(), msg)
-        logInfo("WebSocket handshaked, channel " + ctx?.channel().toString())
+        log("WebSocket handshaked, channel " + ctx?.channel().toString())
         ctx?.channel()?.attr(CHANNEL_ATTR_HANDSHAKER)?.set(handshaker)
     }
 

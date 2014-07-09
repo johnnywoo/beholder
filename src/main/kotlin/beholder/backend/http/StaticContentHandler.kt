@@ -1,15 +1,16 @@
-package beholder.backend
+package beholder.backend.http
 
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.FullHttpRequest
+import io.netty.handler.codec.http.HttpResponseStatus
+import java.util.HashMap
+
 import beholder.backend.http.isSuccess
 import beholder.backend.http.isMethodGet
 import beholder.backend.http.sendHttpResponse
-import io.netty.handler.codec.http.HttpResponseStatus
 import beholder.backend.http.addUriPathComponent
-import java.util.HashMap
 import beholder.backend.http.tryNextHandler
 
 Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleChannelInboundHandler<FullHttpRequest>() {

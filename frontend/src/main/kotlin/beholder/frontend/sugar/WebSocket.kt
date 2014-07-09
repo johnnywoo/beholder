@@ -12,9 +12,9 @@ native public class WebSocket(val url: String) {
     fun close() = noImpl
 
 
-    native open public class WebSocketEvent
+    open public class WebSocketEvent
 
-    native open public class WebSocketMessageEvent : WebSocketEvent() {
+    public class WebSocketMessageEvent : WebSocketEvent() {
         val data: String = noImpl
     }
 }

@@ -3,29 +3,24 @@ package beholder.backend.http
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.channel.ChannelHandler
+import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.channel.ChannelInitializer
-import io.netty.buffer.Unpooled
-import io.netty.channel.ChannelFutureListener
-import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.http.DefaultFullHttpResponse
-import io.netty.handler.codec.http.HttpResponseStatus
-import io.netty.handler.codec.http.HttpVersion
-import io.netty.handler.codec.http.HttpHeaders
-import io.netty.handler.codec.http.HttpHeaders.Names
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
+import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.HttpMethod
-import io.netty.channel.ChannelHandler
-import io.netty.util.CharsetUtil
-
-import beholder.backend.WebSocketRouter
-import beholder.backend.WebSocketHttpHandler
-import beholder.backend.StaticContentHandler
-import beholder.backend.ErrorHandler
 import io.netty.buffer.ByteBufHolder
+import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.DefaultFullHttpResponse
+import io.netty.handler.codec.http.HttpVersion
+import io.netty.buffer.Unpooled
+import io.netty.util.CharsetUtil
+import io.netty.handler.codec.http.HttpHeaders
+import io.netty.handler.codec.http.HttpHeaders.Names
+import io.netty.channel.ChannelFutureListener
 
 fun startServer(port: Int, packageName: String, webSocketRouter: WebSocketRouter) {
     val bossGroup   = NioEventLoopGroup(1)

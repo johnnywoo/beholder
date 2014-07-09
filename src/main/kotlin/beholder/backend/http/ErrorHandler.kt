@@ -1,14 +1,16 @@
-package beholder.backend
+package beholder.backend.http
 
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.SimpleChannelInboundHandler
 import java.util.logging.Logger
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.FullHttpRequest
-import beholder.backend.http.isSuccess
-import beholder.backend.http.sendHttpResponse
 import io.netty.handler.codec.http.HttpResponseStatus
 import java.util.logging.Level
+
+import beholder.backend.http.isSuccess
+import beholder.backend.http.sendHttpResponse
+import beholder.backend.logWarning
 
 Sharable class ErrorHandler : SimpleChannelInboundHandler<Any>() {
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: Any?) {

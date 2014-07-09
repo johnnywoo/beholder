@@ -3,6 +3,7 @@ package beholder.backend
 import beholder.backend.http.startServer
 import java.util.logging.Logger
 import java.util.logging.Level
+import beholder.backend.http.WebSocketRouter
 
 fun main(args: Array<String>) {
     if (args.size == 0) {
@@ -20,11 +21,8 @@ fun main(args: Array<String>) {
 }
 
 
-fun Any.logInfo(message: String)
+fun Any.log(message: String)
     = Logger.getLogger(this.javaClass.getName()).log(Level.INFO, message)
-
-fun Any.logWarning(message: String)
-    = Logger.getLogger(this.javaClass.getName()).log(Level.WARNING, message)
 
 fun Any.logWarning(message: String, cause: Throwable?)
     = Logger.getLogger(this.javaClass.getName()).log(Level.WARNING, message, cause)

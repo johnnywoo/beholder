@@ -1,4 +1,4 @@
-package beholder.backend
+package beholder.backend.http
 
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.SimpleChannelInboundHandler

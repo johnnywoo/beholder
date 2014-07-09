@@ -6,7 +6,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import com.google.gson.JsonElement
+import beholder.backend.api.Message
 
 Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>() {
     class object {
@@ -14,11 +14,11 @@ Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
         val JSON_PARSER = JsonParser()
     }
 
-    private class ActionListener(val parser: (JsonElement) -> Any, val callback: (ChannelHandlerContext, String, Any) -> String?)
+    private class ActionListener(val parser: (String) -> Any, val callback: (ChannelHandlerContext, Any) -> Message?)
 
     private val actionListeners: MutableMap<String, ActionListener> = hashMapOf()
 
-    fun onAction<T>(action: String, clazz: Class<T>, callback: (ChannelHandlerContext, String, Any) -> String?) {
+    fun onAction<T>(action: String, clazz: Class<T>, callback: (ChannelHandlerContext, Any) -> Message?) {
         actionListeners.put(action, ActionListener({ GSON.fromJson(it, clazz) as Any }, callback))
     }
 
@@ -32,34 +32,25 @@ Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
             return ctx.tryNextHandler(msg)
         }
 
-        val jsonElement = JSON_PARSER.parse(msg.text())
-        if (jsonElement == null || !jsonElement.isJsonObject()) {
+        val text = msg.text()
+        if (text == null) {
             return ctx.tryNextHandler(msg)
         }
 
-        val rootJsonObject = jsonElement.getAsJsonObject()
-
-        val action = rootJsonObject?.get("action")?.getAsString()
-        if (action == null) {
+        val message = GSON.fromJson(text, javaClass<Message>())
+        if (message == null) {
             return ctx.tryNextHandler(msg)
         }
 
-        val actionListener = actionListeners[action]
+        val actionListener = actionListeners[message.action]
         if (actionListener == null) {
             return ctx.tryNextHandler(msg)
         }
 
-        val dataJson = rootJsonObject?.get("data")
-        if (dataJson == null) {
-            return ctx.tryNextHandler(msg)
-        }
-        val response = actionListener.callback(ctx, action, actionListener.parser(dataJson))
+        val response = actionListener.callback(ctx, actionListener.parser(text))
         if (response != null) {
-            ctx.channel()?.writeAndFlush(TextWebSocketFrame(response))
-            return
+            ctx.channel()?.writeAndFlush(TextWebSocketFrame(GSON.toJson(response)))
         }
-
-        ctx.tryNextHandler(msg)
     }
 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {

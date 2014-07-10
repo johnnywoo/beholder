@@ -10,8 +10,9 @@ import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 import io.netty.util.AttributeKey
 import io.netty.channel.ChannelHandlerContext
+import beholder.backend.user.UserConfiguration
+import io.netty.channel.Channel
 
-val CHANNEL_ATTR_API_KEY: AttributeKey<String>? = AttributeKey.valueOf("apiKey")
 val clientChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
 
 fun main(args: Array<String>) {
@@ -23,34 +24,57 @@ fun main(args: Array<String>) {
     val websocketRouter = WebSocketRouter()
     websocketRouter.onAction("echo", javaClass<EchoMessage>(), {
         ctx, data ->
-            val channel = ctx.channel()
-            val apiKey = channel?.attr(CHANNEL_ATTR_API_KEY)?.get()
-            val text = if (apiKey == null) "not authorized" else (data as EchoMessage).data
+            val isRegistered = ctx.channel()?.isRegistered ?: false
+            val text = if (!isRegistered) "not authorized" else (data as EchoMessage).data
             EchoMessage(text)
     })
 
     websocketRouter.onAction("login", javaClass<LoginMessage>(), {
         ctx, data ->
-            loginAction(ctx, data as LoginMessage)
+            login(ctx, data as LoginMessage)
             null
     })
 
     startServer(args[0].toInt(), "beholder.backend", websocketRouter)
 }
 
-fun loginAction(ctx: ChannelHandlerContext, data: LoginMessage) {
-    val apiKey = data.apiKey
+fun login(ctx: ChannelHandlerContext, data: LoginMessage) {
     val channel = ctx.channel()
-    if (channel == null) {
+    if (channel == null || channel.isRegistered) {
         return
     }
-    channel.attr(CHANNEL_ATTR_API_KEY)?.set(apiKey)
+
+    val userConfiguration = findUserConfiguration(data.apiKey)
+    if (userConfiguration == null) {
+        return
+    }
+
+    channel.userConfiguration = userConfiguration
     clientChannelGroup.add(channel)
+}
+
+fun findUserConfiguration(apiKey: String): UserConfiguration? {
+    val userConfiguration = UserConfiguration()
+    userConfiguration.userName = apiKey
+    userConfiguration.apiKey = apiKey
+    return userConfiguration
 }
 
 
 fun Any.log(message: String)
     = Logger.getLogger(this.javaClass.getName()).log(Level.INFO, message)
-
 fun Any.logWarning(message: String, cause: Throwable?)
     = Logger.getLogger(this.javaClass.getName()).log(Level.WARNING, message, cause)
+
+val CHANNEL_ATTR_USER_CONFIGURATION: AttributeKey<UserConfiguration>? = AttributeKey.valueOf("userConfiguration")
+val Channel.isRegistered: Boolean
+    get() = this.attr(CHANNEL_ATTR_USER_CONFIGURATION)?.get() != null
+var Channel.userConfiguration: UserConfiguration?
+    get() = this.attr(CHANNEL_ATTR_USER_CONFIGURATION)?.get()
+    set(userConfiguration: UserConfiguration?) {
+        if (userConfiguration == null) {
+            this.attr(CHANNEL_ATTR_USER_CONFIGURATION)?.remove()
+        } else {
+            this.attr(CHANNEL_ATTR_USER_CONFIGURATION)?.set(userConfiguration)
+        }
+    }

@@ -69,6 +69,7 @@ Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleCh
             }
 
         fun getContent(): ByteArray {
+            // TODO cache this
             val inputStream = this.javaClass.getResourceAsStream(path)
             try {
                 return inputStream?.readBytes() ?: ByteArray(0)

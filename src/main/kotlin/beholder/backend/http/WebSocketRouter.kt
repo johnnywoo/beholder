@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import beholder.backend.api.Message
+import beholder.backend.fromJsonOrNull
 
 Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>() {
     class object {
@@ -14,12 +15,12 @@ Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
         val JSON_PARSER = JsonParser()
     }
 
-    private class ActionListener(val parser: (String) -> Any, val callback: (ChannelHandlerContext, Any) -> Message?)
+    private class ActionListener(val parser: (String) -> Any?, val callback: (ChannelHandlerContext, Any) -> Message?)
 
     private val actionListeners: MutableMap<String, ActionListener> = hashMapOf()
 
     fun onAction<T>(action: String, clazz: Class<T>, callback: (ChannelHandlerContext, Any) -> Message?) {
-        actionListeners.put(action, ActionListener({ GSON.fromJson(it, clazz) as Any }, callback))
+        actionListeners.put(action, ActionListener({ GSON.fromJsonOrNull(it, clazz) }, callback))
     }
 
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: TextWebSocketFrame?) {
@@ -37,7 +38,7 @@ Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
             return ctx.tryNextHandler(msg)
         }
 
-        val message = GSON.fromJson(text, javaClass<Message>())
+        val message = GSON.fromJsonOrNull(text, javaClass<Message>())
         if (message == null) {
             return ctx.tryNextHandler(msg)
         }
@@ -47,7 +48,12 @@ Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
             return ctx.tryNextHandler(msg)
         }
 
-        val response = actionListener.callback(ctx, actionListener.parser(text))
+        val data = actionListener.parser(text)
+        if (data == null) {
+            return ctx.tryNextHandler(msg)
+        }
+
+        val response = actionListener.callback(ctx, data)
         if (response != null) {
             ctx.channel()?.writeAndFlush(TextWebSocketFrame(GSON.toJson(response)))
         }

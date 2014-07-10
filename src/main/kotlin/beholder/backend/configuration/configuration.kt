@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import java.nio.file.Files
 import java.nio.file.Path
 import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
+import beholder.backend.fromJsonOrNull
 
 val GSON = Gson()
 
@@ -30,10 +30,4 @@ fun getUserConfiguration(apiKey: String): UserConfiguration? {
 }
 
 val Path.userConfiguration : UserConfiguration?
-    get() = try {
-        GSON.fromJson(
-            Files.newBufferedReader(this)?.use { it.readText() }, javaClass<UserConfiguration>()
-        )
-    } catch (e: JsonSyntaxException) {
-        null
-    }
+    get() = GSON.fromJsonOrNull(Files.newBufferedReader(this)?.use { it.readText() }, javaClass<UserConfiguration>())

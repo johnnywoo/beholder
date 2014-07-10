@@ -12,6 +12,8 @@ import io.netty.util.AttributeKey
 import io.netty.channel.ChannelHandlerContext
 import beholder.backend.user.UserConfiguration
 import beholder.backend.configuration.getUserConfiguration
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 
 val clientChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
 
@@ -61,6 +63,10 @@ fun Any.log(message: String)
     = Logger.getLogger(this.javaClass.getName()).log(Level.INFO, message)
 fun Any.logWarning(message: String, cause: Throwable?)
     = Logger.getLogger(this.javaClass.getName()).log(Level.WARNING, message, cause)
+
+[suppress("BASE_WITH_NULLABLE_UPPER_BOUND")] // TODO wtf?!
+fun Gson.fromJsonOrNull<T>(json: String?, classOfT: Class<T>): T?
+    = try { this.fromJson(json, classOfT) } catch (e: JsonSyntaxException) { null }
 
 val CHANNEL_ATTR_USER_CONFIGURATION: AttributeKey<UserConfiguration>? = AttributeKey.valueOf("userConfiguration")
 val ChannelHandlerContext.isRegistered: Boolean

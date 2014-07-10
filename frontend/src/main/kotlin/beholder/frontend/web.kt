@@ -19,7 +19,7 @@ fun main(args: Array<String>) {
         }
 
         webSocket.send("{\"action\": \"echo\", \"data\": \"hello world\"}")
-        webSocket.send("{\"action\": \"login\", \"apiKey\": \"apiKey1\"}")
+        webSocket.send("{\"action\": \"login\", \"apiKey\": \"user1\"}")
         webSocket.send("{\"action\": \"echo\", \"data\": \"hello world2\"}")
     }
 }

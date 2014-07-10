@@ -10,12 +10,13 @@ import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 import io.netty.util.AttributeKey
 import io.netty.channel.ChannelHandlerContext
-import beholder.backend.user.UserConfiguration
-import beholder.backend.configuration.getUserConfiguration
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import beholder.backend.config.Configuration
+import beholder.backend.config.UserConfiguration
 
 val clientChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
+val configuration      = Configuration("beholder")
 
 fun main(args: Array<String>) {
     if (args.size == 0) {
@@ -44,7 +45,7 @@ fun login(ctx: ChannelHandlerContext, data: LoginMessage) {
         return
     }
 
-    val userConfiguration = getUserConfiguration(data.apiKey)
+    val userConfiguration = configuration.getUserConfigurationByApiKey(data.apiKey)
     if (userConfiguration == null) {
         return
     }

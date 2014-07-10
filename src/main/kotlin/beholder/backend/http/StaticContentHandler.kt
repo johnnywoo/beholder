@@ -7,12 +7,6 @@ import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.HttpResponseStatus
 import java.util.HashMap
 
-import beholder.backend.http.isSuccess
-import beholder.backend.http.isMethodGet
-import beholder.backend.http.sendHttpResponse
-import beholder.backend.http.addUriPathComponent
-import beholder.backend.http.tryNextHandler
-
 Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleChannelInboundHandler<FullHttpRequest>() {
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
         if (ctx == null) {
@@ -70,12 +64,7 @@ Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleCh
 
         fun getContent(): ByteArray {
             // TODO cache this
-            val inputStream = this.javaClass.getResourceAsStream(path)
-            try {
-                return inputStream?.readBytes() ?: ByteArray(0)
-            } finally {
-                inputStream?.close()
-            }
+            return this.javaClass.getResourceAsStream(path)?.use { it.readBytes() } ?: ByteArray(0)
         }
     }
 }

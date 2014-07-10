@@ -11,7 +11,7 @@ import io.netty.util.concurrent.GlobalEventExecutor
 import io.netty.util.AttributeKey
 import io.netty.channel.ChannelHandlerContext
 import beholder.backend.user.UserConfiguration
-import io.netty.channel.Channel
+import beholder.backend.configuration.getUserConfiguration
 
 val clientChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
 
@@ -42,7 +42,7 @@ fun login(ctx: ChannelHandlerContext, data: LoginMessage) {
         return
     }
 
-    val userConfiguration = findUserConfiguration(data.apiKey)
+    val userConfiguration = getUserConfiguration(data.apiKey)
     if (userConfiguration == null) {
         return
     }
@@ -54,13 +54,6 @@ fun login(ctx: ChannelHandlerContext, data: LoginMessage) {
         return
     }
     clientChannelGroup.add(channel)
-}
-
-fun findUserConfiguration(apiKey: String): UserConfiguration? {
-    val userConfiguration = UserConfiguration()
-    userConfiguration.userName = apiKey
-    userConfiguration.apiKey = apiKey
-    return userConfiguration
 }
 
 

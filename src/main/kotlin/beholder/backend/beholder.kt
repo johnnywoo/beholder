@@ -24,8 +24,7 @@ fun main(args: Array<String>) {
     val websocketRouter = WebSocketRouter()
     websocketRouter.onAction("echo", javaClass<EchoMessage>(), {
         ctx, data ->
-            val isRegistered = ctx.channel()?.isRegistered ?: false
-            val text = if (!isRegistered) "not authorized" else (data as EchoMessage).data
+            val text = if (!ctx.isRegistered) "not authorized" else (data as EchoMessage).data
             EchoMessage(text)
     })
 
@@ -39,8 +38,7 @@ fun main(args: Array<String>) {
 }
 
 fun login(ctx: ChannelHandlerContext, data: LoginMessage) {
-    val channel = ctx.channel()
-    if (channel == null || channel.isRegistered) {
+    if (ctx.isRegistered) {
         return
     }
 
@@ -49,7 +47,12 @@ fun login(ctx: ChannelHandlerContext, data: LoginMessage) {
         return
     }
 
-    channel.userConfiguration = userConfiguration
+    ctx.userConfiguration = userConfiguration
+
+    val channel = ctx.channel()
+    if (channel == null) {
+        return
+    }
     clientChannelGroup.add(channel)
 }
 
@@ -67,9 +70,9 @@ fun Any.logWarning(message: String, cause: Throwable?)
     = Logger.getLogger(this.javaClass.getName()).log(Level.WARNING, message, cause)
 
 val CHANNEL_ATTR_USER_CONFIGURATION: AttributeKey<UserConfiguration>? = AttributeKey.valueOf("userConfiguration")
-val Channel.isRegistered: Boolean
-    get() = this.attr(CHANNEL_ATTR_USER_CONFIGURATION)?.get() != null
-var Channel.userConfiguration: UserConfiguration?
+val ChannelHandlerContext.isRegistered: Boolean
+    get() = this.hasAttr(CHANNEL_ATTR_USER_CONFIGURATION)
+var ChannelHandlerContext.userConfiguration: UserConfiguration?
     get() = this.attr(CHANNEL_ATTR_USER_CONFIGURATION)?.get()
     set(userConfiguration: UserConfiguration?) {
         if (userConfiguration == null) {

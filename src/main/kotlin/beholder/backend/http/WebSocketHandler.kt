@@ -11,8 +11,8 @@ import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 
 Sharable class WebSocketHandler : SimpleChannelInboundHandler<WebSocketFrame>() {
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: WebSocketFrame?) {
-        val handshaker = ctx!!.channel()?.attr(WebSocketHttpHandler.CHANNEL_ATTR_HANDSHAKER)?.get()
-        if (handshaker == null) {
+        val handshaker = ctx?.attr(WebSocketHttpHandler.CHANNEL_ATTR_HANDSHAKER)?.get()
+        if (ctx == null || handshaker == null) {
             throw RuntimeException("No handshaker for incoming websocket frame")
         }
 

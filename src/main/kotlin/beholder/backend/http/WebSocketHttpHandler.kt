@@ -49,7 +49,7 @@ Sharable class WebSocketHttpHandler : SimpleChannelInboundHandler<FullHttpReques
 
         handshaker.handshake(ctx?.channel(), msg)
         log("WebSocket handshaked, channel " + ctx?.channel().toString())
-        ctx?.channel()?.attr(CHANNEL_ATTR_HANDSHAKER)?.set(handshaker)
+        ctx?.attr(CHANNEL_ATTR_HANDSHAKER)?.set(handshaker)
     }
 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {

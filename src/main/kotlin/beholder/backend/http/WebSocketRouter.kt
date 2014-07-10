@@ -23,7 +23,7 @@ Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
     }
 
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: TextWebSocketFrame?) {
-        val handshaker = ctx?.channel()?.attr(WebSocketHttpHandler.CHANNEL_ATTR_HANDSHAKER)?.get()
+        val handshaker = ctx?.attr(WebSocketHttpHandler.CHANNEL_ATTR_HANDSHAKER)?.get()
         if (ctx == null || handshaker == null) {
             throw RuntimeException("No handshaker for incoming websocket frame")
         }

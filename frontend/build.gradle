@@ -27,7 +27,7 @@ tasks.assemble.dependsOn 'compileJs'
 tasks.assemble.dependsOn 'setupKotlinJsLibraryForIdea'
 
 tasks.clean.dependsOn 'cleanFrontend'
-task cleanFrontent {
+task cleanFrontend {
     dependsOn 'cleanBundledKotlinJs'
     dependsOn 'cleanCompiledJs'
     dependsOn 'cleanKotlinJsLibraryForIdea'

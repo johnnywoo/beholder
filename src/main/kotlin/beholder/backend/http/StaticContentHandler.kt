@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.HttpResponseStatus
 import java.util.HashMap
+import java.io.IOException
 
 Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleChannelInboundHandler<FullHttpRequest>() {
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
@@ -64,7 +65,7 @@ Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleCh
 
         fun getContent(): ByteArray {
             // TODO cache this
-            return this.javaClass.getResourceAsStream(path)?.use { it.readBytes() } ?: ByteArray(0)
+            return try { this.javaClass.getResourceAsStream(path)?.use { it.readBytes() } } catch (e: IOException) { null } ?: ByteArray(0)
         }
     }
 }

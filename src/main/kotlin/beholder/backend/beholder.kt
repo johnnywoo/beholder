@@ -60,14 +60,6 @@ fun login(ctx: ChannelHandlerContext, data: LoginMessage) {
 }
 
 
-fun Any.log(message: String)
-    = Logger.getLogger(this.javaClass.getName()).log(Level.INFO, message)
-fun Any.logWarning(message: String, cause: Throwable?)
-    = Logger.getLogger(this.javaClass.getName()).log(Level.WARNING, message, cause)
-
-fun Gson.fromJsonOrNull<T : Any>(json: String?, classOfT: Class<T>): T?
-    = try { this.fromJson(json, classOfT) } catch (e: JsonSyntaxException) { null }
-
 val CHANNEL_ATTR_USER_CONFIGURATION: AttributeKey<UserConfiguration>? = AttributeKey.valueOf("userConfiguration")
 val ChannelHandlerContext.isRegistered: Boolean
     get() = this.hasAttr(CHANNEL_ATTR_USER_CONFIGURATION)

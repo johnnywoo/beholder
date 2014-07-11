@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.HttpResponseStatus
 import java.util.HashMap
 import java.io.IOException
+import beholder.backend.addUriPathComponent
 
 Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleChannelInboundHandler<FullHttpRequest>() {
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
@@ -15,7 +16,7 @@ Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleCh
         }
 
         if (msg != null && msg.isSuccess && msg.isMethodGet) {
-            val uri     = msg.getUri()?.substringBefore("?") ?: ""
+            val uri     = msg.uri()?.substringBefore("?") ?: ""
             val fileUri = if (getStaticResource(uri) != null) uri else uri.addUriPathComponent("index.html")
 
             val resource = getStaticResource(fileUri)

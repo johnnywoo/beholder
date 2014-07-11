@@ -4,9 +4,8 @@ import com.google.gson.Gson
 import java.nio.file.Files
 import java.nio.file.Path
 import beholder.backend.fromJsonOrNull
-import java.io.IOException
 import java.nio.file.Paths
-import java.nio.charset.Charset
+import beholder.backend.getFileContents
 
 class Configuration(val packageName: String) {
     val GSON = Gson();
@@ -47,12 +46,4 @@ class Configuration(val packageName: String) {
 
     fun getUserConfigurationByApiKey(apiKey: String): UserConfiguration?
         = userConfigurations.firstOrNull { it.apiKey == apiKey }
-}
-
-fun getFileContents(path: Path, charset: Charset = defaultCharset): String? {
-    try {
-        return Files.newBufferedReader(path, charset).use { it.readText() }
-    } catch (e: IOException) {
-        return null
-    }
 }

@@ -67,14 +67,11 @@ class ServerInitializer(val handlers: List<ChannelHandler>) : ChannelInitializer
 // SUGAR
 //
 
-fun String.addUriPathComponent(component: String)
-    = this + (if (this.endsWith("/")) "" else "/") + component
-
 val FullHttpRequest.isSuccess: Boolean
-    get() = this.getDecoderResult()?.isSuccess() ?: false
+    get() = this.decoderResult()?.isSuccess() ?: false
 
 val FullHttpRequest.isMethodGet: Boolean
-    get() = this.getMethod()?.equals(HttpMethod.GET) ?: false
+    get() = this.method()?.equals(HttpMethod.GET) ?: false
 
 
 val FullHttpResponse.contentLength: Long

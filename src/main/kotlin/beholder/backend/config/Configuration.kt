@@ -8,6 +8,7 @@ import java.nio.file.Paths
 import beholder.backend.getFileContents
 import beholder.backend.putFileContents
 import beholder.backend.log
+import beholder.backend.makeRandomString
 
 class Configuration(val packageName: String) {
     val port = 3822
@@ -31,8 +32,7 @@ class Configuration(val packageName: String) {
                         val fileName = it.getFileName()?.toString()
                         if (fileName != null) {
                             userConfiguration.userName = fileName.substring(0, fileName.length - ".json".length)
-                            // TODO generate apiKey
-                            userConfiguration.apiKey = userConfiguration.userName
+                            userConfiguration.apiKey   = makeRandomString(32)
                             configurations.add(userConfiguration)
                         }
                     }

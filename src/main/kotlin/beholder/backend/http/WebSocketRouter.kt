@@ -8,18 +8,22 @@ import com.google.gson.Gson
 import com.google.gson.JsonParser
 import beholder.backend.api.Message
 import beholder.backend.fromJsonOrNull
+import beholder.backend.config.UserConfiguration
+import beholder.backend.GSON
+import io.netty.util.AttributeKey
+import io.netty.channel.group.DefaultChannelGroup
+import io.netty.util.concurrent.GlobalEventExecutor
 
 Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>() {
     class object {
-        val GSON        = Gson()
         val JSON_PARSER = JsonParser()
     }
 
-    private class ActionListener(val parser: (String) -> Any?, val callback: (ChannelHandlerContext, Any) -> Message?)
+    private class ActionListener(val parser: (String) -> Any?, val callback: (Connection, Any) -> Unit)
 
     private val actionListeners: MutableMap<String, ActionListener> = hashMapOf()
 
-    fun onAction<T>(action: String, clazz: Class<T>, callback: (ChannelHandlerContext, Any) -> Message?) {
+    fun onAction<T>(action: String, clazz: Class<T>, callback: (Connection, Any) -> Unit) {
         actionListeners.put(action, ActionListener({ GSON.fromJsonOrNull(it, clazz) }, callback))
     }
 
@@ -53,10 +57,7 @@ Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
             return ctx.tryNextHandler(msg)
         }
 
-        val response = actionListener.callback(ctx, data)
-        if (response != null) {
-            ctx.channel()?.writeAndFlush(TextWebSocketFrame(GSON.toJson(response)))
-        }
+        actionListener.callback(Connection(ctx), data)
     }
 
     override fun channelReadComplete(ctx: ChannelHandlerContext?) {

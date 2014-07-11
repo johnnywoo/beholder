@@ -1,18 +1,16 @@
 package beholder.backend
 
-import beholder.backend.http.startServer
-import beholder.backend.http.WebSocketRouter
 import beholder.backend.api.EchoMessage
 import beholder.backend.api.LoginMessage
-import io.netty.channel.group.DefaultChannelGroup
-import io.netty.util.concurrent.GlobalEventExecutor
-import io.netty.util.AttributeKey
-import io.netty.channel.ChannelHandlerContext
 import beholder.backend.config.Configuration
 import beholder.backend.config.UserConfiguration
+import beholder.backend.http.Server
+import com.google.gson.Gson
+import beholder.backend.http.Connection
 
-val clientChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
-val configuration      = Configuration("beholder")
+val GSON = Gson()
+
+val configuration = Configuration("beholder")
 
 fun main(args: Array<String>) {
     if (args.size == 0) {
@@ -39,20 +37,24 @@ fun getArg(args: Array<String>, index: Int): String? {
 }
 
 fun daemon() {
-    val websocketRouter = WebSocketRouter()
-    websocketRouter.onAction("echo", javaClass<EchoMessage>(), {
-        ctx, data ->
-            val text = if (!ctx.isRegistered) "not authorized" else (data as EchoMessage).data
-            EchoMessage(text)
+    val server = Server(configuration.port, "beholder.backend")
+
+    server.onAction("login", javaClass<LoginMessage>(), {
+        connection, data ->
+            if (!connection.isAuthorized && data is LoginMessage) {
+                val userConfiguration = configuration.getUserConfigurationByApiKey(data.apiKey)
+                if (userConfiguration != null) {
+                    connection.user = userConfiguration
+                }
+            }
     })
 
-    websocketRouter.onAction("login", javaClass<LoginMessage>(), {
-        ctx, data ->
-            login(ctx, data as LoginMessage)
-            null
+    server.onAction("echo", javaClass<EchoMessage>(), restictedAction {
+        connection, data ->
+            connection.send(EchoMessage((data as EchoMessage).data))
     })
 
-    startServer(configuration.port, "beholder.backend", websocketRouter)
+    server.start()
 }
 
 fun createUser(userName: String?, password: String?) {
@@ -67,35 +69,5 @@ fun createUser(userName: String?, password: String?) {
     configuration.saveUserConfiguration(userConfiguration)
 }
 
-fun login(ctx: ChannelHandlerContext, data: LoginMessage) {
-    if (ctx.isRegistered) {
-        return
-    }
-
-    val userConfiguration = configuration.getUserConfigurationByApiKey(data.apiKey)
-    if (userConfiguration == null) {
-        return
-    }
-
-    ctx.userConfiguration = userConfiguration
-
-    val channel = ctx.channel()
-    if (channel == null) {
-        return
-    }
-    clientChannelGroup.add(channel)
-}
-
-
-val CHANNEL_ATTR_USER_CONFIGURATION: AttributeKey<UserConfiguration>? = AttributeKey.valueOf("userConfiguration")
-val ChannelHandlerContext.isRegistered: Boolean
-    get() = this.hasAttr(CHANNEL_ATTR_USER_CONFIGURATION)
-var ChannelHandlerContext.userConfiguration: UserConfiguration?
-    get() = this.attr(CHANNEL_ATTR_USER_CONFIGURATION)?.get()
-    set(userConfiguration: UserConfiguration?) {
-        if (userConfiguration == null) {
-            this.attr(CHANNEL_ATTR_USER_CONFIGURATION)?.remove()
-        } else {
-            this.attr(CHANNEL_ATTR_USER_CONFIGURATION)?.set(userConfiguration)
-        }
-    }
+fun restictedAction(block: (Connection, Any) -> Unit): (Connection, Any) -> Unit
+    = { connection, data -> if (connection.isAuthorized) block(connection, data) }

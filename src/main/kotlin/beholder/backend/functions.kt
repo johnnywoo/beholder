@@ -8,6 +8,8 @@ import java.nio.file.Path
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.io.IOException
+import java.security.SecureRandom
+import java.math.BigInteger
 
 fun Any.log(message: String)
     = Logger.getLogger(this.javaClass.getName()).log(Level.INFO, message)
@@ -19,6 +21,10 @@ fun Gson.fromJsonOrNull<T : Any>(json: String?, classOfT: Class<T>): T?
 
 fun String.addUriPathComponent(component: String)
     = this + (if (this.endsWith("/")) "" else "/") + component
+
+private val random = SecureRandom()
+fun makeRandomString(length: Int)
+    = BigInteger(5 * length, SecureRandom()).toString(32) // TODO this does not actually guarantee correct length
 
 fun getFileContents(path: Path, charset: Charset = defaultCharset): String? {
     try {

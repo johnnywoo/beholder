@@ -22,34 +22,6 @@ import io.netty.handler.codec.http.HttpHeaders
 import io.netty.handler.codec.http.HttpHeaders.Names
 import io.netty.channel.ChannelFutureListener
 
-fun startServer(port: Int, packageName: String, webSocketRouter: WebSocketRouter) {
-    val bossGroup   = NioEventLoopGroup(1)
-    val workerGroup = NioEventLoopGroup()
-    try {
-        val b = ServerBootstrap()
-        b.group(bossGroup, workerGroup)
-            ?.channel(javaClass<NioServerSocketChannel>())
-            //?.handler(LoggingHandler(LogLevel.INFO))
-            ?.childHandler(ServerInitializer(arrayListOf(
-                WebSocketHttpHandler(),
-                BasicAuthHandler(),
-                StaticContentHandler(packageName + ".web"),
-                WebSocketHttpHandler(),
-                webSocketRouter,
-                ErrorHandler()
-            )))
-
-        val ch = b.bind(port)?.sync()?.channel()
-
-        println("Started HTTP server at 127.0.0.1:$port");
-
-        ch?.closeFuture()?.sync()
-    } finally {
-        bossGroup.shutdownGracefully()
-        workerGroup.shutdownGracefully()
-    }
-}
-
 class ServerInitializer(val handlers: List<ChannelHandler>) : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel?): Unit {
         val p = ch?.pipeline()

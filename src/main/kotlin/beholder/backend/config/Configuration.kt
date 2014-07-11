@@ -6,6 +6,7 @@ import java.nio.file.Path
 import beholder.backend.fromJsonOrNull
 import java.io.IOException
 import java.nio.file.Paths
+import java.nio.charset.Charset
 
 class Configuration(val packageName: String) {
     val GSON = Gson();
@@ -30,7 +31,7 @@ class Configuration(val packageName: String) {
         val configurations: MutableList<UserConfiguration> = arrayListOf()
         Files.newDirectoryStream(path, "*.json")?.use {
             it.forEach {
-                val userConfiguration = GSON.fromJsonOrNull(it.text, javaClass<beholder.backend.config.UserConfiguration>())
+                val userConfiguration = GSON.fromJsonOrNull(getFileContents(it), javaClass<UserConfiguration>())
                 if (userConfiguration != null) {
                     // TODO generate apiKey
                     userConfiguration.apiKey = userConfiguration.userName
@@ -41,10 +42,17 @@ class Configuration(val packageName: String) {
         return configurations
     }
 
-    private fun getUsersPath(): Path? = Paths.get(System.getProperty("user.home") ?: ".", "." + packageName, "users")
+    private fun getUsersPath(): Path?
+        = Paths.get(System.getProperty("user.home") ?: ".", "." + packageName, "users")
 
-    fun getUserConfigurationByApiKey(apiKey: String): UserConfiguration? = userConfigurations.firstOrNull { it.apiKey == apiKey }
+    fun getUserConfigurationByApiKey(apiKey: String): UserConfiguration?
+        = userConfigurations.firstOrNull { it.apiKey == apiKey }
 }
 
-val Path.text : String?
-    get() = try { Files.newBufferedReader(this)?.use { it.readText() } } catch (e: IOException) { null }
+fun getFileContents(path: Path, charset: Charset = defaultCharset): String? {
+    try {
+        return Files.newBufferedReader(path, charset).use { it.readText() }
+    } catch (e: IOException) {
+        return null
+    }
+}

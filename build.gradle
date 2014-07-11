@@ -14,6 +14,8 @@ dependencies {
 tasks.compileKotlin.dependsOn 'frontend:assemble'
 tasks.clean.dependsOn 'frontend:clean'
 
+defaultTasks 'assemble'
+
 jar {
     manifest {
         attributes "Main-Class": 'beholder.backend.BackendPackage'

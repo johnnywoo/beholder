@@ -2,6 +2,6 @@
 
 set -e
 
-./gradlew assemble
+./gradlew
 
 java -jar build/libs/beholder.jar 3822

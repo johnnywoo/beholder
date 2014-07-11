@@ -7,7 +7,7 @@ import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 import beholder.backend.api.Message
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
-import beholder.backend.GSON
+import beholder.backend.gson
 
 class Connection(val ctx: ChannelHandlerContext) {
     class object {
@@ -15,7 +15,8 @@ class Connection(val ctx: ChannelHandlerContext) {
         val clientChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
     }
 
-    val isAuthorized = user != null
+    fun isAuthorized()
+        = user != null
 
     var user: UserConfiguration?
         get() = ctx.attr(channelAttrUserConfiguration)?.get()
@@ -28,6 +29,6 @@ class Connection(val ctx: ChannelHandlerContext) {
         }
 
     fun send(message: Message) {
-        ctx.channel()?.writeAndFlush(TextWebSocketFrame(GSON.toJson(message)))
+        ctx.channel()?.writeAndFlush(TextWebSocketFrame(gson.toJson(message)))
     }
 }

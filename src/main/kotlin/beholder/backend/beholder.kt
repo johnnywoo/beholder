@@ -8,7 +8,7 @@ import beholder.backend.http.Server
 import com.google.gson.Gson
 import beholder.backend.http.Connection
 
-val GSON = Gson()
+val gson = Gson()
 
 val configuration = Configuration("beholder")
 
@@ -41,7 +41,7 @@ fun daemon() {
 
     server.onAction("login", javaClass<LoginMessage>(), {
         connection, data ->
-            if (!connection.isAuthorized && data is LoginMessage) {
+            if (!connection.isAuthorized() && data is LoginMessage) {
                 val userConfiguration = configuration.getUserConfigurationByApiKey(data.apiKey)
                 if (userConfiguration != null) {
                     connection.user = userConfiguration
@@ -70,4 +70,4 @@ fun createUser(userName: String?, password: String?) {
 }
 
 fun restictedAction(block: (Connection, Any) -> Unit): (Connection, Any) -> Unit
-    = { connection, data -> if (connection.isAuthorized) block(connection, data) }
+    = { connection, data -> if (connection.isAuthorized()) block(connection, data) }

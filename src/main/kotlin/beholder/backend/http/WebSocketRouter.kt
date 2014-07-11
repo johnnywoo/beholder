@@ -9,7 +9,7 @@ import com.google.gson.JsonParser
 import beholder.backend.api.Message
 import beholder.backend.fromJsonOrNull
 import beholder.backend.config.UserConfiguration
-import beholder.backend.GSON
+import beholder.backend.gson
 import io.netty.util.AttributeKey
 import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
@@ -24,7 +24,7 @@ Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
     private val actionListeners: MutableMap<String, ActionListener> = hashMapOf()
 
     fun onAction<T>(action: String, clazz: Class<T>, callback: (Connection, Any) -> Unit) {
-        actionListeners.put(action, ActionListener({ GSON.fromJsonOrNull(it, clazz) }, callback))
+        actionListeners.put(action, ActionListener({ gson.fromJsonOrNull(it, clazz) }, callback))
     }
 
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: TextWebSocketFrame?) {
@@ -42,7 +42,7 @@ Sharable class WebSocketRouter : SimpleChannelInboundHandler<TextWebSocketFrame>
             return ctx.tryNextHandler(msg)
         }
 
-        val message = GSON.fromJsonOrNull(text, javaClass<Message>())
+        val message = gson.fromJsonOrNull(text, javaClass<Message>())
         if (message == null) {
             return ctx.tryNextHandler(msg)
         }

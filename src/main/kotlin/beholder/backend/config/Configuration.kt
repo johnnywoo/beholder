@@ -9,11 +9,11 @@ import beholder.backend.getFileContents
 import beholder.backend.putFileContents
 import beholder.backend.log
 import beholder.backend.makeRandomString
+import beholder.backend.gson
 
 class Configuration(val packageName: String) {
     val port = 3822
 
-    private val GSON = Gson()
     private val userConfigurations: List<UserConfiguration> = loadUserConfigurations()
 
     private fun loadUserConfigurations(): List<UserConfiguration> {
@@ -27,7 +27,7 @@ class Configuration(val packageName: String) {
         if (Files.exists(usersPath)) {
             Files.newDirectoryStream(usersPath, "*.json")?.use {
                 it.forEach {
-                    val userConfiguration = GSON.fromJsonOrNull(getFileContents(it), javaClass<UserConfiguration>())
+                    val userConfiguration = gson.fromJsonOrNull(getFileContents(it), javaClass<UserConfiguration>())
                     if (userConfiguration != null) {
                         val fileName = it.getFileName()?.toString()
                         if (fileName != null) {
@@ -52,7 +52,7 @@ class Configuration(val packageName: String) {
         = userConfigurations.firstOrNull { it.apiKey == apiKey }
 
     fun saveUserConfiguration(configuration: UserConfiguration) {
-        val text = GSON.toJson(configuration)
+        val text = gson.toJson(configuration)
         if (text == null) {
             return
         }

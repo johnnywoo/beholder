@@ -65,8 +65,7 @@ fun Any.log(message: String)
 fun Any.logWarning(message: String, cause: Throwable?)
     = Logger.getLogger(this.javaClass.getName()).log(Level.WARNING, message, cause)
 
-[suppress("BASE_WITH_NULLABLE_UPPER_BOUND")] // TODO wtf?!
-fun Gson.fromJsonOrNull<T>(json: String?, classOfT: Class<T>): T?
+fun Gson.fromJsonOrNull<T : Any>(json: String?, classOfT: Class<T>): T?
     = try { this.fromJson(json, classOfT) } catch (e: JsonSyntaxException) { null }
 
 val CHANNEL_ATTR_USER_CONFIGURATION: AttributeKey<UserConfiguration>? = AttributeKey.valueOf("userConfiguration")

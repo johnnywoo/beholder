@@ -45,6 +45,9 @@ class Configuration(val packageName: String) {
     private fun getUsersPath(): Path?
         = Paths.get(System.getProperty("user.home") ?: ".", "." + packageName, "users")
 
+    fun getUserConfiguration(userName: String)
+        = userConfigurations.firstOrNull { it.userName == userName }
+
     fun getUserConfigurationByApiKey(apiKey: String): UserConfiguration?
         = userConfigurations.firstOrNull { it.apiKey == apiKey }
 

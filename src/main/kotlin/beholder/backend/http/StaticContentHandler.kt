@@ -8,7 +8,9 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import java.util.HashMap
 import java.io.IOException
 import beholder.backend.addUriPathComponent
+import beholder.backend.userConfiguration
 
+// TODO not only static content
 Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleChannelInboundHandler<FullHttpRequest>() {
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: FullHttpRequest?) {
         if (ctx == null) {
@@ -21,7 +23,17 @@ Sharable class StaticContentHandler(val resourcesPackageName: String) : SimpleCh
 
             val resource = getStaticResource(fileUri)
             if (resource != null) {
-                ctx.sendHttpResponse(msg, resource.getContent(), HttpResponseStatus.OK, resource.getContentType())
+                if (fileUri == "/index.html") {
+                    val template = resource.getContent().toString(defaultCharset)
+                    val apiKey = ctx.userConfiguration?.apiKey
+                    if (apiKey == null) {
+                        ctx.tryNextHandler(msg)
+                        return
+                    }
+                    ctx.sendHttpResponse(msg, template.replace("{apiKey}", apiKey), HttpResponseStatus.OK, resource.getContentType())
+                } else {
+                    ctx.sendHttpResponse(msg, resource.getContent(), HttpResponseStatus.OK, resource.getContentType())
+                }
                 return
             }
         }

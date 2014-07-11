@@ -32,6 +32,7 @@ fun startServer(port: Int, packageName: String, webSocketRouter: WebSocketRouter
             //?.handler(LoggingHandler(LogLevel.INFO))
             ?.childHandler(ServerInitializer(arrayListOf(
                 WebSocketHttpHandler(),
+                BasicAuthHandler(),
                 StaticContentHandler(packageName + ".web"),
                 WebSocketHttpHandler(),
                 webSocketRouter,

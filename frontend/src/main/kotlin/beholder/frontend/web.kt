@@ -2,6 +2,9 @@ package beholder.frontend
 
 import js.dom.html.*
 import beholder.frontend.sugar.WebSocket
+import js.native
+
+native val beholderApiKey: String = js.noImpl
 
 fun main(args: Array<String>) {
     println("Our location: " + window.location.href) // this now goes to the console
@@ -19,7 +22,7 @@ fun main(args: Array<String>) {
         }
 
         webSocket.send("{\"action\": \"echo\", \"data\": \"hello world\"}")
-        webSocket.send("{\"action\": \"login\", \"apiKey\": \"user1\"}")
+        webSocket.send("{\"action\": \"login\", \"apiKey\": \"$beholderApiKey\"}")
         webSocket.send("{\"action\": \"echo\", \"data\": \"hello world2\"}")
     }
 }

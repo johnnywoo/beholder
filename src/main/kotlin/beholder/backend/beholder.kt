@@ -1,8 +1,6 @@
 package beholder.backend
 
 import beholder.backend.http.startServer
-import java.util.logging.Logger
-import java.util.logging.Level
 import beholder.backend.http.WebSocketRouter
 import beholder.backend.api.EchoMessage
 import beholder.backend.api.LoginMessage
@@ -10,8 +8,6 @@ import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 import io.netty.util.AttributeKey
 import io.netty.channel.ChannelHandlerContext
-import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
 import beholder.backend.config.Configuration
 import beholder.backend.config.UserConfiguration
 
@@ -20,10 +16,29 @@ val configuration      = Configuration("beholder")
 
 fun main(args: Array<String>) {
     if (args.size == 0) {
-        System.err.println("Usage: beholder.jar <port>")
+        System.err.println("Usage: beholder.sh (daemon|user)")
         System.exit(1)
     }
 
+    val command = args[0]
+    when (command) {
+        "daemon" -> daemon()
+        "user" -> createUser(getArg(args, 1), getArg(args, 2))
+        else -> {
+            System.err.println("Usage: beholder.sh (daemon|user)")
+            System.exit(1)
+        }
+    }
+}
+
+fun getArg(args: Array<String>, index: Int): String? {
+    if (args.size > index) {
+        return args[index]
+    }
+    return null
+}
+
+fun daemon() {
     val websocketRouter = WebSocketRouter()
     websocketRouter.onAction("echo", javaClass<EchoMessage>(), {
         ctx, data ->
@@ -37,7 +52,19 @@ fun main(args: Array<String>) {
             null
     })
 
-    startServer(args[0].toInt(), "beholder.backend", websocketRouter)
+    startServer(configuration.port, "beholder.backend", websocketRouter)
+}
+
+fun createUser(userName: String?, password: String?) {
+    if (userName == null || password == null) {
+        System.err.println("Usage: beholder.sh user <username> <password>")
+        System.exit(1)
+        return
+    }
+    val userConfiguration = UserConfiguration()
+    userConfiguration.userName = userName
+    userConfiguration.password = password
+    configuration.saveUserConfiguration(userConfiguration)
 }
 
 fun login(ctx: ChannelHandlerContext, data: LoginMessage) {

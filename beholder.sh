@@ -4,4 +4,4 @@ set -e
 
 ./gradlew
 
-java -jar build/libs/beholder.jar 3822
+java -jar build/libs/beholder.jar "$@"

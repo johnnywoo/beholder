@@ -27,3 +27,7 @@ fun getFileContents(path: Path, charset: Charset = defaultCharset): String? {
         return null
     }
 }
+
+fun putFileContents(path: Path, content: String, charset: Charset = defaultCharset) {
+    Files.newBufferedWriter(path, charset).use { it.write(content) }
+}

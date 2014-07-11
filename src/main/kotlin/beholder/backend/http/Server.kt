@@ -3,8 +3,9 @@ package beholder.backend.http
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import beholder.backend.config.Configuration
 
-class Server(val port: Int, val packageName: String) {
+class Server(val configuration: Configuration, val packageName: String) {
     val webSocketRouter = WebSocketRouter()
 
     fun onAction<T>(action: String, clazz: Class<T>, callback: (Connection, Any) -> Unit) {
@@ -21,16 +22,16 @@ class Server(val port: Int, val packageName: String) {
                 //?.handler(LoggingHandler(LogLevel.INFO))
                 ?.childHandler(ServerInitializer(arrayListOf(
                     WebSocketHttpHandler(),
-                    BasicAuthHandler(),
+                    BasicAuthHandler({ login, password -> configuration.getUserConfiguration(login)?.apiKey }),
                     StaticContentHandler(packageName + ".web"),
                     WebSocketHttpHandler(),
                     webSocketRouter,
                     ErrorHandler()
                 )))
 
-            val ch = b.bind(port)?.sync()?.channel()
+            val ch = b.bind(configuration.port)?.sync()?.channel()
 
-            println("Started HTTP server at 127.0.0.1:$port");
+            println("Started HTTP server at 127.0.0.1:" + configuration.port);
 
             ch?.closeFuture()?.sync()
         } finally {

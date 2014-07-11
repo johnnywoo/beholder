@@ -13,31 +13,33 @@ val gson = Gson()
 val configuration = Configuration("beholder")
 
 fun main(args: Array<String>) {
-    if (args.size == 0) {
-        System.err.println("Usage: beholder.sh (daemon|user)")
-        System.exit(1)
-    }
+    when (getItemOrNull(args, 0)) {
+        "daemon" -> {
+            daemon()
+        }
 
-    val command = args[0]
-    when (command) {
-        "daemon" -> daemon()
-        "user" -> createUser(getArg(args, 1), getArg(args, 2))
+        "user" -> {
+            val userName = getItemOrNull(args, 1)
+            val password = getItemOrNull(args, 2)
+            if (userName == null || password == null) {
+                System.err.println("Usage: beholder.sh user <username> <password>")
+                System.exit(1)
+                return
+            }
+            createUser(userName, password)
+        }
+
         else -> {
-            System.err.println("Usage: beholder.sh (daemon|user)")
+            System.err.println("Usage:")
+            System.err.println("beholder.sh daemon")
+            System.err.println("beholder.sh user <username> <password>")
             System.exit(1)
         }
     }
 }
 
-fun getArg(args: Array<String>, index: Int): String? {
-    if (args.size > index) {
-        return args[index]
-    }
-    return null
-}
-
 fun daemon() {
-    val server = Server(configuration.port, "beholder.backend")
+    val server = Server(configuration, "beholder.backend")
 
     server.onAction("login", javaClass<LoginMessage>(), {
         connection, data ->
@@ -57,16 +59,11 @@ fun daemon() {
     server.start()
 }
 
-fun createUser(userName: String?, password: String?) {
-    if (userName == null || password == null) {
-        System.err.println("Usage: beholder.sh user <username> <password>")
-        System.exit(1)
-        return
-    }
-    val userConfiguration = UserConfiguration()
-    userConfiguration.userName = userName
-    userConfiguration.password = password
-    configuration.saveUserConfiguration(userConfiguration)
+fun createUser(userName: String, password: String) {
+    val user = UserConfiguration()
+    user.userName = userName
+    user.password = password
+    configuration.saveUserConfiguration(user)
 }
 
 fun restictedAction(block: (Connection, Any) -> Unit): (Connection, Any) -> Unit

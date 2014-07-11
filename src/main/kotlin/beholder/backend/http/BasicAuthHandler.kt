@@ -13,12 +13,9 @@ import io.netty.util.CharsetUtil
 import io.netty.handler.codec.http.HttpHeaders
 import io.netty.channel.ChannelFutureListener
 import sun.misc.BASE64Decoder
-
-import beholder.backend.configuration
 import io.netty.util.AttributeKey
-import beholder.backend.config.UserConfiguration
 
-Sharable class BasicAuthHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
+Sharable class BasicAuthHandler(val apiKeyProvider: (login: String, password: String) -> String?) : SimpleChannelInboundHandler<FullHttpRequest>() {
     class object {
         val channelAttrApiKey: AttributeKey<String>? = AttributeKey.valueOf("apiKey")
     }
@@ -37,9 +34,9 @@ Sharable class BasicAuthHandler : SimpleChannelInboundHandler<FullHttpRequest>()
                 val login    = auth.substringBefore(":")
                 val password = auth.substringAfter(":")
 
-                val user = configuration.getUserConfiguration(login)
-                if (user != null && user.password == password) {
-                    ctx.attr(channelAttrApiKey)?.set(user.apiKey)
+                val apiKey = apiKeyProvider(login, password)
+                if (apiKey != null) {
+                    ctx.attr(channelAttrApiKey)?.set(apiKey)
                     ctx.tryNextHandler(msg)
                     return
                 }

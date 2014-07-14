@@ -124,10 +124,12 @@ task compileJs {
         def jsLib   = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
         def kotlinc = file('build/kotlinc/bin/kotlinc-js').canonicalPath
         def out     = file("${JS_PATH}/script.js").canonicalPath
-        def source  = file('src/main/kotlin/beholder').canonicalPath
+
+        def source    = file('src/main/kotlin/beholder').canonicalPath
+        def apiSource = file('../src/main/kotlin/beholder/backend/api').canonicalPath
 
         // TODO proper argument escaping if possible
-        def command = "${kotlinc} -sourcemap -output ${out} -libraryFiles ${jsLib} -sourceFiles ${source}"
+        def command = "${kotlinc} -sourcemap -output ${out} -libraryFiles ${jsLib} -sourceFiles ${source},${apiSource}"
 
         def proc = command.execute()
         proc.waitFor()

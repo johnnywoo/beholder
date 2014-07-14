@@ -3,11 +3,12 @@ package beholder.frontend
 import js.dom.html.*
 import beholder.frontend.sugar.WebSocket
 import js.native
+import js.JSON
+import beholder.backend.api.EchoMessage
 
 native val beholderApiKey: String = js.noImpl
 
 fun main(args: Array<String>) {
-    println("Our location: " + window.location.href) // this now goes to the console
     val webSocketLocation = "ws://" + window.location.host + "/ws" // host includes port, unlike hostname
 
     val webSocket = WebSocket(webSocketLocation)
@@ -23,6 +24,6 @@ fun main(args: Array<String>) {
 
         webSocket.send("{\"action\": \"echo\", \"data\": \"hello world\"}")
         webSocket.send("{\"action\": \"login\", \"apiKey\": \"$beholderApiKey\"}")
-        webSocket.send("{\"action\": \"echo\", \"data\": \"hello world2\"}")
+        webSocket.send(JSON.stringify(EchoMessage("hello bloody world")))
     }
 }

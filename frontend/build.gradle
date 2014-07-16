@@ -113,6 +113,11 @@ task compileJs {
                 files.add it
             }
         }
+        file('../src/main/kotlin/beholder/backend/api').eachFileRecurse {
+            if (it.name.endsWith('.kt') || it.isDirectory()) {
+                files.add it
+            }
+        }
         def lastModTime = files.inject(null, {
             time, file ->
                 def lastModified = file.lastModified()

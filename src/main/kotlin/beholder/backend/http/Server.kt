@@ -25,7 +25,7 @@ class Server(val configuration: Configuration, val packageName: String) {
                     WebSocketHttpHandler(),
                     BasicAuthHandler({
                         login, password ->
-                        configuration.getUserConfiguration(login)?.having({ it.password == password })?.apiKey
+                            configuration.getUserConfiguration(login)?.having({ it.password == password })?.apiKey
                     }),
                     StaticContentHandler(packageName + ".web"),
                     WebSocketHttpHandler(),

@@ -118,6 +118,11 @@ task compileJs {
                 files.add it
             }
         }
+        file('src/main/kotlin/js').eachFileRecurse {
+            if (it.name.endsWith('.kt') || it.isDirectory()) {
+                files.add it
+            }
+        }
         def lastModTime = files.inject(null, {
             time, file ->
                 def lastModified = file.lastModified()
@@ -130,18 +135,19 @@ task compileJs {
         def kotlinc = file('build/kotlinc/bin/kotlinc-js').canonicalPath
         def out     = file("${JS_PATH}/script.js").canonicalPath
 
-        def source    = file('src/main/kotlin/beholder').canonicalPath
-        def apiSource = file('../src/main/kotlin/beholder/backend/api').canonicalPath
+        def source           = file('src/main/kotlin/beholder').canonicalPath
+        def apiSource        = file('../src/main/kotlin/beholder/backend/api').canonicalPath
+        def reflectionSource = file('src/main/kotlin/js').canonicalPath
 
         // TODO proper argument escaping if possible
-        def command = "${kotlinc} -sourcemap -output ${out} -libraryFiles ${jsLib} -sourceFiles ${source},${apiSource}"
+        def command = "${kotlinc} -sourcemap -output ${out} -libraryFiles ${jsLib} -sourceFiles ${source},${apiSource},${reflectionSource}"
 
         def proc = command.execute()
         proc.waitFor()
         assert proc.exitValue() == 0, "Command failed: ${command}\nCommand output:\n${proc.text}"
 
         // ok, now the reflection post-processor
-        def reflectionScript = file('../src/main/resources/js/reflection/hack/js-reflection-hack.php').canonicalPath
+        def reflectionScript = file('src/main/kotlin/js/reflection/hack/js-reflection-hack.php').canonicalPath
         def reflectionCommand = "php ${reflectionScript} ${out}"
         def reflectionProc = reflectionCommand.execute()
         reflectionProc.waitFor()

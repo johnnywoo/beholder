@@ -67,7 +67,7 @@ function replaceClassName($contents, $line, $column, $className)
         throw new Exception('Incorrect mapping');
     }
     $lines[$line - 1] = substr($lineContent, 0, $column - 1)
-        . 'new _.beholder.frontend.JavaScriptClass(_.' . $className . ', "' . $className . '")'
+        . 'new _.js.reflection.hack.JavaScriptClass(_.' . $className . ', "' . $className . '")'
         . substr($lineContent, $column - 1 + strlen('jsClass()'))
     ;
     return join("\n", $lines);

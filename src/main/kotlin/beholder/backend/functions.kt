@@ -23,11 +23,14 @@ fun Any.logWarning(message: String, cause: Throwable?)
 
 
 //
-// GSON
+// MISC
 //
 
 fun Gson.fromJsonOrNull<T : Any>(json: String?, classOfT: Class<T>): T?
     = try { this.fromJson(json, classOfT) } catch (e: JsonSyntaxException) { null }
+
+fun <T : Any> T.having(block: (T) -> Boolean): T?
+    = if (block(this)) this else null
 
 
 //

@@ -4,6 +4,7 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import beholder.backend.config.Configuration
+import beholder.backend.having
 
 class Server(val configuration: Configuration, val packageName: String) {
     val webSocketRouter = WebSocketRouter()
@@ -22,7 +23,10 @@ class Server(val configuration: Configuration, val packageName: String) {
                 //?.handler(LoggingHandler(LogLevel.INFO))
                 ?.childHandler(ServerInitializer(arrayListOf(
                     WebSocketHttpHandler(),
-                    BasicAuthHandler({ login, password -> configuration.getUserConfiguration(login)?.apiKey }),
+                    BasicAuthHandler({
+                        login, password ->
+                        configuration.getUserConfiguration(login)?.having({ it.password == password })?.apiKey
+                    }),
                     StaticContentHandler(packageName + ".web"),
                     WebSocketHttpHandler(),
                     webSocketRouter,

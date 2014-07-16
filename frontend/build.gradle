@@ -139,6 +139,13 @@ task compileJs {
         def proc = command.execute()
         proc.waitFor()
         assert proc.exitValue() == 0, "Command failed: ${command}\nCommand output:\n${proc.text}"
+
+        // ok, now the reflection post-processor
+        def reflectionScript = file('../src/main/resources/js/reflection/hack/js-reflection-hack.php').canonicalPath
+        def reflectionCommand = "php ${reflectionScript} ${out}"
+        def reflectionProc = reflectionCommand.execute()
+        reflectionProc.waitFor()
+        assert reflectionProc.exitValue() == 0, "Command failed: ${reflectionCommand}\nCommand output:\n${reflectionProc.text}"
     }
 }
 task cleanCompiledJs {

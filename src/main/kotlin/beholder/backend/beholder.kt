@@ -5,10 +5,11 @@ import beholder.backend.api.LoginMessage
 import beholder.backend.config.Configuration
 import beholder.backend.config.UserConfiguration
 import beholder.backend.http.Server
-import com.google.gson.Gson
 import beholder.backend.http.Connection
+import com.google.gson.GsonBuilder
+import com.google.gson.Gson
 
-val gson = Gson()
+val gson = GsonBuilder().setPrettyPrinting()?.create()!!
 
 fun main(args: Array<String>) {
     val conf = Configuration("beholder", (System.getProperty("user.home") ?: ".") + "/.beholder")

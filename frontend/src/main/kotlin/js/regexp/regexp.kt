@@ -35,9 +35,3 @@ fun String.replaceRegexp(regexp: String, replacement: String)
     = this.replaceRegexp(RegExp(regexp), replacement)
 [native("replace")] fun String.replaceRegexp(regexp: RegExp, replacement: String): String
     = js.noImpl
-
-fun String.splitRegexp(regexp: String)
-    = this.splitRegexp(RegExp(regexp))
-[native("split")] fun String.splitRegexp(regexp: RegExp): Array<String?>
-    = js.noImpl
-

@@ -20,9 +20,15 @@ jar {
     manifest {
         attributes "Main-Class": 'beholder.backend.BackendPackage'
     }
+
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     }
+    into ('beholder/backend/web') {
+        from 'frontend/build/web'
+        from 'frontend/src/main/resources/web'
+    }
+
     archiveName = 'beholder.jar'
 }
 

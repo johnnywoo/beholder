@@ -1,9 +1,6 @@
 apply plugin: 'download-task'
 apply plugin: 'kotlin' // we don't actually need this plugin, but IDEA won't even highlight kotlin syntax properly without it
 
-// relative to 'frontend' dir
-def JS_PATH = '../src/main/resources/beholder/backend/web'
-
 def KOTLINC_ZIP_URL = 'https://github.com/JetBrains/kotlin/releases/download/build-0.8.11/kotlin-compiler-0.8.11.zip'
 
 buildscript {
@@ -30,8 +27,6 @@ tasks.assemble.dependsOn 'setupKotlinJsLibraryForIdea'
 
 tasks.clean.dependsOn 'cleanFrontend'
 task cleanFrontend {
-    dependsOn 'cleanBundledKotlinJs'
-    dependsOn 'cleanCompiledJs'
     dependsOn 'cleanKotlinJsLibraryForIdea'
     doLast {
         delete 'build'
@@ -50,19 +45,14 @@ task downloadKotlinCompiler {
 
 def libJsFiles = ['kotlin-lib.js', 'kotlin-lib-ecma5.js', 'kotlin-maps.js']
 task copyBundledKotlinJs {
-    outputs.upToDateWhen { libJsFiles.find {!file(JS_PATH + '/' + it).exists()} == null }
+    outputs.upToDateWhen { libJsFiles.find {!file('build/web/' + it).exists()} == null }
     doLast {
         def jsLib = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
         copy {
             from zipTree(file(jsLib))
             include libJsFiles
-            into JS_PATH
+            into 'build/web'
         }
-    }
-}
-task cleanBundledKotlinJs {
-    doLast {
-        libJsFiles.each {delete JS_PATH + '/' + it}
     }
 }
 
@@ -123,12 +113,12 @@ task compileJs {
                 def lastModified = file.lastModified()
                 return (time == null || time < lastModified) ? lastModified : time
         })
-        return lastModTime != null && lastModTime < file("${JS_PATH}/script.js").lastModified()
+        return lastModTime != null && lastModTime < file("build/web/script.js").lastModified()
     }
     doLast {
         def jsLib   = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
         def kotlinc = file('build/kotlinc/bin/kotlinc-js').canonicalPath
-        def out     = file("${JS_PATH}/script.js").canonicalPath
+        def out     = file("build/web/script.js").canonicalPath
 
         def source    = file('src/main/kotlin/beholder').canonicalPath
         def apiSource = file('../src/main/kotlin/beholder/backend/api').canonicalPath
@@ -139,11 +129,5 @@ task compileJs {
         def proc = command.execute()
         proc.waitFor()
         assert proc.exitValue() == 0, "Command failed: ${command}\nCommand output:\n${proc.text}"
-    }
-}
-task cleanCompiledJs {
-    doLast {
-        delete "${JS_PATH}/script.js"
-        delete "${JS_PATH}/script.js.map"
     }
 }

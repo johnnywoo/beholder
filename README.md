@@ -12,3 +12,7 @@ Beholder
 
         frontend/src/main/kotlin/kotlin-js-library/core/javalang.kt
         frontend/src/main/kotlin/kotlin-js-library/kotlin/Integers.kt
+
+4. Compiled JS and Kotlin stdlib in JS are placed in `frontend/build/web`,
+   which is excluded from IDEA project by default; you can remove the exclude
+   in Module Settings.

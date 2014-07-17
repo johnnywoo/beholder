@@ -57,7 +57,10 @@ fun makeRandomString(length: Int)
 // FILES
 //
 
-fun getFileContents(path: Path, charset: Charset = defaultCharset): String? {
+fun getFileContents(path: Path?, charset: Charset = defaultCharset): String? {
+    if (path == null) {
+        return null
+    }
     try {
         return Files.newBufferedReader(path, charset).use { it.readText() }
     } catch (e: IOException) {

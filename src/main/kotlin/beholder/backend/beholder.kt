@@ -10,12 +10,12 @@ import beholder.backend.http.Connection
 
 val gson = Gson()
 
-val configuration = Configuration("beholder")
-
 fun main(args: Array<String>) {
+    val conf = Configuration("beholder", (System.getProperty("user.home") ?: ".") + "/.beholder")
+
     when (getItemOrNull(args, 0)) {
         "daemon" -> {
-            daemon()
+            daemon(conf)
         }
 
         "user" -> {
@@ -26,7 +26,7 @@ fun main(args: Array<String>) {
                 System.exit(1)
                 return
             }
-            createUser(userName, password)
+            createUser(conf, userName, password)
         }
 
         else -> {
@@ -38,13 +38,13 @@ fun main(args: Array<String>) {
     }
 }
 
-fun daemon() {
-    val server = Server(configuration, "beholder.backend")
+fun daemon(conf: Configuration) {
+    val server = Server(conf, "beholder.backend")
 
     server.onAction("login", javaClass<LoginMessage>(), {
         connection, data ->
             if (!connection.isAuthorized() && data is LoginMessage) {
-                val userConfiguration = configuration.getUserConfigurationByApiKey(data.apiKey)
+                val userConfiguration = conf.getUserConfigurationByApiKey(data.apiKey)
                 if (userConfiguration != null) {
                     connection.user = userConfiguration
                 }
@@ -59,11 +59,11 @@ fun daemon() {
     server.start()
 }
 
-fun createUser(userName: String, password: String) {
+fun createUser(conf: Configuration, userName: String, password: String) {
     val user = UserConfiguration()
     user.userName = userName
     user.password = password
-    configuration.saveUserConfiguration(user)
+    conf.saveUserConfiguration(user)
 }
 
 fun restictedAction(block: (Connection, Any) -> Unit): (Connection, Any) -> Unit

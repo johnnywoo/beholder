@@ -33,9 +33,9 @@ class Server(val configuration: Configuration, val packageName: String) {
                     ErrorHandler()
                 )))
 
-            val ch = b.bind(configuration.port)?.sync()?.channel()
+            val ch = b.bind(configuration.app.port)?.sync()?.channel()
 
-            println("Started HTTP server at 127.0.0.1:" + configuration.port);
+            println("Started HTTP server at 127.0.0.1:" + configuration.app.port);
 
             ch?.closeFuture()?.sync()
         } finally {

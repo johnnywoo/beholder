@@ -1,6 +1,5 @@
 package beholder.backend.config
 
-import com.google.gson.Gson
 import java.nio.file.Files
 import java.nio.file.Path
 import beholder.backend.fromJsonOrNull
@@ -11,10 +10,23 @@ import beholder.backend.log
 import beholder.backend.makeRandomString
 import beholder.backend.gson
 
-class Configuration(val packageName: String) {
-    val port = 3822
+class Configuration(val packageName: String, val configDir: String) {
+    val app = loadConfig("app.json", javaClass<AppConfiguration>())
 
     private val userConfigurations: List<UserConfiguration> = loadUserConfigurations()
+
+    private fun loadConfig<T : Any>(file: String, klass: Class<T>): T {
+        val config = gson.fromJsonOrNull(getFileContents(Paths.get(configDir, file)), klass)
+        if (config != null) {
+            return config
+        }
+
+        val emptyConfig = gson.fromJsonOrNull("{}", klass)
+        if (emptyConfig == null) {
+            throw Exception("Cannot create empty config for " + klass.getName())
+        }
+        return emptyConfig
+    }
 
     private fun loadUserConfigurations(): List<UserConfiguration> {
         // something like /home/user/.beholder/users
@@ -35,6 +47,8 @@ class Configuration(val packageName: String) {
                             userConfiguration.apiKey   = makeRandomString(32)
                             configurations.add(userConfiguration)
                         }
+                    } else {
+                        log("Corrupted user config: " + it.toString())
                     }
                 }
             }
@@ -43,7 +57,7 @@ class Configuration(val packageName: String) {
     }
 
     private fun getUsersPath(): Path?
-        = Paths.get(System.getProperty("user.home") ?: ".", "." + packageName, "users")
+        = Paths.get(configDir, "users")
 
     fun getUserConfiguration(userName: String)
         = userConfigurations.firstOrNull { it.userName == userName }
@@ -51,8 +65,8 @@ class Configuration(val packageName: String) {
     fun getUserConfigurationByApiKey(apiKey: String): UserConfiguration?
         = userConfigurations.firstOrNull { it.apiKey == apiKey }
 
-    fun saveUserConfiguration(configuration: UserConfiguration) {
-        val text = gson.toJson(configuration)
+    fun saveUserConfiguration(userConf: UserConfiguration) {
+        val text = gson.toJson(userConf)
         if (text == null) {
             return
         }
@@ -65,7 +79,7 @@ class Configuration(val packageName: String) {
             log(usersPath.toString() + " created")
         }
 
-        val userPath = usersPath.resolve(configuration.userName + ".json")
+        val userPath = usersPath.resolve(userConf.userName + ".json")
         if (userPath == null) {
             return
         }

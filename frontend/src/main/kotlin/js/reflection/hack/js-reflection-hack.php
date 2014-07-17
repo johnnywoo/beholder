@@ -50,6 +50,7 @@ foreach ($lines as $number => $line) {
 // sorting replacements so we start replacing at the end of the file and do not confuse column numbers
 krsort($replacements);
 foreach ($replacements as $mapping) {
+    // TODO this breaks the sourcemap
     $script = replaceClassName($script, $mapping['compiledLine'], $mapping['compiledColumn'], $mapping['className']);
 }
 file_put_contents($scriptFile, $script);

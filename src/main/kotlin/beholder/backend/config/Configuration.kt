@@ -10,7 +10,7 @@ import beholder.backend.log
 import beholder.backend.makeRandomString
 import beholder.backend.gson
 
-class Configuration(val packageName: String, val configDir: String) {
+class Configuration(val configDir: String) {
     val app = loadConfig("app.json", javaClass<AppConfiguration>())
 
     private val userConfigurations: List<UserConfiguration> = loadUserConfigurations()

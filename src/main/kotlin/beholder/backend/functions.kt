@@ -16,10 +16,13 @@ import java.math.BigInteger
 //
 
 fun Any.log(message: String)
-    = Logger.getLogger(this.javaClass.getName()).log(Level.INFO, message)
+    = Logger.getAnonymousLogger().log(Level.INFO, message)
+    // we would like to use getLogger(this.javaClass.getSimpleName()) here,
+    // but `this` is wrong: it should be the extended object,
+    // but is actually the extension function object, e.g. beholder.backend.BackendPackage-functions-8f991910)
 
 fun Any.logWarning(message: String, cause: Throwable?)
-    = Logger.getLogger(this.javaClass.getName()).log(Level.WARNING, message, cause)
+    = Logger.getAnonymousLogger().log(Level.WARNING, message, cause)
 
 
 //

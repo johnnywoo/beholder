@@ -13,6 +13,10 @@ class Connection(val ctx: ChannelHandlerContext) {
     class object {
         val channelAttrUserConfiguration: AttributeKey<UserConfiguration>? = AttributeKey.valueOf("userConfiguration")
         val clientChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
+
+        fun sendToAll(message: Message) {
+            clientChannelGroup.writeAndFlush(TextWebSocketFrame(gson.toJson(message)))
+        }
     }
 
     fun isAuthorized()

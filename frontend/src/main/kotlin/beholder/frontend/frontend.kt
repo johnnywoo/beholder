@@ -17,9 +17,7 @@ fun main(args: Array<String>) {
                     .appendChild(document.createTextNode(json))
         }
     }
-    apiClient.connect()
 
-    apiClient.send(EchoMessage("this shall not pass"))
+    apiClient.connect()
     apiClient.send(LoginMessage(beholderApiKey))
-    apiClient.send(EchoMessage("hello bloody world"))
 }

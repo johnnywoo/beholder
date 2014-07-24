@@ -34,7 +34,7 @@ task cleanFrontend {
 }
 
 task downloadKotlinCompiler {
-    outputs.upToDateWhen {file('build/kotlin-compiler.zip').exists()}
+    outputs.upToDateWhen { file('build/kotlin-compiler.zip').exists() }
     doLast {
         download {
             src  KOTLINC_ZIP_URL

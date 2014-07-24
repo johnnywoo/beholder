@@ -1,4 +1,3 @@
-// TODO move all these JS files to frontend module and copy into backend on build
 (function(){
 
     //

@@ -116,18 +116,22 @@ task compileJs {
         return lastModTime != null && lastModTime < file("build/web/script.js").lastModified()
     }
     doLast {
-        def jsLib   = project.configurations.compile.find { it.name.startsWith("kotlin-js-library-") }
+        def jsLib   = project.configurations.compile.find({ it.name.startsWith("kotlin-js-library-") }).toString()
         def kotlinc = file('build/kotlinc/bin/kotlinc-js').canonicalPath
         def out     = file("build/web/script.js").canonicalPath
 
         def source    = file('src/main/kotlin/beholder').canonicalPath
         def apiSource = file('../src/main/kotlin/beholder/backend/api').canonicalPath
 
-        // TODO proper argument escaping if possible
-        def command = "${kotlinc} -sourcemap -output ${out} -libraryFiles ${jsLib} -sourceFiles ${source},${apiSource}"
-
+        def command = [
+            kotlinc,
+            '-sourcemap',
+            '-output', out,
+            '-libraryFiles', jsLib,
+            '-sourceFiles', source + ',' + apiSource,
+        ]
         def proc = command.execute()
         proc.waitFor()
-        assert proc.exitValue() == 0, "Command failed: ${command}\nCommand output:\n${proc.text}"
+        assert proc.exitValue() == 0, "Command failed: " + command.join(' ') + "\nCommand output:\n${proc.text}"
     }
 }

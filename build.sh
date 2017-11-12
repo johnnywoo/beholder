@@ -20,5 +20,5 @@ docker build -t beholder .
 if [ "x$1" = "x-r" ]; then
     echo
     echo '=== RUN ============================================='
-    docker run -ti beholder
+    docker run -ti -p "3820:3820/udp" -p "3821:3821/udp" beholder
 fi

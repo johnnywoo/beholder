@@ -1,16 +1,36 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.config.configFromFile
+import ru.agalkin.beholder.config.defaultConfig
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.time.LocalDateTime
 import kotlin.concurrent.thread
 
 fun main(args: Array<String>) {
+    dumpHelpIfNeeded(args)
+
+    val config = if (args.size > 1) {
+        configFromFile(args[1])
+    } else {
+        defaultConfig()
+    }
+
     startUdpListener(3820) {
         println(LocalDateTime.now().toString() + " 3820: " + it)
     }
     startUdpListener(3821) {
         println(LocalDateTime.now().toString() + " 3821: " + it)
+    }
+}
+
+fun dumpHelpIfNeeded(args: Array<String>) {
+    if (args.size <= 1) {
+        return
+    }
+    if (args[1] == "--help" || args[1] == "-h") {
+        System.err.println("Usage: " + args[0] + " [config-file]")
+        System.exit(0)
     }
 }
 

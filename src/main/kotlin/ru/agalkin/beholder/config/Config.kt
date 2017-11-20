@@ -31,6 +31,9 @@ class Config(configText: String) {
     fun start()
         = root.start()
 
+    fun stop()
+        = root.stop()
+
     companion object {
         fun fromFile(filename: String): Config {
             println("Reading config from $filename")

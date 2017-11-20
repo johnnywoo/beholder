@@ -19,6 +19,12 @@ abstract class CommandAbstract(protected val arguments: List<ArgumentToken>) {
         }
     }
 
+    open fun stop() {
+        for (command in subcommands) {
+            command.stop()
+        }
+    }
+
     private val receivers = mutableSetOf<(Message) -> Unit>()
 
     open fun emit(message: Message) {
@@ -73,10 +79,14 @@ abstract class CommandAbstract(protected val arguments: List<ArgumentToken>) {
             }
 
             // аргументы кончились = надо зарегистрировать нашу новую команду
-            val subcommand = createSubcommand(subcommandArgs)
-            if (subcommand == null) {
+            val subcommand: CommandAbstract
+            try {
+                subcommand = createSubcommand(subcommandArgs)
+                    ?: throw CommandException("Command is not allowed here")
+            } catch (e: CommandException) {
                 rewindIterator(tokens, subcommandArgs.size)
-                throw ParseException("Command is not allowed here:", tokens)
+                tokens.previous()
+                throw ParseException(e.message + ":", tokens)
             }
             subcommands.add(subcommand)
 

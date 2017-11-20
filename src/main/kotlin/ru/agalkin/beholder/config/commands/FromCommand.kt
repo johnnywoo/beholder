@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.config.commands
 
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.parser.ArgumentToken
 import ru.agalkin.beholder.listeners.UdpListener
@@ -24,16 +25,27 @@ class FromCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(argument
     override fun start()
         = source.start()
 
+    override fun stop()
+        = source.stop()
+
 
 
     private interface Source {
         fun start()
+        fun stop()
     }
 
     private inner class UdpSource(private val address: Address) : Source {
+        val receiver: (Message) -> Unit = { emit(it) }
+
         override fun start() {
-            println("from start: connecting to UDP listener at $address")
-            UdpListener.getListener(address).addReceiver { emit(it) }
+            println("${this::class.simpleName} start: connecting to UDP listener at $address")
+            UdpListener.getListener(address).addReceiver(receiver)
+        }
+
+        override fun stop() {
+            println("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
+            UdpListener.getListener(address).removeReceiver(receiver)
         }
     }
 }

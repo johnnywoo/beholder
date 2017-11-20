@@ -3,14 +3,14 @@ package ru.agalkin.beholder
 import sun.misc.Signal
 import java.io.File
 
+const val ETC_CONFIG_FILE = "/etc/beholder/beholder.conf"
+
 fun main(args: Array<String>) {
     dumpHelpIfNeeded(args)
 
-    val etcConfigFile = "/etc/beholder/beholder.conf"
-
     val configFile = when {
         args.size > 1 -> args[1]
-        with(File(etcConfigFile)) {isFile && canRead()} -> etcConfigFile
+        with(File(ETC_CONFIG_FILE)) {isFile && canRead()} -> ETC_CONFIG_FILE
         else -> null
     }
 
@@ -18,18 +18,17 @@ fun main(args: Array<String>) {
 
     Signal.handle(Signal("HUP")) {
         println("Got SIGHUP")
-        // app.reload()
+        app.reload()
     }
-
-    app.start()
 }
 
 fun dumpHelpIfNeeded(args: Array<String>) {
-    if (args.size <= 1) {
+    if (!args.indices.contains(1)) {
         return
     }
     if (args[1] == "--help" || args[1] == "-h") {
         System.err.println("Usage: " + args[0] + " [config-file]")
+        System.err.println("Default config file is $ETC_CONFIG_FILE")
         System.exit(0)
     }
 }

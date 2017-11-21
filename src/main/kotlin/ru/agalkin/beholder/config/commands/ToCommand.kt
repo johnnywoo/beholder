@@ -9,9 +9,7 @@ class ToCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments)
 
     init {
         val usage = "Usage:\n" +
-            "to stdout\n" +
-            "to tcp [host:]port\n" +
-            "to udp [host:]port"
+            "to stdout\n"
 
         try {
             destination = when (requireArg(1, usage)) {

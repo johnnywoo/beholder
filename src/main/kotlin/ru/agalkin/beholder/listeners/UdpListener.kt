@@ -7,6 +7,9 @@ import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
+import java.text.SimpleDateFormat
+import java.util.*
+
 
 class UdpListener(private val address: Address) {
     val queue = LinkedBlockingQueue<Message>()
@@ -28,9 +31,23 @@ class UdpListener(private val address: Address) {
                     queue.take()
                 }
 
-                queue.offer(Message(text))
+                val message = Message(text)
+
+                message.tags["receivedDate"] = curDateIso()
+                message.tags["fromHost"]     = packet.address.hostAddress
+                message.tags["fromPort"]     = packet.port.toString()
+                message.tags["toHost"]       = address.getInetAddress().hostAddress
+                message.tags["toPort"]       = address.port.toString()
+
+                queue.offer(message)
             }
         }
+    }
+
+    private fun curDateIso(): String {
+        val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") // Quoted "Z" to indicate UTC, no timezone offset
+        formatter.timeZone = TimeZone.getTimeZone("UTC")
+        return formatter.format(Date())
     }
 
     private val emitterThread = object : Thread("from-udp-$address-emitter") {

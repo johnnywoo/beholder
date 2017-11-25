@@ -47,6 +47,12 @@ abstract class CommandAbstract(protected val arguments: List<ArgumentToken>) {
         return arguments[index].getValue()
     }
 
+    protected fun requireNoArgsAfter(index: Int, errorMessage: String = "Too many arguments") {
+        if (arguments.size > index + 1) {
+            throw CommandException(errorMessage)
+        }
+    }
+
 
     protected val subcommands = ArrayList<CommandAbstract>()
 

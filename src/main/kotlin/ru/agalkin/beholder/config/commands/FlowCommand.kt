@@ -5,11 +5,15 @@ import ru.agalkin.beholder.config.parser.*
 class FlowCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
     override fun createSubcommand(args: List<ArgumentToken>): CommandAbstract?
         = when (args[0].getValue()) {
-            "from"    -> FromCommand(args)
-            "convert" -> ConvertCommand(args)
-            "to"      -> ToCommand(args)
-            else      -> null
+            "from"  -> FromCommand(args)
+            "parse" -> ParseCommand(args)
+            "to"    -> ToCommand(args)
+            else    -> null
         }
+
+    init {
+        requireNoArgsAfter(0)
+    }
 
     override fun start() {
         // внутри flow команды по очереди обрабатывают сообщения

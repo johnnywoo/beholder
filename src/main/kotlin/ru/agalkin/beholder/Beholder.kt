@@ -39,10 +39,7 @@ class Beholder(private val configFile: String?) {
     }
 
     companion object {
-        private val receivers = mutableSetOf<ReloadListener>()
-
-        fun addReceiver(receiver: ReloadListener)
-            = receivers.add(receiver)
+        val receivers = mutableSetOf<ReloadListener>()
 
         private fun notifyBefore() {
             for (receiver in receivers) {

@@ -11,58 +11,63 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 
 class UdpListener(private val address: Address) {
-    val queue = LinkedBlockingQueue<Message>()
+    private val queue = LinkedBlockingQueue<Message>()
 
-    val isEmitterPaused   = AtomicBoolean(false)
-    val isListenerDeleted = AtomicBoolean(false)
+    private var isEmitterPaused   by ThreadSafeFlag(false)
+    private var isListenerDeleted by ThreadSafeFlag(false)
 
     private val listenerThread = object : Thread("from-udp-$address-listener") {
+        private val buffer = ByteArray(MAX_MESSAGE_CHARS)
+
         override fun run() {
             println("Thread $name got started")
 
-            val datagramSocket = DatagramSocket(address.port, address.getInetAddress())
-            datagramSocket.soTimeout = 100 // millis
+            DatagramSocket(address.port, address.getInetAddress()).use {socket ->
+                socket.soTimeout = 100 // millis
 
-            val buffer = ByteArray(MAX_MESSAGE_CHARS)
+                // лисенер останавливается, когда подписчики кончились
+                while (!isListenerDeleted) {
+                    val packet = DatagramPacket(buffer, buffer.size)
+                    try {
+                        socket.receive(packet)
+                    } catch (e: SocketTimeoutException) {
+                        // 100 millis passed without any packet
+                        // just loop around, check proper conditions and then receive again
+                        continue
+                    }
 
-            // лисенер останавливается, когда подписчики кончились
-            while (!isListenerDeleted.get()) {
-                val packet = DatagramPacket(buffer, buffer.size)
-                try {
-                    datagramSocket.receive(packet)
-                } catch (e: SocketTimeoutException) {
-                    // 100 millis passed without any packet
-                    // just loop around, check proper conditions and then receive again
-                    continue
+                    // не даём очереди бесконтрольно расти (вытесняем старые записи)
+                    if (queue.size > MAX_BUFFER_COUNT) {
+                        queue.take()
+                    }
+
+                    val message = Message(String(packet.data, 0, packet.length))
+
+                    message.tags["receivedDate"] = curDateIso()
+                    message.tags["fromHost"]     = packet.address.hostAddress
+                    message.tags["fromPort"]     = packet.port.toString()
+                    message.tags["toHost"]       = address.getInetAddress().hostAddress
+                    message.tags["toPort"]       = address.port.toString()
+
+                    queue.offer(message)
                 }
-
-                // не даём очереди бесконтрольно расти (вытесняем старые записи)
-                if (queue.size > MAX_BUFFER_COUNT) {
-                    queue.take()
-                }
-
-                val message = Message(String(packet.data, 0, packet.length))
-
-                message.tags["receivedDate"] = curDateIso()
-                message.tags["fromHost"]     = packet.address.hostAddress
-                message.tags["fromPort"]     = packet.port.toString()
-                message.tags["toHost"]       = address.getInetAddress().hostAddress
-                message.tags["toPort"]       = address.port.toString()
-
-                queue.offer(message)
             }
 
             println("Thread $name got deleted")
         }
-    }
 
-    private fun curDateIso(): String {
-        val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") // Quoted "Z" to indicate UTC, no timezone offset
-        formatter.timeZone = TimeZone.getTimeZone("UTC")
-        return formatter.format(Date())
+        private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") // Quoted "Z" to indicate UTC, no timezone offset
+        init {
+            formatter.timeZone = TimeZone.getTimeZone("UTC")
+        }
+
+        private fun curDateIso(): String
+            = formatter.format(Date())
     }
 
     private val emitterThread = object : Thread("from-udp-$address-emitter") {
@@ -70,9 +75,10 @@ class UdpListener(private val address: Address) {
             println("Thread $name got started")
 
             // эмиттер останавливается, когда подписчики кончились
-            while (!isListenerDeleted.get()) {
-                while (isEmitterPaused.get()) {
+            while (!isListenerDeleted) {
+                if (isEmitterPaused) {
                     Thread.sleep(50)
+                    continue
                 }
                 val message = queue.poll(100, TimeUnit.MILLISECONDS) // blocking for 100 millis
                 if (message == null) {
@@ -93,20 +99,20 @@ class UdpListener(private val address: Address) {
     }
 
     init {
-        Beholder.addReceiver(object : Beholder.ReloadListener {
+        Beholder.receivers.add(object : Beholder.ReloadListener {
             override fun before() {
                 // перед тем, как заменять конфиг приложения,
                 // мы хотим поставить приём сообщений на паузу
-                isEmitterPaused.set(true)
-                isListenerDeleted.set(false)
+                isEmitterPaused = true
             }
 
             override fun after() {
                 if (receivers.isEmpty()) {
                    // после перезагрузки конфига оказалось, что листенер никому больше не нужен
-                    isListenerDeleted.set(true)
+                    isListenerDeleted = true
+                    Beholder.receivers.remove(this)
                 }
-                isEmitterPaused.set(false)
+                isEmitterPaused = false
             }
         })
 
@@ -130,5 +136,15 @@ class UdpListener(private val address: Address) {
                 return listeners[address]!!
             }
         }
+    }
+
+    private class ThreadSafeFlag(initialValue: Boolean) : ReadWriteProperty<Any, Boolean> {
+        private val ab = AtomicBoolean(initialValue)
+
+        override fun getValue(thisRef: Any, property: KProperty<*>): Boolean
+            = ab.get()
+
+        override fun setValue(thisRef: Any, property: KProperty<*>, value: Boolean)
+            = ab.set(value)
     }
 }

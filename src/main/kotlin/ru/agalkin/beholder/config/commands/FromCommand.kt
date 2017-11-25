@@ -84,12 +84,12 @@ class FromCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
 
         override fun start() {
             println("${this::class.simpleName} start: connecting to UDP listener at $address")
-            UdpListener.getListener(address).addReceiver(receiver)
+            UdpListener.getListener(address).receivers.add(receiver)
         }
 
         override fun stop() {
             println("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
-            UdpListener.getListener(address).removeReceiver(receiver)
+            UdpListener.getListener(address).receivers.remove(receiver)
         }
     }
 }

@@ -5,33 +5,46 @@ import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
 import java.net.DatagramPacket
 import java.net.DatagramSocket
+import java.net.SocketTimeoutException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class UdpListener(private val address: Address) {
     val queue = LinkedBlockingQueue<Message>()
 
-    val isPaused = AtomicBoolean(false)
+    val isEmitterPaused   = AtomicBoolean(false)
+    val isListenerDeleted = AtomicBoolean(false)
 
     private val listenerThread = object : Thread("from-udp-$address-listener") {
         override fun run() {
+            println("Thread $name got started")
+
             val datagramSocket = DatagramSocket(address.port, address.getInetAddress())
+            datagramSocket.soTimeout = 100 // millis
+
             val buffer = ByteArray(MAX_MESSAGE_CHARS)
 
-            while (true) {
+            // лисенер останавливается, когда подписчики кончились
+            while (!isListenerDeleted.get()) {
                 val packet = DatagramPacket(buffer, buffer.size)
-                datagramSocket.receive(packet)
-                val text = String(packet.data, 0, packet.length)
+                try {
+                    datagramSocket.receive(packet)
+                } catch (e: SocketTimeoutException) {
+                    // 100 millis passed without any packet
+                    // just loop around, check proper conditions and then receive again
+                    continue
+                }
 
                 // не даём очереди бесконтрольно расти (вытесняем старые записи)
                 if (queue.size > MAX_BUFFER_COUNT) {
                     queue.take()
                 }
 
-                val message = Message(text)
+                val message = Message(String(packet.data, 0, packet.length))
 
                 message.tags["receivedDate"] = curDateIso()
                 message.tags["fromHost"]     = packet.address.hostAddress
@@ -41,6 +54,8 @@ class UdpListener(private val address: Address) {
 
                 queue.offer(message)
             }
+
+            println("Thread $name got deleted")
         }
     }
 
@@ -52,15 +67,28 @@ class UdpListener(private val address: Address) {
 
     private val emitterThread = object : Thread("from-udp-$address-emitter") {
         override fun run() {
-            while (true) {
-                while (isPaused.get()) {
+            println("Thread $name got started")
+
+            // эмиттер останавливается, когда подписчики кончились
+            while (!isListenerDeleted.get()) {
+                while (isEmitterPaused.get()) {
                     Thread.sleep(50)
                 }
-                val message = queue.take() // blocking
+                val message = queue.poll(100, TimeUnit.MILLISECONDS) // blocking for 100 millis
+                if (message == null) {
+                    // за 100 мс ничего не нашли
+                    // проверим все условия и поедем ждать заново
+                    continue
+                }
                 for (receiver in receivers) {
                     receiver(message)
                 }
             }
+
+            // на всякий случай, если мы будем перезапускать лисенер, надо тут всё зачистить
+            queue.clear()
+
+            println("Thread $name got deleted")
         }
     }
 
@@ -69,40 +97,38 @@ class UdpListener(private val address: Address) {
             override fun before() {
                 // перед тем, как заменять конфиг приложения,
                 // мы хотим поставить приём сообщений на паузу
-                isPaused.set(true)
+                isEmitterPaused.set(true)
+                isListenerDeleted.set(false)
             }
 
             override fun after() {
-                // TODO после перезагрузки конфига оказалось, что листенер никому больше не нужен
-                isPaused.set(false)
+                if (receivers.isEmpty()) {
+                   // после перезагрузки конфига оказалось, что листенер никому больше не нужен
+                    isListenerDeleted.set(true)
+                }
+                isEmitterPaused.set(false)
             }
         })
 
-        println("Starting UDP listener on $address")
         listenerThread.start()
-        println("Starting UDP listener emitter thread")
         emitterThread.start()
     }
 
-    private val receivers = mutableSetOf<(Message) -> Unit>()
-
-    fun addReceiver(receiver: (Message) -> Unit)
-        = receivers.add(receiver)
-
-    fun removeReceiver(receiver: (Message) -> Unit)
-        = receivers.remove(receiver)
+    val receivers = mutableSetOf<(Message) -> Unit>()
 
     companion object {
         val MAX_BUFFER_COUNT  = 1000 // messages
         val MAX_MESSAGE_CHARS = 10 * 1024 * 1024
 
-        private val listeners = mutableMapOf<Address, UdpListener>()
+        private val listeners = WeakHashMap<Address, UdpListener>()
 
         fun getListener(address: Address): UdpListener {
-            if (!listeners.contains(address)) {
-                listeners[address] = UdpListener(address)
+            synchronized(listeners) {
+                if (!listeners.contains(address)) {
+                    listeners[address] = UdpListener(address)
+                }
+                return listeners[address]!!
             }
-            return listeners[address]!!
         }
     }
 }

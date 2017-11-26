@@ -1,5 +1,7 @@
 package ru.agalkin.beholder.config.parser
 
+import ru.agalkin.beholder.charListToString
+
 class QuotedStringToken(private val quoteChar: Char) : Token(initialChar = quoteChar), ArgumentToken {
     private val stringValue = ArrayList<Char>()
 

@@ -7,23 +7,9 @@ import java.util.regex.Pattern
 
 class ParseCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments) {
     init {
-        val usage = """
-            |Usage:
-            |parse <format>
-            |
-            |Formats:
-            |syslog-nginx  -- decodes messages in old BSD syslog format as produced by nginx
-            |    Tags:
-            |    syslogFacility  -- numeric syslog facility
-            |    syslogSeverity  -- numeric syslog severity
-            |    syslogHost      -- source host from the message
-            |    syslogTag       -- tag string from the message
-            |    payload         -- actual log line (this would be written to a file by nginx)
-        """.trimMargin()
-
-        when (requireArg(1, usage)) {
+        when (requireArg(1, "We need some format to `parse`")) {
             "syslog-nginx" -> Unit
-            else -> throw CommandException(usage)
+            else -> throw CommandException("Cannot understand arguments of `parse` command")
         }
 
         requireNoArgsAfter(1)
@@ -33,12 +19,12 @@ class ParseCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(argumen
     private val syslogNginxRegex = Pattern.compile(
         """
             ^
-            <(?<priority>[0-9]+)>
-            (?<month> Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
-            \s+ (?<day>   \d\d?)
-            \s+ (?<time>  \d\d:\d\d:\d\d)
-            \s+ (?<host>  [^\s]+)
-            \s+ (?<tag>   [^\s]+):
+            < (?<priority>[0-9]+) >
+            (?<month>       Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
+            \s+ (?<day>     \d\d?)
+            \s+ (?<time>    \d\d:\d\d:\d\d)
+            \s+ (?<host>    [^\s]+)
+            \s+ (?<program> [^\s]+):
             \s # one space
             (?<payload>   .*)
             $
@@ -74,9 +60,9 @@ class ParseCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(argumen
             newMessage.tags["syslogHost"] = host
         }
 
-        val tag = matcher.group("tag")
+        val tag = matcher.group("program")
         if (tag != null) {
-            newMessage.tags["syslogTag"] = tag
+            newMessage.tags["syslogProgram"] = tag
         }
 
         val payload = matcher.group("payload")

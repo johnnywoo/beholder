@@ -4,7 +4,10 @@ import org.apache.commons.cli.*
 import kotlin.system.exitProcess
 
 class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
-    val isHelp: Boolean
+    val isShortHelp: Boolean
+        get() = cliArgs.hasOption("h")
+
+    val isFullHelp: Boolean
         get() = cliArgs.hasOption("help")
 
     val configText: String?
@@ -47,8 +50,14 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
 
         options.addOption(
             Option.builder("h")
+                .desc("Show usage")
+                .build()
+        )
+
+        options.addOption(
+            Option.builder()
                 .longOpt("help")
-                .desc("Show help")
+                .desc("Show full help with command descriptions")
                 .build()
         )
 
@@ -61,9 +70,12 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
         }
     }
 
-    fun printHelp() {
+    fun printUsage() {
         HelpFormatter().printHelp("beholder", options)
+    }
 
-        // TODO describe config commands
+    fun printHelp() {
+        printUsage()
+        println(readTextFromResource("help.txt"))
     }
 }

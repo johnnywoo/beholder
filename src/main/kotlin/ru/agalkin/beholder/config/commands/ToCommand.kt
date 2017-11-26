@@ -8,18 +8,6 @@ class ToCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments)
     private val format: Format
 
     init {
-        val usage = """
-            |Usage:
-            |to <destination> [as <format>]
-            |
-            |Destinations:
-            |  stdout
-            |
-            |Formats:
-            |  payload (default)  -- detected payload string or just full message text
-            |  dump  -- full message dump with all tags
-        """.trimMargin()
-
         val args = Args(arguments)
 
         val destinationName = args.shift("Destination type was not specified")
@@ -32,7 +20,7 @@ class ToCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments)
             "dump"    -> Dump()
             "payload" -> Payload()
             null      -> Payload()
-            else      -> throw CommandException(usage)
+            else      -> throw CommandException("Cannot understand arguments of `to` command")
         }
 
         args.end()

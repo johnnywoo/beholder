@@ -1,0 +1,100 @@
+
+=== Config structure ===
+
+Config contains commands, which can have subcommands.
+Commands can produce, consume and modify messages.
+Messages are collections of arbitrary tags.
+
+Example:
+  flow {  # this command has no args, only subcommands
+      from udp 3820 {  # this command has both args and subcommands
+          parse syslog-nginx;  # this command has only arguments
+      }
+      to stdout;
+  }
+
+
+=== Config commands ===
+
+flow   -- defines a flow of messages
+from   -- produces messages from some source
+parse  -- populates message tags according to some format
+to     -- sends messages somewhere
+
+
+=== `flow` command ===
+
+Subcommands: `from`, `parse`, `to`.
+
+The first level of config can only contain `flow` commands.
+`flow` creates a flow of messages, which are routed consecutively
+through subcommands of `flow`.
+
+Example config with a caveat:
+  flow {
+     from udp 1001;
+     to tcp 1.2.3.4:1002; # here we send messages from port 1001
+     from udp 1003;
+     to tcp 1.2.3.4:1004; # receives messages from both ports 1001 AND 1003!
+  }
+
+This config will create two separate flows of messages:
+  flow {from udp 1001; to tcp 1.2.3.4:1002}
+  flow {from udp 1003; to tcp 1.2.3.4:1004}
+
+
+=== `from` command ===
+
+from udp [address:]port;
+
+Subcommands: `parse`.
+
+This command produces messages. Also, if there are any incoming messages,
+`from` will copy those to its output.
+
+You can use subcommands to pre-process messages before placing them into the flow.
+This way, you can easily receive messages in different formats from different sources.
+
+Example:
+  flow {
+      from udp 1001;
+      from udp 1002 {parse syslog-nginx}
+      to stdout as dump;
+      # in stdout we will see raw messages from port 1001
+      # and processed syslog messages from port 1002
+  }
+
+Tags produced by `from udp`:
+  receivedDate  -- ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
+  from          -- URI of packet source (example: udp://1.2.3.4:57733)
+
+
+=== `parse` command ===
+
+parse syslog-nginx;
+
+This command sets tags on messages according to chosen format.
+
+Format `syslog-nginx`: this is a BSD-style syslog format as produced by nginx.
+Incoming messages look like this:
+<190>Nov 25 13:46:44 host nginx: <actual log message>
+
+Tags produced by `parse syslog-nginx`:
+  syslogFacility  -- numeric syslog facility
+  syslogSeverity  -- numeric syslog severity
+  syslogHost      -- source host from the message
+  syslogProgram   -- program name (nginx calls this "tag")
+  payload         -- actual log message (this would've been written to a file by nginx)
+
+If a message cannot be parsed, it will be left unchanged.
+
+
+=== `to` command ===
+
+to stdout [as <format>];
+
+This command formats log messages and sends them to some destination.
+
+Formats:
+  payload  -- (default) detected payload string or just the full message text
+  dump     -- full dump of the message including all tags

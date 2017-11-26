@@ -1,4 +1,11 @@
-package ru.agalkin.beholder.config.parser
+package ru.agalkin.beholder
+
+import java.io.InputStreamReader
+
+fun readTextFromResource(name: String): String {
+    val inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(name)
+    return InputStreamReader(inputStream).readText()
+}
 
 fun charListToString(list: List<Char>): String {
     val sb = StringBuilder(list.size)

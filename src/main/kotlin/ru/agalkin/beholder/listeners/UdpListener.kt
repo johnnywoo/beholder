@@ -49,10 +49,7 @@ class UdpListener(private val address: Address) {
                     val message = Message(String(packet.data, 0, packet.length))
 
                     message.tags["receivedDate"] = curDateIso()
-                    message.tags["fromHost"]     = packet.address.hostAddress
-                    message.tags["fromPort"]     = packet.port.toString()
-                    message.tags["toHost"]       = address.getInetAddress().hostAddress
-                    message.tags["toPort"]       = address.port.toString()
+                    message.tags["from"]         = "udp://${packet.address.hostAddress}:${packet.port}"
 
                     queue.offer(message)
                 }
@@ -61,10 +58,9 @@ class UdpListener(private val address: Address) {
             println("Thread $name got deleted")
         }
 
-        private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") // Quoted "Z" to indicate UTC, no timezone offset
-        init {
-            formatter.timeZone = TimeZone.getTimeZone("UTC")
-        }
+        // 2017-11-26T16:16:01+03:00
+        // 2017-11-26T16:16:01Z if UTC
+        private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
 
         private fun curDateIso(): String
             = formatter.format(Date())

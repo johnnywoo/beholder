@@ -2,6 +2,7 @@ package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.parser.*
+import ru.agalkin.beholder.listToString
 
 /**
  * Выражение (команда) из токенов
@@ -25,19 +26,13 @@ abstract class CommandAbstract(private val arguments: List<ArgumentToken>) {
         }
     }
 
-    private val receivers = mutableSetOf<(Message) -> Unit>()
+    val receivers = mutableSetOf<(Message) -> Unit>()
 
     open fun emit(message: Message) {
         for (receiver in receivers) {
             receiver(message)
         }
     }
-
-    fun addReceiver(receiver: (Message) -> Unit)
-        = receivers.add(receiver)
-
-    fun removeReceiver(receiver: (Message) -> Unit)
-        = receivers.remove(receiver)
 
 
     protected fun requireArg(index: Int, errorMessage: String): String {

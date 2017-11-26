@@ -12,7 +12,7 @@ class FlowCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
         }
 
     init {
-        requireNoArgsAfter(0)
+        requireNoArgsAfter(0, "`flow` cannot have arguments, only subcommands")
     }
 
     override fun start() {
@@ -31,7 +31,7 @@ class FlowCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
             val nextCommand = subcommands[i + 1]
 
             // сообщение из первой команды пихаем во вторую, и т.д.
-            prevCommand.addReceiver { nextCommand.emit(it) }
+            prevCommand.receivers.add({ nextCommand.emit(it) })
         }
 
         super.start()

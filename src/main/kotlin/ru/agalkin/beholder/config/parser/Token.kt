@@ -1,5 +1,7 @@
 package ru.agalkin.beholder.config.parser
 
+import ru.agalkin.beholder.charListToString
+
 open class Token(
     initialChar: Char? = null,
     private val isSingleChar: Boolean = false

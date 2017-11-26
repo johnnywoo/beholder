@@ -3,7 +3,6 @@ package ru.agalkin.beholder
 import ru.agalkin.beholder.config.parser.ParseException
 import sun.misc.Signal
 import java.io.File
-import java.io.InputStreamReader
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -12,7 +11,12 @@ fun main(args: Array<String>) {
         exitProcess(1)
     }
 
-    if (cli.isHelp) {
+    if (cli.isShortHelp) {
+        cli.printUsage()
+        exitProcess(0)
+    }
+
+    if (cli.isFullHelp) {
         cli.printHelp()
         exitProcess(0)
     }
@@ -48,10 +52,8 @@ fun main(args: Array<String>) {
         // use bundled config from resources
         // this is intended primarily for development purposes
         else -> {
-            val inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream("default-config.conf")
-
-            configText = InputStreamReader(inputStream).readText()
             configFile = null
+            configText = readTextFromResource("default-config.conf")
 
             println("Using bundled config from jar resources")
         }

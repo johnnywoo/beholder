@@ -15,24 +15,13 @@ class FromCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
     private val source: Source
 
     init {
-        val usage = """
-            |Usage:
-            |from <source>
-            |
-            |Subcommands:
-            |parse  -- populates message tags from logs in certain formats
-            |
-            |Sources:
-            |udp [address:]port  -- receives messages from an UDP port
-        """.trimMargin()
-
         try {
-            source = when (requireArg(1, usage)) {
+            source = when (requireArg(1, "`from` needs a type of message source")) {
                 "udp" -> {
                     requireNoArgsAfter(2)
-                    UdpSource(Address.fromString(requireArg(2, usage), "0.0.0.0"))
+                    UdpSource(Address.fromString(requireArg(2, "`from udp` needs at least a port number"), "0.0.0.0"))
                 }
-                else -> throw CommandException(usage)
+                else -> throw CommandException("Cannot understand arguments of `from` command")
             }
         } catch (e: Address.AddressException) {
             throw CommandException(e)
@@ -57,11 +46,11 @@ class FromCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
                 val nextCommand = subcommands[i + 1]
                 // не последний ребенок направляется в следующего
                 // (сообщения, вылезающие из него, попадают в следующего ребенка)
-                command.addReceiver { nextCommand.emit(it) }
+                command.receivers.add({ nextCommand.emit(it) })
             } else {
                 // последний ребенок направляется в наш эмиттер
                 // (сообщения, вылезающие из него, будут вылезать из команды from)
-                command.addReceiver { emit(it) }
+                command.receivers.add({ emit(it) })
             }
         }
 

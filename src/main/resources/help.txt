@@ -1,4 +1,5 @@
 
+
 === Config structure ===
 
 Config contains commands, which can have subcommands.
@@ -22,7 +23,7 @@ parse  -- populates message tags according to some format
 to     -- sends messages somewhere
 
 
-=== `flow` command ===
+flow {subcommands}
 
 Subcommands: `from`, `parse`, `to`.
 
@@ -42,8 +43,6 @@ This config will create two separate flows of messages:
   flow {from udp 1001; to tcp 1.2.3.4:1002}
   flow {from udp 1003; to tcp 1.2.3.4:1004}
 
-
-=== `from` command ===
 
 from udp [address:]port;
 
@@ -69,8 +68,6 @@ Tags produced by `from udp`:
   from          -- URI of packet source (example: udp://1.2.3.4:57733)
 
 
-=== `parse` command ===
-
 parse syslog-nginx;
 
 This command sets tags on messages according to chosen format.
@@ -88,8 +85,6 @@ Tags produced by `parse syslog-nginx`:
 
 If a message cannot be parsed, it will be left unchanged.
 
-
-=== `to` command ===
 
 to stdout [as <format>];
 

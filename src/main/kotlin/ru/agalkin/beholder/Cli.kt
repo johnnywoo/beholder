@@ -76,6 +76,47 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
 
     fun printHelp() {
         printUsage()
-        println(readTextFromResource("help.txt"))
+        println(paint(readTextFromResource("help.txt")))
+    }
+
+    private fun paint(text: String): String {
+        if (System.console() == null) {
+            // non-interactive
+            return text
+        }
+
+        return text
+            // заголовки делаем жёлтыми (заголовок = две пустые строки подряд и потом текст)
+            .replace(Regex("((?:^|\n)\n\n)((?:[^\n]+\n)+)")) {
+                "${it.groups[1]?.value}${Color.YELLOW.start}${it.groups[2]?.value}${Color.stop}"
+            }
+            // убираем ===
+            .replace(Regex("=== (.*?) ===")) {
+                it.groups[1]?.value!!
+            }
+            // `куски кода` делаем голубыми
+            .replace(Regex("`([^\n]+?)`")) {
+                "${Color.CYAN.start}${it.groups[1]?.value}${Color.stop}"
+            }
+    }
+
+    enum class Color(private val number: Int) {
+        RED(31),
+        GREEN(32),
+        YELLOW(33),
+        BLUE(34),
+        PINK(35),
+        CYAN(36),
+        GRAY(37);
+
+        override fun toString(): String
+            = number.toString()
+
+        val start: String
+            get() = "\u001B[0;${number}m"
+
+        companion object {
+            val stop = "\u001B[0m"
+        }
     }
 }

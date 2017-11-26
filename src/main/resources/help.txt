@@ -80,7 +80,7 @@ Tags produced by `parse syslog-nginx`:
   syslogFacility  -- numeric syslog facility
   syslogSeverity  -- numeric syslog severity
   syslogHost      -- source host from the message
-  syslogProgram   -- program name (nginx calls this "tag")
+  syslogTag       -- program name (nginx calls this "tag")
   payload         -- actual log message (this would've been written to a file by nginx)
 
 If a message cannot be parsed, it will be left unchanged.
@@ -92,4 +92,5 @@ This command formats log messages and sends them to some destination.
 
 Formats:
   payload  -- (default) detected payload string or just the full message text
+  syslog   -- IETF version of syslog (starting with <123>1 and ISO date including timezone)
   dump     -- full dump of the message including all tags

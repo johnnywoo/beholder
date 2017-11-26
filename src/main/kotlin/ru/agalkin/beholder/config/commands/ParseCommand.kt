@@ -20,11 +20,11 @@ class ParseCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(argumen
         """
             ^
             < (?<priority>[0-9]+) >
-            (?<month>       Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
-            \s+ (?<day>     \d\d?)
-            \s+ (?<time>    \d\d:\d\d:\d\d)
-            \s+ (?<host>    [^\s]+)
-            \s+ (?<program> [^\s]+):
+            (?: Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
+            \s (?: (?:\s|\d)\d) # day
+            \s (?: \d\d:\d\d:\d\d) # time
+            (?: \s (?<host> [^\s]+) )? # 'nohostname' parameter in nginx
+            \s (?<tag> [^\s]+):
             \s # one space
             (?<payload>   .*)
             $
@@ -39,9 +39,8 @@ class ParseCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(argumen
 
         val newMessage = message.copy()
 
-        val matcher = syslogNginxRegex.matcher(message.text)
+        val matcher = syslogNginxRegex.matcher(message.getPayload())
         if (!matcher.matches()) {
-            newMessage.tags["fail"] = "yep"
             super.emit(newMessage)
             return
         }
@@ -50,24 +49,26 @@ class ParseCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(argumen
         if (priority != null) {
             try {
                 val int = Integer.parseInt(priority)
-                newMessage.tags["syslogFacility"] = (int % 8).toString()
-                newMessage.tags["syslogSeverity"] = (int / 8).toString()
+                // The Priority value is calculated by first multiplying the Facility number by 8
+                // and then adding the numerical value of the Severity.
+                newMessage["syslogFacility"] = (int / 8).toString()
+                newMessage["syslogSeverity"] = (int % 8).toString()
             } catch (ignored: NumberFormatException) {}
         }
 
         val host = matcher.group("host")
         if (host != null) {
-            newMessage.tags["syslogHost"] = host
+            newMessage["syslogHost"] = host
         }
 
-        val tag = matcher.group("program")
+        val tag = matcher.group("tag")
         if (tag != null) {
-            newMessage.tags["syslogProgram"] = tag
+            newMessage["syslogTag"] = tag
         }
 
         val payload = matcher.group("payload")
         if (payload != null) {
-            newMessage.tags["payload"] = payload
+            newMessage["payload"] = payload
         }
 
         super.emit(newMessage)

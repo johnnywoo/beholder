@@ -2,10 +2,14 @@ package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.parser.ArgumentToken
+import ru.agalkin.beholder.formatters.DumpFormatter
+import ru.agalkin.beholder.formatters.Formatter
+import ru.agalkin.beholder.formatters.PayloadFormatter
+import ru.agalkin.beholder.formatters.SyslogIetfFormatter
 
 class ToCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments) {
     private val destination: Destination
-    private val format: Format
+    private val formatter: Formatter
 
     init {
         val args = Args(arguments)
@@ -16,10 +20,11 @@ class ToCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments)
             else     -> throw CommandException("Unsupported destination type: $destinationName")
         }
 
-        format = when (args.shiftIfPrefixed("as", "`from ... as` needs a format definition")) {
-            "dump"    -> Dump()
-            "payload" -> Payload()
-            null      -> Payload()
+        formatter = when (args.shiftIfPrefixed("as", "`from ... as` needs a format definition")) {
+            "dump"    -> DumpFormatter()
+            "syslog"  -> SyslogIetfFormatter()
+            "payload" -> PayloadFormatter()
+            null      -> PayloadFormatter()
             else      -> throw CommandException("Cannot understand arguments of `to` command")
         }
 
@@ -27,7 +32,7 @@ class ToCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments)
     }
 
     override fun emit(message: Message) {
-        destination.write(format.formatMessage(message))
+        destination.write(formatter.formatMessage(message))
 
         super.emit(message)
     }
@@ -41,26 +46,6 @@ class ToCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments)
         override fun write(string: String) {
             println(string)
         }
-    }
-
-
-    interface Format {
-        fun formatMessage(message: Message): String
-    }
-
-    class Dump : Format {
-        override fun formatMessage(message: Message): String {
-            val sb = StringBuilder(message.text)
-            for ((tag, value) in message.tags) {
-                sb.append("\n~").append(tag).append('=').append(value)
-            }
-            return sb.toString()
-        }
-    }
-
-    class Payload : Format {
-        override fun formatMessage(message: Message): String
-            = message.getPayload()
     }
 
 

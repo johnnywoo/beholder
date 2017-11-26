@@ -46,10 +46,11 @@ class UdpListener(private val address: Address) {
                         queue.take()
                     }
 
-                    val message = Message(String(packet.data, 0, packet.length))
+                    val message = Message()
 
-                    message.tags["receivedDate"] = curDateIso()
-                    message.tags["from"]         = "udp://${packet.address.hostAddress}:${packet.port}"
+                    message["payload"]      = String(packet.data, 0, packet.length)
+                    message["receivedDate"] = curDateIso()
+                    message["from"]         = "udp://${packet.address.hostAddress}:${packet.port}"
 
                     queue.offer(message)
                 }

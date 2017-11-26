@@ -12,13 +12,13 @@ data class Address(private val host: String, val port: Int) {
             }
 
             val matchedHost = match[1]?.value
-            val matchedPort = match[2]?.value
+            val matchedPort = match[2]?.value!!
 
             val host = matchedHost ?: defaultHost
 
             val port: Int
             try {
-                port = Integer.parseInt(matchedPort)
+                port = matchedPort.toInt()
             } catch (e: Throwable) {
                 throw AddressException("Invalid port: $matchedPort")
             }

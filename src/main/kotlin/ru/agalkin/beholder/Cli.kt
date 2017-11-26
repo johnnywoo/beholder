@@ -85,38 +85,39 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
             return text
         }
 
+        val escape: (Color) -> String = {
+            Regex.escapeReplacement(it.toString())
+        }
+
         return text
             // заголовки делаем жёлтыми (заголовок = две пустые строки подряд и потом текст)
-            .replace(Regex("((?:^|\n)\n\n)((?:[^\n]+\n)+)")) {
-                "${it.groups[1]?.value}${Color.YELLOW.start}${it.groups[2]?.value}${Color.stop}"
-            }
+            .replace(
+                Regex("((?:^|\n)\n\n)((?:[^\n]+\n)+)"),
+                "$1" + escape(Color.YELLOW) + "$2" + escape(Color.NONE)
+            )
             // убираем ===
-            .replace(Regex("=== (.*?) ===")) {
-                it.groups[1]?.value!!
-            }
+            .replace(
+                Regex("=== (.*?) ==="),
+                "$1"
+            )
             // `куски кода` делаем голубыми
-            .replace(Regex("`([^\n]+?)`")) {
-                "${Color.CYAN.start}${it.groups[1]?.value}${Color.stop}"
-            }
+            .replace(
+                Regex("`([^\n]+?)`"),
+                escape(Color.CYAN) + "$1" + escape(Color.NONE)
+            )
     }
 
-    enum class Color(private val number: Int) {
+    private enum class Color(private val number: Int) {
         RED(31),
         GREEN(32),
         YELLOW(33),
         BLUE(34),
         PINK(35),
         CYAN(36),
-        GRAY(37);
+        GRAY(37),
+        NONE(0);
 
         override fun toString(): String
-            = number.toString()
-
-        val start: String
-            get() = "\u001B[0;${number}m"
-
-        companion object {
-            val stop = "\u001B[0m"
-        }
+            = if (number == 0) "\u001B[0m" else "\u001B[0;${number}m"
     }
 }

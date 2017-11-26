@@ -22,14 +22,16 @@ class ToCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments)
 
         val args = Args(arguments)
 
-        destination = when (args.shift(usage)) {
+        val destinationName = args.shift("Destination type was not specified")
+        destination = when (destinationName) {
             "stdout" -> StdoutDestination()
-            else     -> throw CommandException(usage)
+            else     -> throw CommandException("Unsupported destination type: $destinationName")
         }
 
-        format = when (args.shiftIfPrefixed("as", usage)) {
+        format = when (args.shiftIfPrefixed("as", "`from ... as` needs a format definition")) {
             "dump"    -> Dump()
             "payload" -> Payload()
+            null      -> Payload()
             else      -> throw CommandException(usage)
         }
 

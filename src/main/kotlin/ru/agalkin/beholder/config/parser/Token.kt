@@ -66,7 +66,7 @@ open class Token(
             }
 
             if (lastToken is QuotedStringToken) {
-                throw ParseException("Unclosed string literal detected:", listOf(lastToken).listIterator())
+                throw ParseException("Unclosed string literal detected: ${lastToken.getDefinition()}")
             }
 
             if (!lastToken.isEmpty()) {

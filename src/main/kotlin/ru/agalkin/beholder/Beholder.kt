@@ -3,12 +3,12 @@ package ru.agalkin.beholder
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.parser.ParseException
 
-class Beholder(private val configFile: String?) {
+class Beholder(private val configFile: String?, private val configText: String?) {
     // тут не ловим никаких ошибок, чтобы при старте с кривым конфигом сразу упасть
     var config: Config = readConfig()
-    init {
-        config.start()
-    }
+
+    fun start()
+        = config.start()
 
     fun reload() {
         val newConfig: Config
@@ -24,18 +24,22 @@ class Beholder(private val configFile: String?) {
         notifyBefore()
 
         config.stop()
-        newConfig.start()
         config = newConfig
+        config.start()
 
         notifyAfter()
     }
 
     private fun readConfig(): Config {
+        if (configText != null) {
+            return Config(configText)
+        }
+
         if (configFile != null) {
             return Config.fromFile(configFile)
         }
 
-        return Config.defaultConfig()
+        throw BeholderException("Cannot start beholder without config")
     }
 
     companion object {

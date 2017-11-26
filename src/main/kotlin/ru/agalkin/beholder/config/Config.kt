@@ -39,13 +39,6 @@ class Config(configText: String) {
             println("Reading config from $filename")
             return Config(File(filename).readText())
         }
-
-        fun defaultConfig(): Config {
-            println("Reading bundled config from jar resources")
-            val inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream("default-config.conf")
-            val configText  = InputStreamReader(inputStream).readText()
-            return Config(configText)
-        }
     }
 }
 

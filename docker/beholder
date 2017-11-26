@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+# beholder.jar with no arguments will start a daemon with bundled config.
+# This script is intended to execute in docker container, where bundled config is useless.
+# Instead we are going to show help on empty args.
+# To start the bundled config daemon anyway, use `beholder --`.
+
+#if [ -z "$1" ]; then
+#    set -- --help
+#fi
+
+java -jar /root/beholder*.jar "$@"

@@ -32,7 +32,7 @@ class FromCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
                     requireNoArgsAfter(2)
                     UdpSource(Address.fromString(requireArg(2, usage), "0.0.0.0"))
                 }
-                else  -> throw CommandException(usage)
+                else -> throw CommandException(usage)
             }
         } catch (e: Address.AddressException) {
             throw CommandException(e)

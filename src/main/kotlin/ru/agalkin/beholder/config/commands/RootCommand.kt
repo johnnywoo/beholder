@@ -16,7 +16,7 @@ class RootCommand : CommandAbstract(arrayListOf()) {
             root.importSubcommands(tokenIterator)
             if (tokenIterator.hasNext()) {
                 // не все токены распихались по выражениям
-                throw ParseException("Unexpected leftover tokens:", tokenIterator)
+                throw ParseException.fromIterator("Unexpected leftover tokens:", tokenIterator)
             }
             return root
         }

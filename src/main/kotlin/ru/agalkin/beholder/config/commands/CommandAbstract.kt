@@ -10,7 +10,7 @@ import ru.agalkin.beholder.config.parser.*
  * или
  * command arg arg { child; child }
  */
-abstract class CommandAbstract(protected val arguments: List<ArgumentToken>) {
+abstract class CommandAbstract(private val arguments: List<ArgumentToken>) {
     abstract protected fun createSubcommand(args: List<ArgumentToken>) : CommandAbstract?
 
     open fun start() {
@@ -88,11 +88,9 @@ abstract class CommandAbstract(protected val arguments: List<ArgumentToken>) {
             val subcommand: CommandAbstract
             try {
                 subcommand = createSubcommand(subcommandArgs)
-                    ?: throw CommandException("Command is not allowed here")
+                    ?: throw CommandException("Command `${subcommandArgs[0].getValue()}` is not allowed inside `${arguments[0].getValue()}`")
             } catch (e: CommandException) {
-                rewindIterator(tokens, subcommandArgs.size)
-                tokens.previous()
-                throw ParseException(e.message + ":", tokens)
+                throw ParseException.fromList(e.message + ":", subcommandArgs)
             }
             subcommands.add(subcommand)
 
@@ -105,8 +103,7 @@ abstract class CommandAbstract(protected val arguments: List<ArgumentToken>) {
             if (token is OpenBraceToken) {
                 subcommand.importSubcommands(tokens)
                 if (!tokens.hasNext() || tokens.next() !is CloseBraceToken) {
-                    tokens.previous()
-                    throw ParseException("Invalid closing brace placement:", tokens)
+                    throw ParseException.fromIterator("Invalid closing brace placement:", tokens, 1)
                 }
                 return importSubcommands(tokens)
             }
@@ -119,15 +116,14 @@ abstract class CommandAbstract(protected val arguments: List<ArgumentToken>) {
                 return
             }
 
-            tokens.previous()
-            throw ParseException("Cannot parse token ${token::class.simpleName}:", tokens)
+            throw ParseException.fromIterator("Cannot parse token ${token::class.simpleName}:", tokens, 1)
         }
     }
 
     fun getChildrenDefinition(indent: String = "")
         = listToString(subcommands, { it.getDefinition(indent) + "\n" })
 
-    fun getDefinition(indent: String = ""): String {
+    private fun getDefinition(indent: String = ""): String {
         val sb = StringBuilder()
 
         // args
@@ -152,11 +148,5 @@ abstract class CommandAbstract(protected val arguments: List<ArgumentToken>) {
         val next = tokens.next()
         tokens.previous()
         return next
-    }
-
-    private tailrec fun <T> rewindIterator(iterator: ListIterator<T>, offset: Int) {
-        if (offset > 0) {
-            rewindIterator(iterator, offset - 1)
-        }
     }
 }

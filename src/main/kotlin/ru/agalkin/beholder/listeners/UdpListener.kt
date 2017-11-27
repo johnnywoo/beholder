@@ -96,7 +96,7 @@ class UdpListener(private val address: Address) {
     }
 
     init {
-        Beholder.receivers.add(object : Beholder.ReloadListener {
+        Beholder.reloadListeners.add(object : Beholder.ReloadListener {
             override fun before() {
                 // перед тем, как заменять конфиг приложения,
                 // мы хотим поставить приём сообщений на паузу
@@ -107,7 +107,7 @@ class UdpListener(private val address: Address) {
                 if (receivers.isEmpty()) {
                    // после перезагрузки конфига оказалось, что листенер никому больше не нужен
                     isListenerDeleted = true
-                    Beholder.receivers.remove(this)
+                    Beholder.reloadListeners.remove(this)
                 }
                 isEmitterPaused = false
             }

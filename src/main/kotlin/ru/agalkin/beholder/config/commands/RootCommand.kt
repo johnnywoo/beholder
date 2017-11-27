@@ -2,11 +2,11 @@ package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.config.parser.*
 
-class RootCommand : CommandAbstract(arrayListOf()) {
-    override fun createSubcommand(args: List<ArgumentToken>) : CommandAbstract?
-        = when (args[0].getValue()) {
+class RootCommand : CommandAbstract(Arguments(arrayListOf())) {
+    override fun createSubcommand(args: Arguments) : CommandAbstract?
+        = when (args.getCommandName()) {
             "flow" -> FlowCommand(args)
-            else -> null
+            else   -> null
         }
 
     companion object {

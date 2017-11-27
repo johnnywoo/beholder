@@ -1,6 +1,8 @@
 package ru.agalkin.beholder
 
 import org.apache.commons.cli.*
+import ru.agalkin.beholder.config.Config
+import ru.agalkin.beholder.config.commands.*
 import kotlin.system.exitProcess
 
 class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
@@ -76,7 +78,15 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
 
     fun printHelp() {
         printUsage()
-        println(paint(readTextFromResource("help.txt")))
+
+        println(paint(
+            "\n\n" + Config.help +
+            "\n\n" + FlowCommand.help +
+            "\n\n" + FromCommand.help +
+            "\n\n" + ParseCommand.help +
+            "\n\n" + SetCommand.help +
+            "\n\n" + ToCommand.help
+        ))
     }
 
     private fun paint(text: String): String {
@@ -94,11 +104,6 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
             .replace(
                 Regex("((?:^|\n)\n\n)((?:[^\n]+\n)+)"),
                 "$1" + escape(Color.YELLOW) + "$2" + escape(Color.NONE)
-            )
-            // убираем ===
-            .replace(
-                Regex("=== (.*?) ==="),
-                "$1"
             )
             // `куски кода` делаем голубыми
             .replace(

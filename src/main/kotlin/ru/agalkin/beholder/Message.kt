@@ -1,27 +1,30 @@
 package ru.agalkin.beholder
 
+import java.math.BigInteger
 import java.text.SimpleDateFormat
 import java.util.*
 
 data class Message(
-    private val tags: MutableMap<String, String> = mutableMapOf<String, String>()
+    private val fields: MutableMap<String, String> = mutableMapOf()
 ) {
-    operator fun set(tag: String, value: String) {
+    val messageId = createdMessagesCount++
+
+    operator fun set(field: String, value: String) {
         if (value.isEmpty()) {
-            tags.remove(tag)
+            fields.remove(field)
         } else {
-            tags[tag] = value
+            fields[field] = value
         }
     }
 
-    fun getTags(): Map<String, String>
-        = tags
+    fun getFields(): Map<String, String>
+        = fields
 
     fun getPayload(): String
-        = stringTag("payload") ?: ""
+        = stringField("payload") ?: ""
 
-    fun stringTag(tag: String): String? {
-        val string = tags[tag]
+    fun stringField(field: String): String? {
+        val string = fields[field]
         if (string == null || string.isEmpty()) {
             return null
         }
@@ -30,11 +33,11 @@ data class Message(
 
     private var dateFormat: SimpleDateFormat? = null
 
-    fun dateTag(tag: String): Date? {
+    fun dateField(field: String): Date? {
         if (dateFormat == null) {
             dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
         }
-        val string = tags[tag]
+        val string = fields[field]
         if (string == null || string.isEmpty()) {
             return null
         }
@@ -42,9 +45,9 @@ data class Message(
     }
 
     // default is a parameter to avoid boxing
-    fun intTag(tag: String, default: Int): Int {
+    fun intField(field: String, default: Int): Int {
         try {
-            val string = tags[tag]
+            val string = fields[field]
             if (string == null || string.isEmpty()) {
                 return default
             }
@@ -52,5 +55,9 @@ data class Message(
         } catch (e: Throwable) {
             return default
         }
+    }
+
+    companion object {
+        var createdMessagesCount = 0L
     }
 }

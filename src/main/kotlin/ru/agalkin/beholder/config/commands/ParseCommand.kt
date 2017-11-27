@@ -1,18 +1,38 @@
 package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.config.parser.ArgumentToken
 import java.lang.NumberFormatException
 import java.util.regex.Pattern
 
-class ParseCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(arguments) {
+class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
+    companion object {
+        val help = """
+            |parse syslog-nginx;
+            |
+            |This command sets fields on messages according to chosen format.
+            |
+            |Format `syslog-nginx`: this is a BSD-style syslog format as produced by nginx.
+            |Incoming messages look like this:
+            |<190>Nov 25 13:46:44 host nginx: <actual log message>
+            |
+            |Fields produced by `parse syslog-nginx`:
+            |  ¥syslogFacility  -- numeric syslog facility
+            |  ¥syslogSeverity  -- numeric syslog severity
+            |  ¥syslogHost      -- source host from the message
+            |  ¥syslogProgram   -- program name (nginx calls this "tag")
+            |  ¥payload         -- actual log message (this would've been written to a file by nginx)
+            |
+            |If a message cannot be parsed, it will be left unchanged.
+            |""".trimMargin().replace("¥", "$")
+    }
+
     init {
-        when (requireArg(1, "We need some format to `parse`")) {
+        when (arguments.shift("We need some format to `parse`")) {
             "syslog-nginx" -> Unit
-            else -> throw CommandException("Cannot understand arguments of `parse` command")
+            else           -> throw CommandException("Cannot understand arguments of `parse` command")
         }
 
-        requireNoArgsAfter(1)
+        arguments.end()
     }
 
     // <190>Nov 25 13:46:44 vps nginx: 127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] "GET /api HTTP/1.1" 200 47 "-" "curl/7.38.0"
@@ -63,7 +83,7 @@ class ParseCommand(arguments: List<ArgumentToken>) : LeafCommandAbstract(argumen
 
         val tag = matcher.group("tag")
         if (tag != null) {
-            newMessage["syslogTag"] = tag
+            newMessage["syslogProgram"] = tag
         }
 
         val payload = matcher.group("payload")

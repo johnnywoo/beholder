@@ -11,8 +11,8 @@ import ru.agalkin.beholder.listToString
  * или
  * command arg arg { child; child }
  */
-abstract class CommandAbstract(private val arguments: List<ArgumentToken>) {
-    abstract protected fun createSubcommand(args: List<ArgumentToken>) : CommandAbstract?
+abstract class CommandAbstract(private val arguments: Arguments) {
+    abstract protected fun createSubcommand(args: Arguments) : CommandAbstract?
 
     open fun start() {
         for (command in subcommands) {
@@ -31,20 +31,6 @@ abstract class CommandAbstract(private val arguments: List<ArgumentToken>) {
     open fun emit(message: Message) {
         for (receiver in receivers) {
             receiver(message)
-        }
-    }
-
-
-    protected fun requireArg(index: Int, errorMessage: String): String {
-        if (arguments.size < index) {
-            throw CommandException(errorMessage)
-        }
-        return arguments[index].getValue()
-    }
-
-    protected fun requireNoArgsAfter(index: Int, errorMessage: String = "Too many arguments") {
-        if (arguments.size > index + 1) {
-            throw CommandException(errorMessage)
         }
     }
 
@@ -82,8 +68,8 @@ abstract class CommandAbstract(private val arguments: List<ArgumentToken>) {
             // аргументы кончились = надо зарегистрировать нашу новую команду
             val subcommand: CommandAbstract
             try {
-                subcommand = createSubcommand(subcommandArgs)
-                    ?: throw CommandException("Command `${subcommandArgs[0].getValue()}` is not allowed inside `${arguments[0].getValue()}`")
+                subcommand = createSubcommand(Arguments(subcommandArgs))
+                    ?: throw CommandException("Command `${subcommandArgs[0].getValue()}` is not allowed inside `${arguments.getCommandName()}`")
             } catch (e: CommandException) {
                 throw ParseException.fromList(e.message + ":", subcommandArgs)
             }
@@ -122,7 +108,7 @@ abstract class CommandAbstract(private val arguments: List<ArgumentToken>) {
         val sb = StringBuilder()
 
         // args
-        sb.append(indent).append(arguments.joinToString(" ") { it.getDefinition() })
+        sb.append(indent).append(arguments.toList().joinToString(" ") { it.getDefinition() })
 
         // child expressions
         if (subcommands.isEmpty()) {

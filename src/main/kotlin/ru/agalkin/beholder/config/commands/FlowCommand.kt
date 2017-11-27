@@ -1,18 +1,40 @@
 package ru.agalkin.beholder.config.commands
 
-import ru.agalkin.beholder.config.parser.*
+class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
+    companion object {
+        val help = """
+            |flow {subcommands}
+            |
+            |Subcommands: `from`, `parse`, `set`, `to`.
+            |
+            |The first level of config can only contain `flow` commands.
+            |`flow` creates a flow of messages, which are routed consecutively through its subcommands.
+            |
+            |Example config with a caveat:
+            |  flow {
+            |     from udp 1001;
+            |     to tcp 1.2.3.4:1002; # here we send messages from port 1001
+            |     from udp 1003;
+            |     to tcp 1.2.3.4:1004; # receives messages from both ports 1001 AND 1003!
+            |  }
+            |
+            |This config will create two separate flows of messages:
+            |  flow {from udp 1001; to tcp 1.2.3.4:1002}
+            |  flow {from udp 1003; to tcp 1.2.3.4:1004}
+            |""".trimMargin()
+    }
 
-class FlowCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
-    override fun createSubcommand(args: List<ArgumentToken>): CommandAbstract?
-        = when (args[0].getValue()) {
+    override fun createSubcommand(args: Arguments): CommandAbstract?
+        = when (args.getCommandName()) {
             "from"  -> FromCommand(args)
             "parse" -> ParseCommand(args)
+            "set"   -> SetCommand(args)
             "to"    -> ToCommand(args)
             else    -> null
         }
 
     init {
-        requireNoArgsAfter(0, "`flow` cannot have arguments, only subcommands")
+        arguments.end()
     }
 
     override fun start() {

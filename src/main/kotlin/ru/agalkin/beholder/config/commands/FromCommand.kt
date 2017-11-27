@@ -2,30 +2,71 @@ package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.config.parser.ArgumentToken
+import ru.agalkin.beholder.listeners.TimerListener
 import ru.agalkin.beholder.listeners.UdpListener
 
-class FromCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
-    override fun createSubcommand(args: List<ArgumentToken>): CommandAbstract?
-        = when (args[0].getValue()) {
+class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
+    companion object {
+        val help = """
+            |from udp [address:]port;
+            |from timer;
+            |
+            |Subcommands: `parse`, `set`.
+            |
+            |This command produces messages, applying subcommands to them if there are any.
+            |
+            |If there are any incoming messages (not produced by current `from` command),
+            |`from` will copy them to its output. Subcommands are not applied to those.
+            |
+            |You can use subcommands to pre-process messages before placing them into the flow.
+            |This way, you can easily receive messages in different formats from different sources.
+            |
+            |Example:
+            |  flow {
+            |      from udp 1001;
+            |      from udp 1002 {parse syslog-nginx}
+            |      set ¥payload dump;
+            |      to stdout;
+            |      # in stdout we will see raw messages from port 1001
+            |      # and processed syslog messages from port 1002
+            |  }
+            |
+            |Fields produced by `from udp`:
+            |  ¥receivedDate  -- ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
+            |  ¥from          -- URI of packet source (example: udp://1.2.3.4:57733)
+            |
+            |`from timer` emits a minimal message every second. It is useful for experimenting
+            |with beholder configurations.
+            |
+            |Fields produced by `from timer`:
+            |  ¥receivedDate  -- ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
+            |  ¥from          -- Always 'timer://timer'
+            |""".trimMargin().replace("¥", "$")
+    }
+
+    override fun createSubcommand(args: Arguments): CommandAbstract?
+        = when (args.getCommandName()) {
             "parse" -> ParseCommand(args)
-            else -> null
+            "set"   -> SetCommand(args)
+            else    -> null
         }
 
     private val source: Source
 
     init {
         try {
-            source = when (requireArg(1, "`from` needs a type of message source")) {
+            source = when (arguments.shift("`from` needs a type of message source")) {
                 "udp" -> {
-                    requireNoArgsAfter(2)
-                    UdpSource(Address.fromString(requireArg(2, "`from udp` needs at least a port number"), "0.0.0.0"))
+                    UdpSource(Address.fromString(arguments.shift("`from udp` needs at least a port number"), "0.0.0.0"))
                 }
+                "timer" -> TimerSource()
                 else -> throw CommandException("Cannot understand arguments of `from` command")
             }
         } catch (e: Address.AddressException) {
             throw CommandException(e)
         }
+
+        arguments.end()
     }
 
     private fun onMessageFromSource(message: Message) {
@@ -79,6 +120,20 @@ class FromCommand(arguments: List<ArgumentToken>) : CommandAbstract(arguments) {
         override fun stop() {
             println("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
             UdpListener.getListener(address).receivers.remove(receiver)
+        }
+    }
+
+    private inner class TimerSource() : Source {
+        val receiver: (Message) -> Unit = { onMessageFromSource(it) }
+
+        override fun start() {
+            println("${this::class.simpleName} start: connecting to timer")
+            TimerListener.timer.receivers.add(receiver)
+        }
+
+        override fun stop() {
+            println("${this::class.simpleName} stop: disconnecting from timer")
+            TimerListener.timer.receivers.remove(receiver)
         }
     }
 }

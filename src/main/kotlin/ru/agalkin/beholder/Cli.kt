@@ -3,14 +3,19 @@ package ru.agalkin.beholder
 import org.apache.commons.cli.*
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.commands.*
-import kotlin.system.exitProcess
 
-class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
+class Cli(args: Array<String>, onParseError: (ParseException) -> Nothing) {
     val isShortHelp: Boolean
         get() = cliArgs.hasOption("h")
 
     val isFullHelp: Boolean
         get() = cliArgs.hasOption("help")
+
+    val isQuiet: Boolean
+        get() = cliArgs.hasOption("quiet")
+
+    val logFile: String?
+        get() = cliArgs.getOptionValue("log")
 
     val configText: String?
         get() = cliArgs.getOptionValue("config")
@@ -51,6 +56,22 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
         )
 
         options.addOption(
+            Option.builder("q")
+                .longOpt("quiet")
+                .desc("Do not print internal log into stdout")
+                .build()
+        )
+
+        options.addOption(
+            Option.builder("l")
+                .longOpt("log")
+                .argName("file")
+                .hasArg()
+                .desc("Internal log file")
+                .build()
+        )
+
+        options.addOption(
             Option.builder("h")
                 .desc("Show usage")
                 .build()
@@ -68,7 +89,6 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Unit) {
             cliArgs = cliParser.parse(options, args)
         } catch (e: ParseException) {
             onParseError(e)
-            exitProcess(1) // just in case the callback did not exit
         }
     }
 

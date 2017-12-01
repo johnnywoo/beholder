@@ -1,7 +1,9 @@
 package ru.agalkin.beholder.config.commands
 
+import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
+import ru.agalkin.beholder.listeners.InternalLogListener
 import ru.agalkin.beholder.listeners.TimerListener
 import ru.agalkin.beholder.listeners.UdpListener
 
@@ -10,6 +12,7 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
         val help = """
             |from udp [address:]port;
             |from timer;
+            |from internal-log;
             |
             |Subcommands: `parse`, `set`.
             |
@@ -34,13 +37,26 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
             |Fields produced by `from udp`:
             |  ¥receivedDate  -- ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
             |  ¥from          -- URI of packet source (example: udp://1.2.3.4:57733)
+            |  ¥payload       -- Text as received from UDP
             |
             |`from timer` emits a minimal message every second. It is useful for experimenting
             |with beholder configurations.
             |
             |Fields produced by `from timer`:
             |  ¥receivedDate  -- ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
-            |  ¥from          -- Always 'timer://timer'
+            |  ¥from          -- '${TimerListener.FROM_FIELD_VALUE}'
+            |  ¥syslogProgram -- 'beholder'
+            |  ¥payload        -- A short random message
+            |
+            |`from internal-log` emits messages from the internal Beholder log. These are the same messages
+            |Beholder writes to stdout/stderr and its log file (see also CLI options --log and --quiet).
+            |
+            |Fields produced by `from internal-log`:
+            |  ¥receivedDate   -- ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
+            |  ¥from           -- Always '${InternalLog.FROM_FIELD_VALUE}'
+            |  ¥syslogSeverity -- Severity of messages
+            |  ¥syslogProgram  -- 'beholder'
+            |  ¥payload        -- Log message text
             |""".trimMargin().replace("¥", "$")
     }
 
@@ -56,10 +72,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
     init {
         try {
             source = when (arguments.shift("`from` needs a type of message source")) {
-                "udp" -> {
-                    UdpSource(Address.fromString(arguments.shift("`from udp` needs at least a port number"), "0.0.0.0"))
-                }
+                "udp" -> UdpSource(Address.fromString(
+                    arguments.shift("`from udp` needs at least a port number"),
+                    "0.0.0.0"
+                ))
                 "timer" -> TimerSource()
+                "internal-log" -> InternalLogSource()
                 else -> throw CommandException("Cannot understand arguments of `from` command")
             }
         } catch (e: Address.AddressException) {
@@ -113,27 +131,41 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
         val receiver: (Message) -> Unit = { onMessageFromSource(it) }
 
         override fun start() {
-            println("${this::class.simpleName} start: connecting to UDP listener at $address")
+            InternalLog.info("${this::class.simpleName} start: connecting to UDP listener at $address")
             UdpListener.getListener(address).receivers.add(receiver)
         }
 
         override fun stop() {
-            println("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
+            InternalLog.info("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
             UdpListener.getListener(address).receivers.remove(receiver)
         }
     }
 
-    private inner class TimerSource() : Source {
+    private inner class TimerSource : Source {
         val receiver: (Message) -> Unit = { onMessageFromSource(it) }
 
         override fun start() {
-            println("${this::class.simpleName} start: connecting to timer")
-            TimerListener.timer.receivers.add(receiver)
+            InternalLog.info("${this::class.simpleName} start: connecting to timer")
+            TimerListener.instance.receivers.add(receiver)
         }
 
         override fun stop() {
-            println("${this::class.simpleName} stop: disconnecting from timer")
-            TimerListener.timer.receivers.remove(receiver)
+            InternalLog.info("${this::class.simpleName} stop: disconnecting from timer")
+            TimerListener.instance.receivers.remove(receiver)
+        }
+    }
+
+    private inner class InternalLogSource : Source {
+        val receiver: (Message) -> Unit = { onMessageFromSource(it) }
+
+        override fun start() {
+            InternalLog.info("${this::class.simpleName} start: connecting to internal log")
+            InternalLogListener.instance.receivers.add(receiver)
+        }
+
+        override fun stop() {
+            InternalLog.info("${this::class.simpleName} stop: disconnecting from internal log")
+            InternalLogListener.instance.receivers.remove(receiver)
         }
     }
 }

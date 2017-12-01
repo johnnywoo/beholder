@@ -15,9 +15,9 @@ class Beholder(private val configFile: String?, private val configText: String?)
         try {
             newConfig = readConfig()
         } catch (e: ParseException) {
-            println("=== Error: invalid config ===")
-            println(e.message)
-            println("=== Config was not applied ===")
+            InternalLog.err("=== Error: invalid config ===")
+            InternalLog.err(e.message)
+            InternalLog.err("=== Config was not applied ===")
             return
         }
 

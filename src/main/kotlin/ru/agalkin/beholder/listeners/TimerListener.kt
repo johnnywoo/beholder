@@ -1,31 +1,51 @@
 package ru.agalkin.beholder.listeners
 
+import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
-import java.text.SimpleDateFormat
+import ru.agalkin.beholder.getIsoDateFormatter
 import java.util.*
 
 class TimerListener {
+    private val messageParts = arrayOf(
+        listOf("A tiny", "A small", "A little", "An average", "A big", "A large", "A huge", "An enormous"),
+        listOf("mouse", "cat", "dog", "elephant", "wolf", "hamster", "chicken", "hedgehog"),
+        listOf("entered", "left", "walked by", "is buried under", "is looking to buy", "jumped over", "got fed up with"),
+        listOf("the building", "the car", "the Moon", "a cookie jar", "the zoo", "the shark", "the Beatles")
+    )
+
     private val listenerThread = object : Thread("timer-listener") {
         override fun run() {
-            println("Thread $name got started")
+            InternalLog.info("Thread $name got started")
+
+            var millis = Date().time
 
             while (true) {
+                val message = Message()
+
+                message["receivedDate"]  = curDateIso()
+                message["syslogProgram"] = "beholder"
+                message["from"]          = FROM_FIELD_VALUE
+
+                val sb = StringBuilder()
+                for (set in messageParts) {
+                    if(!sb.isEmpty()) {
+                        sb.append(' ')
+                    }
+                    sb.append(set.shuffled()[0])
+                }
+                message["payload"] = sb.toString()
+
                 for (receiver in receivers) {
-                    val message = Message()
-
-                    message["receivedDate"] = curDateIso()
-                    message["from"]         = "timer://timer"
-
                     receiver(message)
                 }
 
-                sleep(1000)
+                // выдаём сообщения точно раз в секунду, без накопления ошибки
+                millis += 1000
+                sleep(millis - Date().time)
             }
         }
 
-        // 2017-11-26T16:16:01+03:00
-        // 2017-11-26T16:16:01Z if UTC
-        private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+        private val formatter = getIsoDateFormatter()
 
         private fun curDateIso(): String
             = formatter.format(Date())
@@ -38,6 +58,8 @@ class TimerListener {
     val receivers = mutableSetOf<(Message) -> Unit>()
 
     companion object {
-        val timer = TimerListener()
+        const val FROM_FIELD_VALUE = "beholder://timer"
+
+        val instance: TimerListener by lazy { TimerListener() }
     }
 }

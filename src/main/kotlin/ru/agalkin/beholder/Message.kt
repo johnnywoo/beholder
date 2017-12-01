@@ -1,13 +1,18 @@
 package ru.agalkin.beholder
 
-import java.math.BigInteger
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class Message(
+class Message {
     private val fields: MutableMap<String, String> = mutableMapOf()
-) {
+
     val messageId = createdMessagesCount++
+
+    fun copy(): Message {
+        val newMessage = Message()
+        newMessage.fields.putAll(fields)
+        return newMessage
+    }
 
     operator fun set(field: String, value: String) {
         if (value.isEmpty()) {
@@ -17,25 +22,25 @@ data class Message(
         }
     }
 
+    operator fun get(field: String): String? {
+        val value = fields[field]
+        if (value == null || value.isEmpty()) {
+            return null
+        }
+        return value
+    }
+
     fun getFields(): Map<String, String>
         = fields
 
     fun getPayload(): String
-        = stringField("payload") ?: ""
-
-    fun stringField(field: String): String? {
-        val string = fields[field]
-        if (string == null || string.isEmpty()) {
-            return null
-        }
-        return string
-    }
+        = get("payload") ?: ""
 
     private var dateFormat: SimpleDateFormat? = null
 
     fun dateField(field: String): Date? {
         if (dateFormat == null) {
-            dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+            dateFormat = getIsoDateFormatter()
         }
         val string = fields[field]
         if (string == null || string.isEmpty()) {

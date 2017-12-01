@@ -1,9 +1,9 @@
 package ru.agalkin.beholder.config
 
+import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.commands.RootCommand
 import ru.agalkin.beholder.config.parser.Token
 import java.io.File
-import java.io.InputStreamReader
 
 class Config(configText: String) {
     companion object {
@@ -33,7 +33,7 @@ class Config(configText: String) {
             |""".trimMargin()
 
         fun fromFile(filename: String): Config {
-            println("Reading config from $filename")
+            InternalLog.info("Reading config from $filename")
             return Config(File(filename).readText())
         }
     }
@@ -41,9 +41,7 @@ class Config(configText: String) {
     private val root: RootCommand
 
     init {
-        println("=== Config text ===")
-        print(configText)
-        println("=== End config text ===")
+        InternalLog.info("=== Config text ===\n$configText=== End config text ===")
 
         // читаем символы из строки и формируем токены
         val tokens = Token.getTokens(configText)
@@ -55,9 +53,7 @@ class Config(configText: String) {
         // штука сразу делает конкретные экземпляры команд, в которых уже есть бизнес-логика
         root = RootCommand.fromTokens(tokens)
 
-        println("=== Parsed config ===")
-        print(root.getChildrenDefinition())
-        println("=== End parsed config ===")
+        InternalLog.info("=== Parsed config ===\n${root.getChildrenDefinition()}=== End parsed config ===")
     }
 
     fun start()

@@ -3,4 +3,6 @@
 /build
 /out
 
+/beholder.log
+
 .DS_Store

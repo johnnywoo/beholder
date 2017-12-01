@@ -1,19 +1,19 @@
 package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
+import ru.agalkin.beholder.getIsoDateFormatter
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.SocketTimeoutException
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.atomic.AtomicBoolean
-import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
-
 
 class UdpListener(private val address: Address) {
     private val queue = LinkedBlockingQueue<Message>()
@@ -25,7 +25,7 @@ class UdpListener(private val address: Address) {
         private val buffer = ByteArray(MAX_MESSAGE_CHARS)
 
         override fun run() {
-            println("Thread $name got started")
+            InternalLog.info("Thread $name got started")
 
             DatagramSocket(address.port, address.getInetAddress()).use {socket ->
                 socket.soTimeout = 100 // millis
@@ -56,12 +56,12 @@ class UdpListener(private val address: Address) {
                 }
             }
 
-            println("Thread $name got deleted")
+            InternalLog.info("Thread $name got deleted")
         }
 
         // 2017-11-26T16:16:01+03:00
         // 2017-11-26T16:16:01Z if UTC
-        private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+        private val formatter = getIsoDateFormatter()
 
         private fun curDateIso(): String
             = formatter.format(Date())
@@ -69,7 +69,7 @@ class UdpListener(private val address: Address) {
 
     private val emitterThread = object : Thread("from-udp-$address-emitter") {
         override fun run() {
-            println("Thread $name got started")
+            InternalLog.info("Thread $name got started")
 
             // эмиттер останавливается, когда подписчики кончились
             while (!isListenerDeleted) {
@@ -77,12 +77,20 @@ class UdpListener(private val address: Address) {
                     Thread.sleep(50)
                     continue
                 }
+
                 val message = queue.poll(100, TimeUnit.MILLISECONDS) // blocking for 100 millis
                 if (message == null) {
                     // за 100 мс ничего не нашли
                     // проверим все условия и поедем ждать заново
                     continue
                 }
+
+                // выхватили сообщение, а эмиттер уже на паузе — надо обождать
+                while (isEmitterPaused) {
+                    Thread.sleep(50)
+                    continue
+                }
+
                 for (receiver in receivers) {
                     receiver(message)
                 }
@@ -91,7 +99,7 @@ class UdpListener(private val address: Address) {
             // на всякий случай, если мы будем перезапускать лисенер, надо тут всё зачистить
             queue.clear()
 
-            println("Thread $name got deleted")
+            InternalLog.info("Thread $name got deleted")
         }
     }
 

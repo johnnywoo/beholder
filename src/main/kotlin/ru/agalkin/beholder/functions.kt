@@ -1,6 +1,16 @@
 package ru.agalkin.beholder
 
 import java.io.InputStreamReader
+import java.text.SimpleDateFormat
+import java.util.*
+
+fun getIsoDateFormatter()
+    = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+
+// 2017-11-26T16:16:01+03:00
+// 2017-11-26T16:16:01Z if UTC
+fun getIsoDate(date: Date = Date()): String
+    = getIsoDateFormatter().format(date)
 
 fun readTextFromResource(name: String): String {
     val inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(name)

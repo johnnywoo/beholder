@@ -6,8 +6,14 @@ import java.io.File
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
+    Thread.setDefaultUncaughtExceptionHandler { _, exception ->
+        Thread.setDefaultUncaughtExceptionHandler(null)
+        InternalLog.exception(exception)
+        exitProcess(1)
+    }
+
     val cli = Cli(args) { parseError ->
-        System.err.println("Bad arguments: ${parseError.message}")
+        InternalLog.err("Bad arguments: ${parseError.message}")
         exitProcess(1)
     }
 
@@ -21,6 +27,24 @@ fun main(args: Array<String>) {
         exitProcess(0)
     }
 
+    if (cli.isQuiet) {
+        InternalLog.stopWritingToStdout()
+    }
+
+    val logFile = cli.logFile
+    if (logFile != null) {
+        InternalLog.info("Internal log file: $logFile")
+        InternalLog.copyToFile(logFile)
+    }
+
+    InternalLog.info("Beholder is starting")
+
+    Runtime.getRuntime().addShutdownHook(object : Thread("shutdown-hook") {
+        override fun run() {
+            InternalLog.info("Beholder is stopping")
+        }
+    })
+
     val configFile: String?
     val configText: String?
 
@@ -29,7 +53,7 @@ fun main(args: Array<String>) {
         cli.configText != null -> {
             configFile = null
             configText = cli.configText + "\n"
-            println("Using config from CLI arguments")
+            InternalLog.info("Using config from CLI arguments")
         }
 
         // beholder --config-file=/etc/beholder/beholder.conf
@@ -38,14 +62,14 @@ fun main(args: Array<String>) {
 
             val file = File(filename)
             if (!file.isFile || !file.canRead()) {
-                System.err.println("Cannot read config from $filename")
+                InternalLog.err("Cannot read config from $filename")
                 exitProcess(1)
             }
 
             configFile = filename
             configText = null // config reader will read the file by itself
 
-            println("Using config from file: $filename")
+            InternalLog.info("Using config from file: $filename")
         }
 
         // no file and no config text:
@@ -55,7 +79,7 @@ fun main(args: Array<String>) {
             configFile = null
             configText = readTextFromResource("default-config.conf")
 
-            println("Using bundled config from jar resources")
+            InternalLog.info("Using bundled config from jar resources")
         }
     }
 
@@ -63,8 +87,8 @@ fun main(args: Array<String>) {
     try {
         app = Beholder(configFile, configText)
     } catch (e: ParseException) {
-        System.err.println("=== Error: invalid config ===")
-        System.err.println(e.message)
+        InternalLog.err("=== Error: invalid config ===")
+        InternalLog.err(e.message)
         exitProcess(1)
     }
 
@@ -76,7 +100,8 @@ fun main(args: Array<String>) {
     app.start()
 
     Signal.handle(Signal("HUP")) {
-        println("Got SIGHUP")
+        InternalLog.info("Got SIGHUP")
+        InternalLog.info("Beholder is reloading")
         app.reload()
     }
 }

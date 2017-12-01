@@ -1,8 +1,8 @@
 package ru.agalkin.beholder.formatters
 
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.getIsoDateFormatter
 import java.net.InetAddress
-import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -27,10 +27,10 @@ class SyslogIetfFormatter : Formatter {
         sb.append(formatDate(date)).append(' ')
 
         // host
-        sb.append(message.stringField("syslogHost") ?: defaultHost).append(' ')
+        sb.append(message["syslogHost"] ?: defaultHost).append(' ')
 
         // program name
-        sb.append(message.stringField("syslogProgram") ?: "-").append(' ')
+        sb.append(message["syslogProgram"] ?: "-").append(' ')
 
         // pid, message id, structured data
         sb.append("- - - ")
@@ -41,9 +41,11 @@ class SyslogIetfFormatter : Formatter {
         return sb.toString()
     }
 
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+    private val dateFormat = getIsoDateFormatter()
 
     // чтобы всё было как можно более одинаковое, мы заменим Z для UTC на +00:00
     private fun formatDate(date: Date): String
         = dateFormat.format(date).replace(Regex("Z$"), "+00:00")
+
+
 }

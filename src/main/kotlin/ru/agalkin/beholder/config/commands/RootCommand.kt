@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.config.commands
 
-import ru.agalkin.beholder.config.parser.*
+import ru.agalkin.beholder.config.parser.ParseException
+import ru.agalkin.beholder.config.parser.Token
 
 class RootCommand : CommandAbstract(Arguments(arrayListOf())) {
     override fun createSubcommand(args: Arguments) : CommandAbstract?

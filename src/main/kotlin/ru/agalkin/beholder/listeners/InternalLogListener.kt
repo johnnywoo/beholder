@@ -35,7 +35,6 @@ class InternalLogListener {
                 // выхватили сообщение, а эмиттер уже на паузе — надо обождать
                 while (isEmitterPaused) {
                     Thread.sleep(50)
-                    continue
                 }
 
                 for (receiver in receivers) {

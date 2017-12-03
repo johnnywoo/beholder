@@ -7,7 +7,7 @@ RUN set -xe \
     && apt-get dist-upgrade -qq \
     && apt-get install -qqy --no-install-recommends \
         openjdk-8-jre-headless \
-    && mkdir -p /etc/beholder
+    && mkdir -p /etc/beholder \
     && mkdir -p /var/log/beholder
 
 COPY build/libs /root

@@ -2,11 +2,14 @@ package ru.agalkin.beholder
 
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
+
+private val createdMessagesCount = AtomicLong(0)
 
 class Message {
     private val fields: MutableMap<String, String> = mutableMapOf()
 
-    val messageId = createdMessagesCount++
+    val messageId = createdMessagesCount.getAndIncrement()
 
     fun copy(): Message {
         val newMessage = Message()
@@ -60,9 +63,5 @@ class Message {
         } catch (e: Throwable) {
             return default
         }
-    }
-
-    companion object {
-        var createdMessagesCount = 0L
     }
 }

@@ -49,7 +49,7 @@ class TimerListenerThread : Thread("timer-listener") {
         private val messageParts = arrayOf(
             listOf("A tiny", "A small", "A little", "An average", "A big", "A large", "A huge", "An enormous"),
             listOf("mouse", "cat", "dog", "elephant", "wolf", "hamster", "chicken", "hedgehog"),
-            listOf("entered", "left", "walked by", "is buried under", "is looking to buy", "jumped over", "got fed up with"),
+            listOf("entered", "left", "walked by", "is buried under", "is looking to buy", "jumped over", "got fed up with", "got paid by"),
             listOf("the building", "the car", "the Moon", "a cookie jar", "the zoo", "the shark", "the Beatles")
         )
     }

@@ -107,11 +107,11 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
                 val nextCommand = subcommands[i + 1]
                 // не последний ребенок направляется в следующего
                 // (сообщения, вылезающие из него, попадают в следующего ребенка)
-                command.receivers.add({ nextCommand.emit(it) })
+                command.router.subscribers.add({ nextCommand.emit(it) })
             } else {
                 // последний ребенок направляется в наш эмиттер
                 // (сообщения, вылезающие из него, будут вылезать из команды from)
-                command.receivers.add({ emit(it) })
+                command.router.subscribers.add({ emit(it) })
             }
         }
 

@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.addNewlineIfNeeded
 import ru.agalkin.beholder.formatters.InterpolateStringFormatter
 import ru.agalkin.beholder.threads.FileSender
 
@@ -54,35 +55,25 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
 
     override fun emit(message: Message) {
         destination.write(message)
-
-        super.emit(message)
     }
 
 
-    interface Destination {
+    private interface Destination {
         fun write(message: Message)
     }
 
-    inner class StdoutDestination : Destination {
+    private class StdoutDestination : Destination {
         override fun write(message: Message) {
-            val text = message.getPayload()
-            print(when (text.isEmpty() || text.last() != '\n') {
-                true -> text + "\n"
-                else -> text
-            })
+            print(addNewlineIfNeeded(message.getPayload()))
         }
     }
 
-    class FileDestination(filenameTemplate: String) : Destination {
+    private class FileDestination(filenameTemplate: String) : Destination {
         private val formatter = InterpolateStringFormatter(filenameTemplate)
 
         override fun write(message: Message) {
             val sender = FileSender.getSender(formatter.formatMessage(message))
-            val text = message.getPayload()
-            sender.writeMessagePayload(when (text.last()) {
-                '\n' -> text
-                else -> text + "\n"
-            })
+            sender.writeMessagePayload(addNewlineIfNeeded(message.getPayload()))
         }
     }
 }

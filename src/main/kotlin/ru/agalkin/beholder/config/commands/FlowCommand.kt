@@ -53,7 +53,7 @@ class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
             val nextCommand = subcommands[i + 1]
 
             // сообщение из первой команды пихаем во вторую, и т.д.
-            prevCommand.receivers.add({ nextCommand.emit(it) })
+            prevCommand.router.subscribers.add({ nextCommand.emit(it) })
         }
 
         super.start()

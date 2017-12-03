@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.MessageRouter
 import ru.agalkin.beholder.config.parser.*
 import ru.agalkin.beholder.listToString
 
@@ -26,12 +27,10 @@ abstract class CommandAbstract(private val arguments: Arguments) {
         }
     }
 
-    val receivers = mutableSetOf<(Message) -> Unit>()
+    val router = MessageRouter()
 
     open fun emit(message: Message) {
-        for (receiver in receivers) {
-            receiver(message)
-        }
+        router.sendMessageToSubscribers(message)
     }
 
 

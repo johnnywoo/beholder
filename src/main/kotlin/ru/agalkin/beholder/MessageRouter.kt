@@ -8,7 +8,7 @@ class MessageRouter {
     fun sendMessageToSubscribers(message: Message) {
         var isCopyNeeded = false
         for (subscriber in subscribers) {
-            subscriber(if (isCopyNeeded) message else message.copy())
+            subscriber(if (isCopyNeeded) message.copy() else message)
             isCopyNeeded = true
         }
     }

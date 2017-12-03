@@ -2,6 +2,7 @@ package ru.agalkin.beholder
 
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.parser.ParseException
+import java.util.concurrent.CopyOnWriteArraySet
 
 const val BEHOLDER_SYSLOG_PROGRAM = "beholder"
 
@@ -45,7 +46,7 @@ class Beholder(private val configFile: String?, private val configText: String?)
     }
 
     companion object {
-        val reloadListeners = mutableSetOf<ReloadListener>()
+        val reloadListeners = CopyOnWriteArraySet<ReloadListener>()
 
         private fun notifyBefore() {
             for (receiver in reloadListeners) {

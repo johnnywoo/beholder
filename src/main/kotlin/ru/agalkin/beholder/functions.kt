@@ -32,3 +32,9 @@ fun <T> listToString(list: List<T>, convert: (T) -> String): String {
     }
     return sb.toString()
 }
+
+fun addNewlineIfNeeded(text: String)
+    = when (text.isEmpty() || text.last() != '\n') {
+        true  -> text + "\n"
+        false -> text
+    }

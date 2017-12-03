@@ -59,8 +59,7 @@ class InternalLog {
             logFile?.appendText(
                 (getIsoDate(date))
                     + " " + severity.name
-                    + " " + text
-                    + "\n"
+                    + " " + addNewlineIfNeeded(text)
             )
 
             val message = Message()

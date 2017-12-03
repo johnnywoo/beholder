@@ -57,11 +57,9 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         // формат старого сислога:
         // <190>Nov 25 13:46:44 vps nginx: 127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] "GET /api HTTP/1.1" 200 47 "-" "curl/7.38.0"
 
-        val newMessage = message.copy()
-
         val matcher = syslogNginxRegex.matcher(message.getPayload())
         if (!matcher.matches()) {
-            super.emit(newMessage)
+            super.emit(message)
             return
         }
 
@@ -71,26 +69,26 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
                 val int = Integer.parseInt(priority)
                 // The Priority value is calculated by first multiplying the Facility number by 8
                 // and then adding the numerical value of the Severity.
-                newMessage["syslogFacility"] = (int / 8).toString()
-                newMessage["syslogSeverity"] = (int % 8).toString()
+                message["syslogFacility"] = (int / 8).toString()
+                message["syslogSeverity"] = (int % 8).toString()
             } catch (ignored: NumberFormatException) {}
         }
 
         val host = matcher.group("host")
         if (host != null) {
-            newMessage["syslogHost"] = host
+            message["syslogHost"] = host
         }
 
         val tag = matcher.group("tag")
         if (tag != null) {
-            newMessage["syslogProgram"] = tag
+            message["syslogProgram"] = tag
         }
 
         val payload = matcher.group("payload")
         if (payload != null) {
-            newMessage["payload"] = payload
+            message["payload"] = payload
         }
 
-        super.emit(newMessage)
+        super.emit(message)
     }
 }

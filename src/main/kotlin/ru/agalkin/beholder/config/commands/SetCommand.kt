@@ -60,10 +60,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     override fun emit(message: Message) {
-        val newMessage = message.copy()
-
-        newMessage[field] = formatter.formatMessage(newMessage)
-
-        super.emit(newMessage)
+        message[field] = formatter.formatMessage(message)
+        super.emit(message)
     }
 }

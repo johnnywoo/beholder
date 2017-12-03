@@ -1,11 +1,13 @@
 package ru.agalkin.beholder.config.commands
 
+import ru.agalkin.beholder.INTERNAL_LOG_FROM_FIELD
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.listeners.InternalLogListener
-import ru.agalkin.beholder.listeners.TimerListener
-import ru.agalkin.beholder.listeners.UdpListener
+import ru.agalkin.beholder.threads.InternalLogListener
+import ru.agalkin.beholder.threads.TIMER_FROM_FIELD
+import ru.agalkin.beholder.threads.TimerListener
+import ru.agalkin.beholder.threads.UdpListener
 
 class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
     companion object {
@@ -44,7 +46,7 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
             |
             |Fields produced by `from timer`:
             |  ¥receivedDate  -- ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
-            |  ¥from          -- '${TimerListener.FROM_FIELD_VALUE}'
+            |  ¥from          -- '$TIMER_FROM_FIELD'
             |  ¥syslogProgram -- 'beholder'
             |  ¥payload        -- A short random message
             |
@@ -53,7 +55,7 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
             |
             |Fields produced by `from internal-log`:
             |  ¥receivedDate   -- ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
-            |  ¥from           -- Always '${InternalLog.FROM_FIELD_VALUE}'
+            |  ¥from           -- Always '$INTERNAL_LOG_FROM_FIELD'
             |  ¥syslogSeverity -- Severity of messages
             |  ¥syslogProgram  -- 'beholder'
             |  ¥payload        -- Log message text
@@ -146,12 +148,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to timer")
-            TimerListener.instance.receivers.add(receiver)
+            TimerListener.receivers.add(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from timer")
-            TimerListener.instance.receivers.remove(receiver)
+            TimerListener.receivers.remove(receiver)
         }
     }
 
@@ -160,12 +162,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to internal log")
-            InternalLogListener.instance.receivers.add(receiver)
+            InternalLogListener.getReceivers().add(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from internal log")
-            InternalLogListener.instance.receivers.remove(receiver)
+            InternalLogListener.getReceivers().remove(receiver)
         }
     }
 }

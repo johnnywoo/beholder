@@ -1,11 +1,14 @@
 package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.formatters.InterpolateStringFormatter
+import ru.agalkin.beholder.threads.FileSender
 
 class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     companion object {
         val help = """
             |to stdout;
+            |to file <file>;
             |
             |This command writes `¥payload` field of incoming messages to some destination.
             |To format the payload, use `set ¥payload ...` command.
@@ -21,7 +24,17 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |  2017-11-27T21:14:02+03:00 Just a repeating text message
             |  2017-11-27T21:14:03+03:00 Just a repeating text message
             |
-            |Currently only writing to stdout is supported.
+            |`to stdout` simply sends payloads of messages into STDOUT of beholder process.
+            |
+            |`to file <file>` stores payloads of messages into a file.
+            |Relative filenames are resolved from CWD of beholder process.
+            |You can use message fields in filenames:
+            |  flow {
+            |      from udp 1234;
+            |      parse syslog-nginx;
+            |      set ¥payload syslog;
+            |      to file '/var/log/export/¥syslogHost/¥syslogProgram.log';
+            |  }
             |""".trimMargin().replace("¥", "$")
     }
 
@@ -32,6 +45,7 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
 
         destination = when (destinationName) {
             "stdout" -> StdoutDestination()
+            "file"   -> FileDestination(arguments.shift("`to file` needs a filename"))
             else     -> throw CommandException("Unsupported destination type: $destinationName")
         }
 
@@ -39,19 +53,36 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     override fun emit(message: Message) {
-        destination.write(message.getPayload())
+        destination.write(message)
 
         super.emit(message)
     }
 
 
     interface Destination {
-        fun write(string: String)
+        fun write(message: Message)
     }
 
     inner class StdoutDestination : Destination {
-        override fun write(string: String) {
-            println(string)
+        override fun write(message: Message) {
+            val text = message.getPayload()
+            print(when (text.last()) {
+                '\n' -> text
+                else -> text + "\n"
+            })
+        }
+    }
+
+    class FileDestination(filenameTemplate: String) : Destination {
+        private val formatter = InterpolateStringFormatter(filenameTemplate)
+
+        override fun write(message: Message) {
+            val sender = FileSender.getSender(formatter.formatMessage(message))
+            val text = message.getPayload()
+            sender.writeMessagePayload(when (text.last()) {
+                '\n' -> text
+                else -> text + "\n"
+            })
         }
     }
 }

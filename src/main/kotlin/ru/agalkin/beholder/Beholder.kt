@@ -3,6 +3,8 @@ package ru.agalkin.beholder
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.parser.ParseException
 
+const val BEHOLDER_SYSLOG_PROGRAM = "beholder"
+
 class Beholder(private val configFile: String?, private val configText: String?) {
     // тут не ловим никаких ошибок, чтобы при старте с кривым конфигом сразу упасть
     var config: Config = readConfig()

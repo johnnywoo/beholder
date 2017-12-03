@@ -10,7 +10,7 @@ enum class Severity(private val value: Int) {
     INFO(6),
     DEBUG(7);
 
-    override fun toString()
+    fun getNumberAsString()
         = value.toString()
 
     fun isMoreUrgentThan(x: Severity?)
@@ -18,6 +18,6 @@ enum class Severity(private val value: Int) {
 
     companion object {
         fun fromString(str: String?)
-            = Severity.values().firstOrNull { it.toString() == str }
+            = Severity.values().firstOrNull { it.getNumberAsString() == str }
     }
 }

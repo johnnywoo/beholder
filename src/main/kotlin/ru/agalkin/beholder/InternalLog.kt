@@ -1,10 +1,12 @@
 package ru.agalkin.beholder
 
 import org.apache.commons.lang3.exception.ExceptionUtils
-import ru.agalkin.beholder.listeners.InternalLogListener
+import ru.agalkin.beholder.threads.InternalLogListener
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+
+const val INTERNAL_LOG_FROM_FIELD = "beholder://internal-log"
 
 class InternalLog {
     companion object {
@@ -36,8 +38,6 @@ class InternalLog {
                 Severity.ERROR
             )
 
-        const val FROM_FIELD_VALUE = "beholder://internal-log"
-
         private fun dispatchMessage(text: String?, severity: Severity) {
             if (text == null) {
                 return
@@ -63,19 +63,15 @@ class InternalLog {
                     + "\n"
             )
 
-            // мы не хотим раньше времени стартовать все подряд треды какие только есть
-            // поэтому до реального появления в конфиге подписчиков на наш лог ничего стартовать не будем
-            if (InternalLogListener.isInitialized) {
-                val message = Message()
+            val message = Message()
 
-                message["receivedDate"]   = getIsoDate()
-                message["from"]           = FROM_FIELD_VALUE
-                message["payload"]        = text
-                message["syslogProgram"]  = "beholder"
-                message["syslogSeverity"] = severity.toString()
+            message["receivedDate"]   = getIsoDate()
+            message["from"]           = INTERNAL_LOG_FROM_FIELD
+            message["payload"]        = text
+            message["syslogProgram"]  = BEHOLDER_SYSLOG_PROGRAM
+            message["syslogSeverity"] = severity.getNumberAsString()
 
-                InternalLogListener.instance.add(message)
-            }
+            InternalLogListener.add(message)
         }
     }
 }

@@ -55,7 +55,7 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
             |
             |Fields produced by `from internal-log`:
             |  ¥receivedDate   -- ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
-            |  ¥from           -- Always '$INTERNAL_LOG_FROM_FIELD'
+            |  ¥from           -- '$INTERNAL_LOG_FROM_FIELD'
             |  ¥syslogSeverity -- Severity of messages
             |  ¥syslogProgram  -- 'beholder'
             |  ¥payload        -- Log message text
@@ -134,12 +134,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to UDP listener at $address")
-            UdpListener.getListener(address).receivers.add(receiver)
+            UdpListener.getListener(address).router.subscribers.add(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
-            UdpListener.getListener(address).receivers.remove(receiver)
+            UdpListener.getListener(address).router.subscribers.remove(receiver)
         }
     }
 
@@ -148,12 +148,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to timer")
-            TimerListener.receivers.add(receiver)
+            TimerListener.subscribers.add(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from timer")
-            TimerListener.receivers.remove(receiver)
+            TimerListener.subscribers.remove(receiver)
         }
     }
 
@@ -162,12 +162,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to internal log")
-            InternalLogListener.getReceivers().add(receiver)
+            InternalLogListener.getSubscribers().add(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from internal log")
-            InternalLogListener.getReceivers().remove(receiver)
+            InternalLogListener.getSubscribers().remove(receiver)
         }
     }
 }

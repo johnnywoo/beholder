@@ -2,7 +2,7 @@ package ru.agalkin.beholder.threads
 
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
-import java.util.concurrent.CopyOnWriteArraySet
+import ru.agalkin.beholder.MessageRouter
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -13,7 +13,7 @@ class InternalLogEmitterThread : Thread("internal-log-emitter") {
     val queue = LinkedBlockingQueue<Message>()
 
     companion object {
-        val receivers = CopyOnWriteArraySet<(Message) -> Unit>()
+        val router = MessageRouter()
     }
 
     override fun run() {
@@ -38,9 +38,7 @@ class InternalLogEmitterThread : Thread("internal-log-emitter") {
                 Thread.sleep(50)
             }
 
-            for (receiver in receivers) {
-                receiver(message)
-            }
+            router.sendMessageToSubscribers(message)
         }
     }
 }

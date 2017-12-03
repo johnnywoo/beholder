@@ -27,9 +27,9 @@ class InternalLogListener {
 
         private var ignoreAllMessages = true
 
-        fun getReceivers(): MutableSet<(Message) -> Unit> {
+        fun getSubscribers(): MutableSet<(Message) -> Unit> {
             ignoreAllMessages = false
-            return InternalLogEmitterThread.receivers
+            return InternalLogEmitterThread.router.subscribers
         }
 
         fun add(message: Message) {

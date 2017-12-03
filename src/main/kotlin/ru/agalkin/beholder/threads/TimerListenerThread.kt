@@ -2,10 +2,9 @@ package ru.agalkin.beholder.threads
 
 import ru.agalkin.beholder.*
 import java.util.*
-import java.util.concurrent.CopyOnWriteArraySet
 
 class TimerListenerThread : Thread("timer-listener") {
-    val receivers = CopyOnWriteArraySet<(Message) -> Unit>()
+    val router = MessageRouter()
 
     override fun run() {
         InternalLog.info("Thread $name got started")
@@ -13,23 +12,23 @@ class TimerListenerThread : Thread("timer-listener") {
         var millis = Date().time
 
         while (true) {
-            val message = Message()
+            router.sendUniqueMessagesToSubscribers {
+                val message = Message()
 
-            message["receivedDate"]  = curDateIso()
-            message["syslogProgram"] = BEHOLDER_SYSLOG_PROGRAM
-            message["from"]          = TIMER_FROM_FIELD
+                message["receivedDate"]  = curDateIso()
+                message["syslogProgram"] = BEHOLDER_SYSLOG_PROGRAM
+                message["from"]          = TIMER_FROM_FIELD
 
-            val sb = StringBuilder()
-            for (set in messageParts) {
-                if(!sb.isEmpty()) {
-                    sb.append(' ')
+                val sb = StringBuilder()
+                for (set in messageParts) {
+                    if (!sb.isEmpty()) {
+                        sb.append(' ')
+                    }
+                    sb.append(set.shuffled()[0])
                 }
-                sb.append(set.shuffled()[0])
-            }
-            message["payload"] = sb.toString()
+                message["payload"] = sb.toString()
 
-            for (receiver in receivers) {
-                receiver(message)
+                message
             }
 
             // выдаём сообщения точно раз в секунду, без накопления ошибки

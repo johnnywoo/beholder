@@ -26,9 +26,7 @@ class UdpEmitterThread(private val udpListener: UdpListener) : Thread("from-udp-
                 Thread.sleep(50)
             }
 
-            for (receiver in udpListener.receivers) {
-                receiver(message)
-            }
+            udpListener.router.sendMessageToSubscribers(message)
         }
 
         // на всякий случай, если мы будем перезапускать лисенер, надо тут всё зачистить

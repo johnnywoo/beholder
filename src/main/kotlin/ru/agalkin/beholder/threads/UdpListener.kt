@@ -2,9 +2,9 @@ package ru.agalkin.beholder.threads
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.MessageRouter
 import ru.agalkin.beholder.config.Address
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -14,7 +14,7 @@ class UdpListener(val address: Address) {
     var isEmitterPaused = AtomicBoolean(false)
     var isListenerDeleted = AtomicBoolean(false)
 
-    val receivers = CopyOnWriteArraySet<(Message) -> Unit>()
+    val router = MessageRouter()
 
     private val listenerThread = UdpListenerThread(this)
     private val emitterThread  = UdpEmitterThread(this)
@@ -28,7 +28,7 @@ class UdpListener(val address: Address) {
             }
 
             override fun after() {
-                if (receivers.isEmpty()) {
+                if (router.subscribers.isEmpty()) {
                    // после перезагрузки конфига оказалось, что листенер никому больше не нужен
                     isListenerDeleted.set(true)
                     Beholder.reloadListeners.remove(this)

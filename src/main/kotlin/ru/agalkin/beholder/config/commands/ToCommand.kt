@@ -66,9 +66,9 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     inner class StdoutDestination : Destination {
         override fun write(message: Message) {
             val text = message.getPayload()
-            print(when (text.last()) {
-                '\n' -> text
-                else -> text + "\n"
+            print(when (text.isEmpty() || text.last() != '\n') {
+                true -> text + "\n"
+                else -> text
             })
         }
     }

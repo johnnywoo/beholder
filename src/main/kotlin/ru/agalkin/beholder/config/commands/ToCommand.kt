@@ -2,14 +2,17 @@ package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.addNewlineIfNeeded
+import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.formatters.InterpolateStringFormatter
 import ru.agalkin.beholder.threads.FileSender
+import ru.agalkin.beholder.threads.UdpSender
 
 class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     companion object {
         val help = """
             |to stdout;
             |to file <file>;
+            |to udp [<address>:]<port>;
             |
             |This command writes `¥payload` field of incoming messages to some destination.
             |To format the payload, use `set ¥payload ...` command.
@@ -36,6 +39,8 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |      set ¥payload syslog;
             |      to file '/var/log/export/¥syslogHost/¥syslogProgram.log';
             |  }
+            |
+            |`to udp [<address>:]<port>` sends payloads of messages as UDP packets.
             |""".trimMargin().replace("¥", "$")
     }
 
@@ -44,10 +49,15 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     init {
         val destinationName = arguments.shift("Destination type was not specified")
 
-        destination = when (destinationName) {
-            "stdout" -> StdoutDestination()
-            "file"   -> FileDestination(arguments.shift("`to file` needs a filename"))
-            else     -> throw CommandException("Unsupported destination type: $destinationName")
+        try {
+            destination = when (destinationName) {
+                "stdout" -> StdoutDestination()
+                "file"   -> FileDestination(arguments.shift("`to file` needs a filename"))
+                "udp"    -> UdpDestination(Address.fromString(arguments.shift("`to udp` needs at least a port number"), "127.0.0.1"))
+                else     -> throw CommandException("Unsupported destination type: $destinationName")
+            }
+        } catch (e: Address.AddressException) {
+            throw CommandException(e)
         }
 
         arguments.end()
@@ -69,11 +79,19 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     private class FileDestination(filenameTemplate: String) : Destination {
-        private val formatter = InterpolateStringFormatter(filenameTemplate)
+        private val filenameFormatter = InterpolateStringFormatter(filenameTemplate)
 
         override fun write(message: Message) {
-            val sender = FileSender.getSender(formatter.formatMessage(message))
+            val sender = FileSender.getSender(filenameFormatter.formatMessage(message))
             sender.writeMessagePayload(addNewlineIfNeeded(message.getPayload()))
+        }
+    }
+
+    private class UdpDestination(address: Address) : Destination {
+        private val sender = UdpSender.getSender(address)
+
+        override fun write(message: Message) {
+            sender.writeMessagePayload(message.getPayload())
         }
     }
 }

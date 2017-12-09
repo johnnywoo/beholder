@@ -34,15 +34,23 @@ class Config(configText: String) {
 
         fun fromFile(filename: String): Config {
             InternalLog.info("Reading config from $filename")
-            return Config(File(filename).readText())
+            return Config.fromStringWithLog(File(filename).readText())
+        }
+
+        fun fromStringWithLog(configText: String): Config {
+            InternalLog.info("=== Config text ===\n$configText=== End config text ===")
+            val config = Config(configText)
+            InternalLog.info("=== Parsed config ===\n${config.getDefinition()}=== End parsed config ===")
+            return config
         }
     }
 
     private val root: RootCommand
 
-    init {
-        InternalLog.info("=== Config text ===\n$configText=== End config text ===")
+    fun getDefinition()
+        = root.getChildrenDefinition()
 
+    init {
         // читаем символы из строки и формируем токены
         val tokens = Token.getTokens(configText)
 
@@ -52,8 +60,6 @@ class Config(configText: String) {
         // вариант 2: command arg { block }
         // штука сразу делает конкретные экземпляры команд, в которых уже есть бизнес-логика
         root = RootCommand.fromTokens(tokens)
-
-        InternalLog.info("=== Parsed config ===\n${root.getChildrenDefinition()}=== End parsed config ===")
     }
 
     fun start()

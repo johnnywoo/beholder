@@ -35,7 +35,7 @@ class Beholder(private val configFile: String?, private val configText: String?)
 
     private fun readConfig(): Config {
         if (configText != null) {
-            return Config(configText)
+            return Config.fromStringWithLog(configText)
         }
 
         if (configFile != null) {

@@ -51,28 +51,32 @@ abstract class CommandAbstract(private val arguments: Arguments) {
         // токен нашелся, сдвигаем курсор
         tokens.next()
 
-        val subcommandArgs = ArrayList<ArgumentToken>()
-        subcommandArgs.add(nameToken)
+        val subcommandArgs = Arguments(nameToken)
 
-        // ок, команду начали, теперь запихиваем в неё все что можно и потом выходим/рекурсия
+        // слизываем все аргументы из итератора
+        while (tokens.hasNext()) {
+            val argToken = peekNext(tokens)
+            if (argToken is ArgumentToken) {
+                subcommandArgs.add(argToken)
+                tokens.next()
+            } else {
+                break
+            }
+        }
+
+        // аргументы кончились = надо зарегистрировать нашу новую команду
+        val subcommand: CommandAbstract
+        try {
+            subcommand = createSubcommand(subcommandArgs)
+                ?: throw CommandException("Command `${subcommandArgs.getCommandName()}` is not allowed inside ${this::class.simpleName}")
+        } catch (e: CommandException) {
+            throw ParseException.fromList(e.message + ":", subcommandArgs.toList())
+        }
+        subcommands.add(subcommand)
+
+        // ок, команду начали, теперь ищем терминатор и потом выходим/рекурсия
         while (tokens.hasNext()) {
             val token = tokens.next()
-
-            // аргумент (литерал / кавычки) = просто добавляем в аргументы и едем дальше
-            if (token is ArgumentToken) {
-                subcommandArgs.add(token)
-                continue
-            }
-
-            // аргументы кончились = надо зарегистрировать нашу новую команду
-            val subcommand: CommandAbstract
-            try {
-                subcommand = createSubcommand(Arguments(subcommandArgs))
-                    ?: throw CommandException("Command `${subcommandArgs[0].getValue()}` is not allowed inside `${arguments.getCommandName()}`")
-            } catch (e: CommandException) {
-                throw ParseException.fromList(e.message + ":", subcommandArgs)
-            }
-            subcommands.add(subcommand)
 
             // нащупали ; = детей нет, команда кончилась (поехали сканировать следующую команду)
             if (token is SemicolonToken) {
@@ -82,9 +86,11 @@ abstract class CommandAbstract(private val arguments: Arguments) {
             // нащупали открывашку = поехал блок и потом выражение кончилось
             if (token is OpenBraceToken) {
                 subcommand.importSubcommands(tokens)
-                if (!tokens.hasNext() || tokens.next() !is CloseBraceToken) {
-                    throw ParseException.fromIterator("Invalid closing brace placement:", tokens, 1)
+                if (peekNext(tokens) !is CloseBraceToken) {
+                    throw ParseException.fromIterator("Invalid closing brace placement:", tokens)
                 }
+                // вынимаем закрывашку
+                tokens.next()
                 return importSubcommands(tokens)
             }
 

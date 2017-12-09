@@ -43,6 +43,8 @@ dependencies {
     // compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19.3"
     compile "commons-cli:commons-cli:1.4"
     compile "org.apache.commons:commons-lang3:3.7"
+
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 }
 
 compileKotlin {

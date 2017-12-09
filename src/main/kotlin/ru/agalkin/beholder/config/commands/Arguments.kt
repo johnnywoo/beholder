@@ -3,14 +3,19 @@ package ru.agalkin.beholder.config.commands
 import ru.agalkin.beholder.config.parser.ArgumentToken
 import ru.agalkin.beholder.config.parser.LiteralToken
 
-class Arguments(private val args: List<ArgumentToken>) {
+open class Arguments(commandNameToken: LiteralToken) {
+    protected val args = mutableListOf<ArgumentToken>(commandNameToken)
+
     private var index = 0
 
-    fun getCommandName()
+    fun add(argumentToken: ArgumentToken)
+        = args.add(argumentToken)
+
+    open fun getCommandName()
         = args[0].getValue()
 
     fun toList(): List<ArgumentToken>
-        = args
+        = args.toList()
 
     fun shiftToken(errorMessage: String): ArgumentToken {
         if (args.indices.contains(index + 1)) {
@@ -33,8 +38,16 @@ class Arguments(private val args: List<ArgumentToken>) {
 
     fun end() {
         if (args.indices.contains(index + 1)) {
-            throw CommandException("Too many arguments for `${args[0]}`")
+            throw CommandException("Too many arguments for `${getCommandName()}`")
         }
     }
-}
 
+    // сомнительная хрень, тут надо что-то перепридумать
+    object RootArguments : Arguments(LiteralToken(' ')) {
+        init {
+            args.clear()
+        }
+        override fun getCommandName()
+            = "<root>"
+    }
+}

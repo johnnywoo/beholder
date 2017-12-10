@@ -71,6 +71,56 @@ class ExpressionsTest {
         )
     }
 
+    @Test
+    fun testFlowMultiple() {
+        assertConfigParses(
+            """
+            |flow {
+            |    flow {
+            |        from timer;
+            |        set ¥payload '¥receivedDate ¥payload';
+            |        to stdout;
+            |    }
+            |    flow {
+            |        from timer;
+            |        set ¥payload '¥receivedDate ¥payload';
+            |        to stdout;
+            |    }
+            |}
+            |""".trimMargin().replace('¥', '$'),
+            """
+            |flow {
+            |    flow {
+            |        from timer;
+            |        set ¥payload '¥receivedDate ¥payload';
+            |        to stdout;
+            |    }
+            |    flow {
+            |        from timer;
+            |        set ¥payload '¥receivedDate ¥payload';
+            |        to stdout;
+            |    }
+            |}
+            |""".trimMargin().replace('¥', '$')
+        )
+    }
+
+    @Test
+    fun testFlowRoot() {
+        assertConfigParses(
+            """
+            |from timer;
+            |set ¥payload '¥receivedDate ¥payload';
+            |to stdout;
+            |""".trimMargin().replace('¥', '$'),
+            """
+            |from timer;
+            |set ¥payload '¥receivedDate ¥payload';
+            |to stdout;
+            |""".trimMargin().replace('¥', '$')
+        )
+    }
+
     private fun dumpTokens(configText: String): String {
         val tokens = Token.getTokens(configText)
         val sb = StringBuilder()

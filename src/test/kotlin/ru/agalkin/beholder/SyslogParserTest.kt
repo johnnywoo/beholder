@@ -2,6 +2,7 @@ package ru.agalkin.beholder
 
 import org.junit.Test
 import ru.agalkin.beholder.config.commands.Arguments
+import ru.agalkin.beholder.config.commands.CommandArguments
 import ru.agalkin.beholder.config.commands.ParseCommand
 import ru.agalkin.beholder.config.parser.ArgumentToken
 import ru.agalkin.beholder.config.parser.LiteralToken
@@ -33,7 +34,7 @@ class SyslogParserTest {
 
     private fun argumentsFromString(command: String): Arguments {
         val tokens = Token.getTokens(command)
-        val arguments = Arguments(tokens[0] as LiteralToken)
+        val arguments = CommandArguments(tokens[0] as LiteralToken)
         @Suppress("LoopToCallChain")
         for (token in tokens.drop(1)) {
             arguments.add(token as ArgumentToken)

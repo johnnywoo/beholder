@@ -3,13 +3,7 @@ package ru.agalkin.beholder.config.commands
 import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
 
-class RootCommand : CommandAbstract(Arguments.RootArguments) {
-    override fun createSubcommand(args: Arguments) : CommandAbstract?
-        = when (args.getCommandName()) {
-            "flow" -> FlowCommand(args)
-            else   -> null
-        }
-
+class RootCommand : FlowCommand(RootArguments) {
     companion object {
         fun fromTokens(tokens: List<Token>): RootCommand {
             val root = RootCommand()

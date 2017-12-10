@@ -51,7 +51,7 @@ abstract class CommandAbstract(private val arguments: Arguments) {
         // токен нашелся, сдвигаем курсор
         tokens.next()
 
-        val subcommandArgs = Arguments(nameToken)
+        val subcommandArgs = CommandArguments(nameToken)
 
         // слизываем все аргументы из итератора
         while (tokens.hasNext()) {
@@ -75,35 +75,39 @@ abstract class CommandAbstract(private val arguments: Arguments) {
         subcommands.add(subcommand)
 
         // ок, команду начали, теперь ищем терминатор и потом выходим/рекурсия
-        while (tokens.hasNext()) {
-            val token = tokens.next()
 
-            // нащупали ; = детей нет, команда кончилась (поехали сканировать следующую команду)
-            if (token is SemicolonToken) {
-                return importSubcommands(tokens)
-            }
-
-            // нащупали открывашку = поехал блок и потом выражение кончилось
-            if (token is OpenBraceToken) {
-                subcommand.importSubcommands(tokens)
-                if (peekNext(tokens) !is CloseBraceToken) {
-                    throw ParseException.fromIterator("Invalid closing brace placement:", tokens)
-                }
-                // вынимаем закрывашку
-                tokens.next()
-                return importSubcommands(tokens)
-            }
-
-            // нащупали закрывашку = кончились дети
-            if (token is CloseBraceToken) {
-                // возвращаем позицию обратно, чтобы снаружи в родителе убедиться в необходимости закрывашки
-                // (у рута нет ни открывашек, ни закрывашек)
-                tokens.previous()
-                return
-            }
-
-            throw ParseException.fromIterator("Cannot parse token ${token::class.simpleName}:", tokens, 1)
+        if (!tokens.hasNext()) {
+            // больше в конфиге ничего нет, считаем это за терминатор
+            return
         }
+
+        val token = tokens.next()
+
+        // нащупали ; = детей нет, команда кончилась (поехали сканировать следующую команду)
+        if (token is SemicolonToken) {
+            return importSubcommands(tokens)
+        }
+
+        // нащупали открывашку = поехал блок и потом выражение кончилось
+        if (token is OpenBraceToken) {
+            subcommand.importSubcommands(tokens)
+            if (peekNext(tokens) !is CloseBraceToken) {
+                throw ParseException.fromIterator("Invalid closing brace placement:", tokens)
+            }
+            // вынимаем закрывашку
+            tokens.next()
+            return importSubcommands(tokens)
+        }
+
+        // нащупали закрывашку = кончились дети
+        if (token is CloseBraceToken) {
+            // возвращаем позицию обратно, чтобы снаружи в родителе убедиться в необходимости закрывашки
+            // (у рута нет ни открывашек, ни закрывашек)
+            tokens.previous()
+            return
+        }
+
+        throw ParseException.fromIterator("Cannot parse token ${token::class.simpleName}:", tokens, 1)
     }
 
     fun getChildrenDefinition(indent: String = "")

@@ -17,7 +17,7 @@ class Config(configText: String) {
             |Example:
             |  flow {  # this command has no args, only subcommands
             |      from udp 3820 {  # this command has both args and subcommands
-            |          parse syslog-nginx;  # this command has only arguments
+            |          parse syslog;  # this command has only arguments
             |      }
             |      to stdout;
             |  }

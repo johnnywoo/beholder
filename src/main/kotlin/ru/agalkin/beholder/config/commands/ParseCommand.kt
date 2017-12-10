@@ -7,15 +7,16 @@ import java.util.regex.Pattern
 class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     companion object {
         val help = """
-            |parse syslog-nginx;
+            |parse syslog;
             |
             |This command sets fields on messages according to chosen format.
             |
-            |Format `syslog-nginx`: this is a BSD-style syslog format as produced by nginx.
+            |Format `syslog`: the only syslog variant currently supported is
+            |a BSD-style syslog format as produced by nginx.
             |Incoming messages look like this:
             |<190>Nov 25 13:46:44 host nginx: <actual log message>
             |
-            |Fields produced by `parse syslog-nginx`:
+            |Fields produced by `parse syslog`:
             |  ¥syslogFacility  -- numeric syslog facility
             |  ¥syslogSeverity  -- numeric syslog severity
             |  ¥syslogHost      -- source host from the message
@@ -28,8 +29,8 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
 
     init {
         when (arguments.shift("We need some format to `parse`")) {
-            "syslog-nginx" -> Unit
-            else           -> throw CommandException("Cannot understand arguments of `parse` command")
+            "syslog" -> Unit
+            else     -> throw CommandException("Cannot understand arguments of `parse` command")
         }
 
         arguments.end()
@@ -41,10 +42,10 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             ^
             < (?<priority>[0-9]+) >
             (?: Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
-            \s (?: (?:\s|\d)\d) # day
-            \s (?: \d\d:\d\d:\d\d) # time
-            (?: \s (?<host> [^\s]+) )? # 'nohostname' parameter in nginx
-            \s (?<tag> [^\s]+):
+            \s+ (?: (?:\d)? \d) # day
+            \s+ (?: \d\d:\d\d:\d\d) # time
+            (?: \s+ (?<host> [^\s:]+) )? # 'nohostname' parameter in nginx
+            \s+ (?<tag> [^\s:]+):
             \s # one space
             (?<payload>   .*)
             $

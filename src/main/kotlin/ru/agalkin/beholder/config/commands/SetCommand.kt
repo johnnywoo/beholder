@@ -36,7 +36,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |
             |Functions:
             |  syslog  -- Generates a IETF syslog payload based on syslog-related fields;
-            |             see `parse syslog-nginx` for details.
+            |             see `parse syslog` for details.
             |  dump    -- Generates a dump payload with all fields of the message.
             |""".trimMargin().replace("¥", "$")
     }

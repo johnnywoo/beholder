@@ -29,7 +29,7 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
             |Example:
             |  flow {
             |      from udp 1001;
-            |      from udp 1002 {parse syslog-nginx}
+            |      from udp 1002 {parse syslog}
             |      set ¥payload dump;
             |      to stdout;
             |      # in stdout we will see raw messages from port 1001

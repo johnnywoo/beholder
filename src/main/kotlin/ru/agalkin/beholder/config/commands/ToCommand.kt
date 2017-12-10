@@ -35,7 +35,7 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |You can use message fields in filenames:
             |  flow {
             |      from udp 1234;
-            |      parse syslog-nginx;
+            |      parse syslog;
             |      set ¥payload syslog;
             |      to file '/var/log/export/¥syslogHost/¥syslogProgram.log';
             |  }

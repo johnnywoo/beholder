@@ -12,6 +12,7 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
             |
             |Message routing:
             |Incoming message: a copy goes into first subcommand, a copy is emitted out of the `flow`.
+            |Exit of each subcommand is routed into next subcommand.
             |Exit of last subcommand: messages are discarded.
             |
             |Example config with a caveat:
@@ -43,11 +44,19 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
     override fun start() {
         // внутри flow команды по очереди обрабатывают сообщения
 
+        // вход flow направляем в первую вложенную команду
+        // также он будет проброшен на выход (для этого наш текущий flow должен находиться внутри другого flow или рута)
+        val firstCommand = subcommands.getOrNull(0)
+        if (firstCommand != null) {
+            router.subscribers.add({ firstCommand.receiveMessage(it) })
+        }
+
+        // если команда одна, то соединять будет нечего
         if (subcommands.size < 2) {
-            // flow бесполезен без хотя бы двух команд
             return
         }
 
+        // соединяем команды в конвейер
         for (i in subcommands.indices) {
             if (!subcommands.indices.contains(i + 1)) {
                 continue
@@ -56,7 +65,7 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
             val nextCommand = subcommands[i + 1]
 
             // сообщение из первой команды пихаем во вторую, и т.д.
-            prevCommand.router.subscribers.add({ nextCommand.emit(it) })
+            prevCommand.router.subscribers.add({ nextCommand.receiveMessage(it) })
         }
 
         super.start()

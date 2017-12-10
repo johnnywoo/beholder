@@ -29,7 +29,7 @@ abstract class CommandAbstract(private val arguments: Arguments) {
 
     val router = MessageRouter()
 
-    open fun emit(message: Message) {
+    open fun receiveMessage(message: Message) {
         router.sendMessageToSubscribers(message)
     }
 

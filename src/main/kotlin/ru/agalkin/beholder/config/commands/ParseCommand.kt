@@ -53,14 +53,14 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         Pattern.COMMENTS
     )
 
-    override fun emit(message: Message) {
+    override fun receiveMessage(message: Message) {
         // мы тут хотим разобрать формат старого сислога и сложить данные из него в теги
         // формат старого сислога:
         // <190>Nov 25 13:46:44 vps nginx: 127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] "GET /api HTTP/1.1" 200 47 "-" "curl/7.38.0"
 
         val matcher = syslogNginxRegex.matcher(message.getPayload())
         if (!matcher.matches()) {
-            super.emit(message)
+            super.receiveMessage(message)
             return
         }
 
@@ -90,6 +90,6 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             message["payload"] = payload
         }
 
-        super.emit(message)
+        super.receiveMessage(message)
     }
 }

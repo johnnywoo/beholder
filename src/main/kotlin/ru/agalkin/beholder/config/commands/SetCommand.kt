@@ -59,8 +59,8 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         arguments.end()
     }
 
-    override fun emit(message: Message) {
+    override fun receiveMessage(message: Message) {
         message[field] = formatter.formatMessage(message)
-        super.emit(message)
+        super.receiveMessage(message)
     }
 }

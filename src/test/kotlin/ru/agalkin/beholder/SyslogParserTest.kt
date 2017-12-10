@@ -18,7 +18,7 @@ class SyslogParserTest {
 
         val parseCommand = ParseCommand(argumentsFromString("parse syslog"))
         // commands modify messages in place (messages are copied ahead of time by routers)
-        parseCommand.emit(message)
+        parseCommand.receiveMessage(message)
 
         assertEquals(
             """

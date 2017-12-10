@@ -63,10 +63,10 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         arguments.end()
     }
 
-    override fun emit(message: Message) {
+    override fun receiveMessage(message: Message) {
         destination.write(message)
 
-        super.emit(message)
+        super.receiveMessage(message)
     }
 
 

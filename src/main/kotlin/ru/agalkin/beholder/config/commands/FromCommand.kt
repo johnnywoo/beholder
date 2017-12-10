@@ -92,10 +92,10 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
     private fun onMessageFromSource(message: Message) {
         if (!subcommands.isEmpty()) {
             // есть детишки = сообщение из нашего источника сначала прогоняется через них
-            subcommands[0].emit(message)
+            subcommands[0].receiveMessage(message)
         } else {
             // нет детишек = сообщение напрямую вылезает из команды from
-            emit(message)
+            receiveMessage(message)
         }
     }
 
@@ -107,11 +107,11 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
                 val nextCommand = subcommands[i + 1]
                 // не последний ребенок направляется в следующего
                 // (сообщения, вылезающие из него, попадают в следующего ребенка)
-                command.router.subscribers.add({ nextCommand.emit(it) })
+                command.router.subscribers.add({ nextCommand.receiveMessage(it) })
             } else {
                 // последний ребенок направляется в наш эмиттер
                 // (сообщения, вылезающие из него, будут вылезать из команды from)
-                command.router.subscribers.add({ emit(it) })
+                command.router.subscribers.add({ receiveMessage(it) })
             }
         }
 

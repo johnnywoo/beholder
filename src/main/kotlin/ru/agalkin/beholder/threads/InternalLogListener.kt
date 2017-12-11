@@ -2,6 +2,7 @@ package ru.agalkin.beholder.threads
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.MessageRouter
 
 class InternalLogListener {
     val emitterThread = InternalLogEmitterThread()
@@ -27,9 +28,9 @@ class InternalLogListener {
 
         private var ignoreAllMessages = true
 
-        fun getSubscribers(): MutableSet<(Message) -> Unit> {
+        fun getMessageRouter(): MessageRouter {
             ignoreAllMessages = false
-            return InternalLogEmitterThread.router.subscribers
+            return InternalLogEmitterThread.router
         }
 
         fun add(message: Message) {

@@ -107,11 +107,11 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
                 val nextCommand = subcommands[i + 1]
                 // не последний ребенок направляется в следующего
                 // (сообщения, вылезающие из него, попадают в следующего ребенка)
-                command.router.subscribers.add({ nextCommand.receiveMessage(it) })
+                command.router.addSubscriber({ nextCommand.receiveMessage(it) })
             } else {
                 // последний ребенок направляется в наш эмиттер
                 // (сообщения, вылезающие из него, будут вылезать из команды from)
-                command.router.subscribers.add({ receiveMessage(it) })
+                command.router.addSubscriber({ receiveMessage(it) })
             }
         }
 
@@ -134,12 +134,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to UDP listener at $address")
-            UdpListener.getListener(address).router.subscribers.add(receiver)
+            UdpListener.getListener(address).router.addSubscriber(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
-            UdpListener.getListener(address).router.subscribers.remove(receiver)
+            UdpListener.getListener(address).router.removeSubscriber(receiver)
         }
     }
 
@@ -148,12 +148,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to timer")
-            TimerListener.subscribers.add(receiver)
+            TimerListener.messageRouter.addSubscriber(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from timer")
-            TimerListener.subscribers.remove(receiver)
+            TimerListener.messageRouter.removeSubscriber(receiver)
         }
     }
 
@@ -162,12 +162,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to internal log")
-            InternalLogListener.getSubscribers().add(receiver)
+            InternalLogListener.getMessageRouter().addSubscriber(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from internal log")
-            InternalLogListener.getSubscribers().remove(receiver)
+            InternalLogListener.getMessageRouter().removeSubscriber(receiver)
         }
     }
 }

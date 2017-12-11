@@ -48,7 +48,7 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
         // также он будет проброшен на выход (для этого наш текущий flow должен находиться внутри другого flow или рута)
         val firstCommand = subcommands.getOrNull(0)
         if (firstCommand != null) {
-            router.subscribers.add({ firstCommand.receiveMessage(it) })
+            router.addSubscriber({ firstCommand.receiveMessage(it) })
         }
 
         // если команда одна, то соединять будет нечего
@@ -65,7 +65,7 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
             val nextCommand = subcommands[i + 1]
 
             // сообщение из первой команды пихаем во вторую, и т.д.
-            prevCommand.router.subscribers.add({ nextCommand.receiveMessage(it) })
+            prevCommand.router.addSubscriber({ nextCommand.receiveMessage(it) })
         }
 
         super.start()

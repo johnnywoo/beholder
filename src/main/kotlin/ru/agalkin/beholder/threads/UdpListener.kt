@@ -28,7 +28,7 @@ class UdpListener(val address: Address) {
             }
 
             override fun after() {
-                if (router.subscribers.isEmpty()) {
+                if (!router.hasSubscribers()) {
                    // после перезагрузки конфига оказалось, что листенер никому больше не нужен
                     isListenerDeleted.set(true)
                     Beholder.reloadListeners.remove(this)

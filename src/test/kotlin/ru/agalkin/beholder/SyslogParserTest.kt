@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 
 class SyslogParserTest {
     @Test
-    fun testFlowEmpty() {
+    fun testSyslogParser() {
         val message = Message()
         message["payload"] = "<190>Nov 25 13:46:44 vps nginx: 127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] \"GET /api HTTP/1.1\" 200 47 \"-\" \"curl/7.38.0\""
 
@@ -35,9 +35,8 @@ class SyslogParserTest {
     private fun argumentsFromString(command: String): Arguments {
         val tokens = Token.getTokens(command)
         val arguments = CommandArguments(tokens[0] as LiteralToken)
-        @Suppress("LoopToCallChain")
         for (token in tokens.drop(1)) {
-            arguments.add(token as ArgumentToken)
+            arguments.addToken(token as ArgumentToken)
         }
         return arguments
     }

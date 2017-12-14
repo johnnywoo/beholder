@@ -25,7 +25,7 @@ class Config(configText: String) {
             |
             |Config syntax
             |
-            |Command arguments can be expressed as literal strings, quoted strings and regexps.
+            |Command arguments can be expressed as literal words, quoted strings and regexps.
             |
             |Quoted strings start with either `'` or `"`. There is no difference between the two.
             |Escaping is done with backslashes. Special characters: `\n`, `\r`, `\t`.
@@ -37,6 +37,12 @@ class Config(configText: String) {
             |`'\n'` => newline character
             |`'\\n'` => \n
             |
+            |Quoted strings may contain message field names, which are replaced with their values.
+            |Example:
+            |`'date: ¥receivedDate payload: ¥payload'`
+            |Field names consist of alphanumeric characters (case-sensitive) and underscores.
+            |Field names cannot start with numbers.
+            |
             |Regexps are recognized by a delimiter, which is one of `/~!`.
             |The delimiter currently cannot be escaped in the regexp.
             |Regexp must be in the form of `#body#modifiers`. Modifiers are optional.
@@ -45,8 +51,9 @@ class Config(configText: String) {
             |`~http://[a-z.]+~`
             |`/cat|dog/i`
             |
-            |Literal string is a string of non-whitespace characters that is not a quoted string or regexp.
-            |There is no escaping in literals.
+            |Literal word is a string of non-whitespace characters that is not a quoted string or regexp.
+            |Literal words may contain field names, which are replaced with their values.
+            |There is no escaping in literal words.
             |Example: `127.0.0.1:1234`.
             |
             |Config commands

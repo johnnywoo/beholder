@@ -28,7 +28,7 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     init {
-        when (arguments.shift("We need some format to `parse`")) {
+        when (arguments.shiftString("We need some format to `parse`")) {
             "syslog" -> Unit
             else     -> throw CommandException("Cannot understand arguments of `parse` command")
         }

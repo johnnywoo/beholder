@@ -3,12 +3,12 @@ package ru.agalkin.beholder.config.commands
 import ru.agalkin.beholder.config.parser.ArgumentToken
 import ru.agalkin.beholder.config.parser.LiteralToken
 
-class CommandArguments(commandNameToken: LiteralToken) : Arguments {
+class CommandArguments(commandNameToken: LiteralToken) : Arguments() {
     private val args = mutableListOf<ArgumentToken>(commandNameToken)
 
     private var index = 0
 
-    fun add(argumentToken: ArgumentToken)
+    fun addToken(argumentToken: ArgumentToken)
         = args.add(argumentToken)
 
     override fun getCommandName()

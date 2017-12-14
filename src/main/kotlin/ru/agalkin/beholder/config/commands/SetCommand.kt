@@ -54,17 +54,17 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         // set $field function [...]
         // set $field 'interpolated-value'
 
-        val arg = arguments.shiftToken("`set` needs at least two arguments")
+        val arg = arguments.shiftStringToken("`set` needs at least two arguments")
 
         formatter = when ((arg as? LiteralToken)?.getValue()) {
-            "syslog" -> SyslogIetfFormatter()
-            "dump"   -> DumpFormatter()
+            "syslog"  -> SyslogIetfFormatter()
+            "dump"    -> DumpFormatter()
             "replace" -> RegexpFormatter(
                 arguments.shiftRegexp("`replace` needs a regexp"),
-                arguments.shift("`replace` needs a replacement string"),
+                arguments.shiftString("`replace` needs a replacement string"),
                 field
             )
-            else     -> InterpolateStringFormatter(arg.getValue())
+            else -> InterpolateStringFormatter(arg.getValue())
         }
 
         arguments.end()

@@ -57,7 +57,7 @@ abstract class CommandAbstract(private val arguments: Arguments) {
         while (tokens.hasNext()) {
             val argToken = peekNext(tokens)
             if (argToken is ArgumentToken) {
-                subcommandArgs.add(argToken)
+                subcommandArgs.addToken(argToken)
                 tokens.next()
             } else {
                 break

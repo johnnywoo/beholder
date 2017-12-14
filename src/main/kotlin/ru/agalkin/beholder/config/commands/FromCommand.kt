@@ -73,9 +73,9 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
     init {
         try {
-            source = when (arguments.shift("`from` needs a type of message source")) {
+            source = when (arguments.shiftString("`from` needs a type of message source")) {
                 "udp" -> UdpSource(Address.fromString(
-                    arguments.shift("`from udp` needs at least a port number"),
+                    arguments.shiftString("`from udp` needs at least a port number"),
                     "0.0.0.0"
                 ))
                 "timer" -> TimerSource()

@@ -47,13 +47,13 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     private val destination: Destination
 
     init {
-        val destinationName = arguments.shift("Destination type was not specified")
+        val destinationName = arguments.shiftString("Destination type was not specified")
 
         try {
             destination = when (destinationName) {
                 "stdout" -> StdoutDestination()
-                "file"   -> FileDestination(arguments.shift("`to file` needs a filename"))
-                "udp"    -> UdpDestination(Address.fromString(arguments.shift("`to udp` needs at least a port number"), "127.0.0.1"))
+                "file"   -> FileDestination(arguments.shiftString("`to file` needs a filename"))
+                "udp"    -> UdpDestination(Address.fromString(arguments.shiftString("`to udp` needs at least a port number"), "127.0.0.1"))
                 else     -> throw CommandException("Unsupported destination type: $destinationName")
             }
         } catch (e: Address.AddressException) {

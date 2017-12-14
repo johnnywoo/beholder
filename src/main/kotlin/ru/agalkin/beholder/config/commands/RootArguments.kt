@@ -2,7 +2,7 @@ package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.config.parser.ArgumentToken
 
-object RootArguments : Arguments {
+object RootArguments : Arguments() {
     override fun toList(): List<ArgumentToken>
         = listOf()
 

@@ -23,6 +23,32 @@ class Config(configText: String) {
             |  }
             |
             |
+            |Config syntax
+            |
+            |Command arguments can be expressed as literal strings, quoted strings and regexps.
+            |
+            |Quoted strings start with either `'` or `"`. There is no difference between the two.
+            |Escaping is done with backslashes. Special characters: `\n`, `\r`, `\t`.
+            |If any other character is prefixed with `\`, it is stripped of the backslash.
+            |Examples:
+            |`'this \' is a quote'` => this ' is a quote
+            |`'this \" is also a quote'` => this " is also a quote
+            |`'\z'` => z
+            |`'\n'` => newline character
+            |`'\\n'` => \n
+            |
+            |Regexps are recognized by a delimiter, which is one of `/~!`.
+            |The delimiter currently cannot be escaped in the regexp.
+            |Regexp must be in the form of `#body#modifiers`. Modifiers are optional.
+            |Examples:
+            |`/spaces are allowed/`
+            |`~http://[a-z.]+~`
+            |`/cat|dog/i`
+            |
+            |Literal string is a string of non-whitespace characters that is not a quoted string or regexp.
+            |There is no escaping in literals.
+            |Example: `127.0.0.1:1234`.
+            |
             |Config commands
             |
             |flow   -- defines flow of messages between commands

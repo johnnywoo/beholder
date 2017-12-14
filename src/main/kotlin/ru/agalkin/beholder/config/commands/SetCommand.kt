@@ -2,10 +2,7 @@ package ru.agalkin.beholder.config.commands
 
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.parser.LiteralToken
-import ru.agalkin.beholder.formatters.DumpFormatter
-import ru.agalkin.beholder.formatters.Formatter
-import ru.agalkin.beholder.formatters.InterpolateStringFormatter
-import ru.agalkin.beholder.formatters.SyslogIetfFormatter
+import ru.agalkin.beholder.formatters.*
 
 class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     companion object {
@@ -37,7 +34,16 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |Functions:
             |  syslog  -- Generates a IETF syslog payload based on syslog-related fields;
             |             see `parse syslog` for details.
+            |  replace -- String replacement with regexp. See below.
             |  dump    -- Generates a dump payload with all fields of the message.
+            |
+            |`set ¥field replace /regexp/ 'replacement'`
+            |Takes value of ¥field, replaces all occurences of regexp with the replacement,
+            |and stores the new value into ¥field.
+            |Be aware of double-escaping in replacement strings!
+            |Example:
+            |  `set ¥payload replace /\n/ '\\\\n'`
+            |This command converts newlines into `\n` sequences.
             |""".trimMargin().replace("¥", "$")
     }
 
@@ -53,6 +59,11 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         formatter = when ((arg as? LiteralToken)?.getValue()) {
             "syslog" -> SyslogIetfFormatter()
             "dump"   -> DumpFormatter()
+            "replace" -> RegexpFormatter(
+                arguments.shiftRegexp("`replace` needs a regexp"),
+                arguments.shift("`replace` needs a replacement string"),
+                field
+            )
             else     -> InterpolateStringFormatter(arg.getValue())
         }
 

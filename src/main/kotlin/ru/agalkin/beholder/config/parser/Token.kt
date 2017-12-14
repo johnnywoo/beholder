@@ -8,7 +8,7 @@ open class Token(
 ) {
     // символы, составляющие определение токена
     // (как он был написан в конфиге)
-    var characters = ArrayList<Char>()
+    val characters = ArrayList<Char>()
 
     init {
         if (initialChar != null) {
@@ -33,6 +33,8 @@ open class Token(
             ';' -> return SemicolonToken()
             // токен комментария ничего не содержит, просто ждёт \n в пустом виде
             '#' -> return CommentToken()
+            // delimiter = начинаем регулярку
+            '/', '~', '!' -> return RegexpToken(char)
             // кавычки = начинаем новый кавычечный токен
             '"', '\'' -> return QuotedStringToken(char)
             // ничего особенного не нашли

@@ -5,7 +5,8 @@ import ru.agalkin.beholder.charListToString
 class QuotedStringToken(private val quoteChar: Char) : Token(initialChar = quoteChar), ArgumentToken {
     private val stringValue = ArrayList<Char>()
 
-    override fun getValue() = charListToString(stringValue)
+    override fun getValue()
+        = charListToString(stringValue)
 
     private var isEscapeSequence = false
 

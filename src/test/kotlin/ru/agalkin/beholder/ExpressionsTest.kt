@@ -29,6 +29,50 @@ class ExpressionsTest {
     }
 
     @Test
+    fun testFromTimerDefault() {
+        assertConfigParses(
+            "from timer;",
+            """
+            |from timer;
+            |""".trimMargin()
+        )
+    }
+
+    @Test
+    fun testFromTimerOptionalArgument() {
+        assertConfigParses(
+            "from timer 1 second;",
+            """
+            |from timer 1 second;
+            |""".trimMargin()
+        )
+    }
+
+    @Test
+    fun testFromTimerError() {
+        assertConfigFails(
+            "from timer n second;",
+            "Correct syntax is `from timer 10 seconds`: from timer n second"
+        )
+    }
+
+    @Test
+    fun testFromTimerSuffixError() {
+        assertConfigFails(
+            "from timer 1 lightyear;",
+            "Too many arguments for `from`: from timer 1 lightyear"
+        )
+    }
+
+    @Test
+    fun testFromTimerExtraTokenAfterOptional() {
+        assertConfigFails(
+            "from timer 1 second foo;",
+            "Too many arguments for `from`: from timer 1 second foo"
+        )
+    }
+
+    @Test
     fun testFlowSimple() {
         assertConfigParses(
             "flow {from timer}",

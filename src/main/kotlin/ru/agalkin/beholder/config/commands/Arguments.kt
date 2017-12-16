@@ -12,6 +12,8 @@ abstract class Arguments {
 
     abstract protected fun shiftToken(errorMessage: String): ArgumentToken
 
+    abstract protected fun peekNext(skip: Int = 0): ArgumentToken?
+
     abstract fun end()
 
     fun shiftStringToken(errorMessage: String): ArgumentToken {
@@ -35,6 +37,31 @@ abstract class Arguments {
             throw CommandException(errorMessage)
         }
         return arg.substring(1)
+    }
+
+    fun shiftSuffixedIntOrNull(suffixWords: Set<String>, errorMessage: String): Int? {
+        // second token must be a literal word
+        // if it's not, we just return null
+        val suffixToken = peekNext(1)
+        if (suffixToken == null || suffixToken !is LiteralToken || !suffixWords.contains(suffixToken.getValue())) {
+            return null
+        }
+
+        // ok, there is the suffix word, so the first argument must be correct
+        val token = shiftToken(errorMessage)
+
+        // we need to move the index over to "consume" the suffix token
+        shiftToken(errorMessage)
+
+        if (token == null || token !is LiteralToken) {
+            throw CommandException(errorMessage)
+        }
+
+        val number = token.getValue().toIntOrNull()
+        if (number == null) {
+            throw CommandException(errorMessage)
+        }
+        return number
     }
 
     fun shiftRegexp(errorMessage: String): Pattern {

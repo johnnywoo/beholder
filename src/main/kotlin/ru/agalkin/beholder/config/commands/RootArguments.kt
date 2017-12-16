@@ -10,6 +10,9 @@ object RootArguments : Arguments() {
         throw CommandException(errorMessage)
     }
 
+    override fun peekNext(skip: Int)
+        = null
+
     override fun end() {
     }
 

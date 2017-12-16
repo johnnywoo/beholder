@@ -12,8 +12,8 @@ import ru.agalkin.beholder.threads.UdpListener
 class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
     companion object {
         val help = """
-            |from udp [address:]port;
-            |from timer;
+            |from udp [<address>:]<port>;
+            |from timer [<n> seconds];
             |from internal-log;
             |
             |Subcommands: `parse`, `set`.
@@ -41,8 +41,11 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
             |  ¥from          -- URI of packet source (example: udp://1.2.3.4:57733)
             |  ¥payload       -- Text as received from UDP
             |
-            |`from timer` emits a minimal message every second. It is useful for experimenting
-            |with beholder configurations.
+            |`from timer` emits a minimal message every second.
+            |It is useful for experimenting with beholder configurations.
+            |You can specify a number of seconds between messages like this:
+            |`from timer 30 seconds` for two messages per minute
+            |`from timer 1 second` is the default and equivalent to just `from timer`.
             |
             |Fields produced by `from timer`:
             |  ¥receivedDate  -- ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
@@ -78,7 +81,12 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
                     arguments.shiftString("`from udp` needs at least a port number"),
                     "0.0.0.0"
                 ))
-                "timer" -> TimerSource()
+                "timer" -> TimerSource(
+                    arguments.shiftSuffixedIntOrNull(
+                        setOf("second", "seconds"),
+                        "Correct syntax is `from timer 10 seconds`"
+                    ) ?: 1
+                )
                 "internal-log" -> InternalLogSource()
                 else -> throw CommandException("Cannot understand arguments of `from` command")
             }
@@ -143,8 +151,15 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
         }
     }
 
-    private inner class TimerSource : Source {
-        val receiver: (Message) -> Unit = { onMessageFromSource(it) }
+    private inner class TimerSource(intervalSeconds: Int) : Source {
+        private var secondsToSkip = 0
+        val receiver: (Message) -> Unit = {
+            if (secondsToSkip <= 0) {
+                secondsToSkip = intervalSeconds
+                onMessageFromSource(it)
+            }
+            secondsToSkip--
+        }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to timer")

@@ -17,6 +17,9 @@ class CommandArguments(commandNameToken: LiteralToken) : Arguments() {
     override fun toList(): List<ArgumentToken>
         = args.toList()
 
+    override fun peekNext(skip: Int)
+        = args.getOrNull(index + 1 + skip)
+
     override fun shiftToken(errorMessage: String): ArgumentToken {
         if (args.indices.contains(index + 1)) {
             index++

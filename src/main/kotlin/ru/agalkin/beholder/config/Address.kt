@@ -8,7 +8,7 @@ data class Address(private val host: String, val port: Int) {
         fun fromString(str: String, defaultHost: String): Address {
             val match = "^(?:([^:]+):)?([0-9]+)$".toRegex().matchEntire(str)?.groups
             if (match == null) {
-                throw AddressException("Invalid network address: $str")
+                throw AddressException("Invalid network address '$str'")
             }
 
             val matchedHost = match[1]?.value

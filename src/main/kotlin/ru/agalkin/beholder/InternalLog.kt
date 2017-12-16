@@ -1,8 +1,9 @@
 package ru.agalkin.beholder
 
-import org.apache.commons.lang3.exception.ExceptionUtils
 import ru.agalkin.beholder.threads.InternalLogListener
 import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,11 +33,14 @@ class InternalLog {
         fun err(text: String?)
             = dispatchMessage(text, Severity.ERROR)
 
-        fun exception(e: Throwable)
-            = dispatchMessage(
-                ExceptionUtils.getRootCauseStackTrace(e).joinToString("\n") { it },
+        fun exception(e: Throwable) {
+            val writer = StringWriter()
+            e.printStackTrace(PrintWriter(writer))
+            dispatchMessage(
+                writer.buffer.toString(),
                 Severity.ERROR
             )
+        }
 
         private fun dispatchMessage(text: String?, severity: Severity) {
             if (text == null) {

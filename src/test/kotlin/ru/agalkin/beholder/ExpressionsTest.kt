@@ -119,6 +119,14 @@ class ExpressionsTest {
         )
     }
 
+    @Test
+    fun testBadPort() {
+        assertConfigFails(
+            "from udp wtf;",
+            "Invalid network address 'wtf': from udp wtf"
+        )
+    }
+
     private fun dumpTokens(configText: String): String {
         val tokens = Token.getTokens(configText)
         val sb = StringBuilder()

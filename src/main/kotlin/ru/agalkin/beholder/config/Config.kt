@@ -45,7 +45,7 @@ class Config(configText: String) {
             |
             |Regexps are recognized by a delimiter, which is one of `/~!`.
             |The delimiter currently cannot be escaped in the regexp.
-            |Regexp must be in the form of `#body#modifiers`. Modifiers are optional.
+            |Regexp must be in the form of `/body/modifiers`. Modifiers are optional.
             |Examples:
             |`/spaces are allowed/`
             |`~http://[a-z.]+~`
@@ -63,7 +63,7 @@ class Config(configText: String) {
             |set    -- puts values into message fields
             |parse  -- populates message fields according to some format
             |to     -- sends messages to destinations
-            |""".trimMargin()
+            |""".trimMargin().replace('¥', '$')
 
         fun fromFile(filename: String): Config {
             InternalLog.info("Reading config from $filename")

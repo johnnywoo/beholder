@@ -35,6 +35,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |  syslog  -- Generates a IETF syslog payload based on syslog-related fields;
             |             see `parse syslog` for details.
             |  replace -- String replacement with regexp. See below.
+            |  time    -- Current time, e.g. 01:23:45.
             |  dump    -- Generates a dump payload with all fields of the message.
             |
             |`set ¥field replace /regexp/ 'replacement'`
@@ -59,6 +60,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         formatter = when ((arg as? LiteralToken)?.getValue()) {
             "syslog"  -> SyslogIetfFormatter()
             "dump"    -> DumpFormatter()
+            "time"    -> TimeFormatter()
             "replace" -> RegexpFormatter(
                 arguments.shiftRegexp("`replace` needs a regexp"),
                 arguments.shiftString("`replace` needs a replacement string"),

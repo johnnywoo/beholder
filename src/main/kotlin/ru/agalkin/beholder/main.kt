@@ -99,6 +99,10 @@ fun main(args: Array<String>) {
 
     app.start()
 
+    // we need very little memory compared to most Java programs
+    // let's shrink the initial heap
+    Runtime.getRuntime().gc()
+
     Signal.handle(Signal("HUP")) {
         InternalLog.info("Got SIGHUP")
         InternalLog.info("Beholder is reloading")

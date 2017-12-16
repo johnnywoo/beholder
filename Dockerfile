@@ -14,4 +14,4 @@ COPY build/libs /root
 COPY docker/beholder /sbin/
 COPY docker/beholder.conf /etc/beholder/
 
-CMD java -jar /root/beholder*.jar --config-file=/etc/beholder/beholder.conf --log=/var/log/beholder/beholder.log
+CMD java -server -Xms12m -jar /root/beholder*.jar --config-file=/etc/beholder/beholder.conf --log=/var/log/beholder/beholder.log

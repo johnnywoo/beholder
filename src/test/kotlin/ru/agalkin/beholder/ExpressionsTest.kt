@@ -171,6 +171,48 @@ class ExpressionsTest {
         )
     }
 
+    @Test
+    fun testUnclosedQuotes() {
+        assertConfigFails(
+            "set \$f 'bla",
+            "Unclosed string literal detected: 'bla"
+        )
+    }
+
+    @Test
+    fun testQuotesLast() {
+        assertConfigParses(
+            "set \$f 'bla'",
+            "set \$f 'bla';\n"
+        )
+    }
+
+    @Test
+    fun testUnclosedRegexp() {
+        assertConfigFails(
+            "set \$f replace /bla",
+            "Unclosed regexp detected: /bla"
+        )
+    }
+
+    @Test
+    fun testRegexpLast() {
+        // проверяем, что когда у нас regexp последний токен, мы определяем корректно, что он закрылся
+        // при этом в команде set будет ошибка, что не хватает аргументов (нет строки замены)
+        assertConfigFails(
+            "set \$f replace /bla/",
+            "`replace` needs a replacement string: set \$f replace /bla/"
+        )
+    }
+
+    @Test
+    fun testRegexpInvalid() {
+        assertConfigFails(
+            "set \$f replace /+/",
+            "Invalid regexp: Dangling meta character '+' near index 0\n+\n^"
+        )
+    }
+
     private fun dumpTokens(configText: String): String {
         val tokens = Token.getTokens(configText)
         val sb = StringBuilder()

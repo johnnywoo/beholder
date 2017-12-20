@@ -39,9 +39,12 @@ class Message {
     fun getPayload(): String
         = get("payload") ?: ""
 
+    fun getStringField(field: String)
+        = get(field) ?: ""
+
     private var dateFormat: SimpleDateFormat? = null
 
-    fun dateField(field: String): Date? {
+    fun getDateField(field: String): Date? {
         if (dateFormat == null) {
             dateFormat = getIsoDateFormatter()
         }
@@ -53,7 +56,7 @@ class Message {
     }
 
     // default is a parameter to avoid boxing
-    fun intField(field: String, default: Int): Int {
+    fun getIntField(field: String, default: Int): Int {
         try {
             val string = fields[field]
             if (string == null || string.isEmpty()) {

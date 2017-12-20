@@ -61,7 +61,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             "syslog"  -> SyslogIetfFormatter()
             "dump"    -> DumpFormatter()
             "time"    -> TimeFormatter()
-            "replace" -> RegexpFormatter(
+            "replace" -> ReplaceFormatter(
                 arguments.shiftRegexp("`replace` needs a regexp"),
                 arguments.shiftString("`replace` needs a replacement string"),
                 field

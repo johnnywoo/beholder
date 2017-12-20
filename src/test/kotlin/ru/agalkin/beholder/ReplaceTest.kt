@@ -57,6 +57,28 @@ class ReplaceTest {
     }
 
     @Test
+    fun testReplaceBadRegexReplacement() {
+        assertConfigParses(
+            """
+            |set ¥payload replace /cat/ '$1';
+            |""".trimMargin().replace('¥', '$'),
+            """
+            |set ¥payload replace /cat/ '$1';
+            |""".trimMargin().replace('¥', '$')
+        )
+
+        val setCommand = getCommandFromString("set \$payload replace /cat/ 'huge \$1'")
+
+        val message = Message()
+        message["payload"] = "We've got a cat here"
+
+        setCommand.receiveMessage(message)
+
+        // текст не изменился, команда не упала с исключением
+        assertEquals("We've got a cat here", message["payload"])
+    }
+
+    @Test
     fun testReplaceWorks() {
         val setCommand = getCommandFromString("set \$payload replace /cat|dog/ animal")
 

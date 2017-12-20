@@ -16,14 +16,14 @@ class SyslogIetfFormatter : Formatter {
         // <15>1 2017-03-03T09:26:44+00:00 sender-host program-name - - -
         val sb = StringBuilder()
 
-        val facility = message.intField("syslogFacility", 1) // 1 = user
-        val severity = message.intField("syslogSeverity", 6) // 6 = info
+        val facility = message.getIntField("syslogFacility", 1) // 1 = user
+        val severity = message.getIntField("syslogSeverity", 6) // 6 = info
 
         // header
         sb.append("<").append(facility * 8 + severity).append(">1 ")
 
         // time (received time for now)
-        val date = message.dateField("receivedDate") ?: Date()
+        val date = message.getDateField("receivedDate") ?: Date()
         sb.append(formatDate(date)).append(' ')
 
         // host

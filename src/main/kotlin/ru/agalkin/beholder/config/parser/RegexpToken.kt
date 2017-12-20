@@ -2,6 +2,7 @@ package ru.agalkin.beholder.config.parser
 
 import ru.agalkin.beholder.charListToString
 import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
 
 class RegexpToken(private val delimiter: Char) : Token(initialChar = delimiter), ArgumentToken {
     private val body      = ArrayList<Char>()
@@ -10,12 +11,21 @@ class RegexpToken(private val delimiter: Char) : Token(initialChar = delimiter),
     // мы рассчитываем, что это свойство будет использовано
     // гарантированно после окончания парсинга токена
     // и парсинг токена происходит ровно один раз
-    val regexp by lazy { Pattern.compile(charListToString(body), modifiers)!! }
+    val regexp by lazy {
+        try {
+            Pattern.compile(charListToString(body), modifiers)!!
+        } catch (e: PatternSyntaxException) {
+            throw ParseException("Invalid regexp: ${e.message}")
+        }
+    }
 
     override fun getValue()
         = getDefinition()
 
     private var isInModifiers = false
+
+    fun isSecondDelimiterPresent()
+        = isInModifiers
 
     override fun addChar(char: Char): Token {
         when {

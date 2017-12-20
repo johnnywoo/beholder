@@ -73,6 +73,10 @@ open class Token(
                 throw ParseException("Unclosed string literal detected: ${lastToken.getDefinition()}")
             }
 
+            if (lastToken is RegexpToken && !lastToken.isSecondDelimiterPresent()) {
+                throw ParseException("Unclosed regexp detected: ${lastToken.getDefinition()}")
+            }
+
             if (!lastToken.isEmpty()) {
                 tokens.add(lastToken)
             }

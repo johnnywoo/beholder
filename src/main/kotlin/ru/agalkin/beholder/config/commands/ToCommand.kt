@@ -57,7 +57,7 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
                 else     -> throw CommandException("Unsupported destination type: $destinationName")
             }
         } catch (e: Address.AddressException) {
-            throw CommandException(e)
+            throw CommandException(e).apply { addSuppressed(e) }
         }
 
         arguments.end()

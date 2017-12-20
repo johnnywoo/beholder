@@ -20,7 +20,7 @@ data class Address(private val host: String, val port: Int) {
             try {
                 port = matchedPort.toInt()
             } catch (e: Throwable) {
-                throw AddressException("Invalid port: $matchedPort")
+                throw AddressException("Invalid port: $matchedPort").apply { addSuppressed(e) }
             }
 
             if (port < 1) {

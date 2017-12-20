@@ -15,7 +15,7 @@ class RegexpToken(private val delimiter: Char) : Token(initialChar = delimiter),
         try {
             Pattern.compile(charListToString(body), modifiers)!!
         } catch (e: PatternSyntaxException) {
-            throw ParseException("Invalid regexp: ${e.message}")
+            throw ParseException("Invalid regexp: ${e.message}").apply { addSuppressed(e) }
         }
     }
 

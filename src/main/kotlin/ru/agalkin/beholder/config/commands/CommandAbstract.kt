@@ -70,7 +70,7 @@ abstract class CommandAbstract(private val arguments: Arguments) {
             subcommand = createSubcommand(subcommandArgs)
                 ?: throw CommandException("Command `${subcommandArgs.getCommandName()}` is not allowed inside ${this::class.simpleName}")
         } catch (e: CommandException) {
-            throw ParseException.fromList(e.message + ":", subcommandArgs.toList())
+            throw ParseException.fromList(e.message + ":", subcommandArgs.toList()).apply { addSuppressed(e) }
         }
         subcommands.add(subcommand)
 

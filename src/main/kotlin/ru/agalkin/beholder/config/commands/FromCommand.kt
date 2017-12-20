@@ -91,7 +91,7 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
                 else -> throw CommandException("Cannot understand arguments of `from` command")
             }
         } catch (e: Address.AddressException) {
-            throw CommandException(e)
+            throw CommandException(e).apply { addSuppressed(e) }
         }
 
         arguments.end()

@@ -32,6 +32,18 @@ class SyslogParserTest {
         )
     }
 
+    @Test
+    fun testSyslogParserMultiline() {
+        val message = Message()
+        message["payload"] = "<190>Nov 25 13:46:44 vps nginx: a\nb"
+
+        val parseCommand = ParseCommand(argumentsFromString("parse syslog"))
+        // commands modify messages in place (messages are copied ahead of time by routers)
+        parseCommand.receiveMessage(message)
+
+        assertEquals("a\nb", message.getPayload())
+    }
+
     private fun argumentsFromString(command: String): Arguments {
         val tokens = Token.getTokens(command)
         val arguments = CommandArguments(tokens[0] as LiteralToken)

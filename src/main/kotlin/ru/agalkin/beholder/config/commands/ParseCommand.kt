@@ -137,8 +137,6 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
                 (?: \s+ (?<host> [^\s:]+) )? # 'nohostname' parameter in nginx
                 \s+ (?<tag> [^\s:]+):
                 \s # one space
-                (?<payload>   .*)
-                $
             """,
             Pattern.COMMENTS
         )
@@ -148,8 +146,9 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             // формат старого сислога:
             // <190>Nov 25 13:46:44 vps nginx: 127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] "GET /api HTTP/1.1" 200 47 "-" "curl/7.38.0"
 
-            val matcher = syslogNginxRegex.matcher(message.getPayload())
-            if (!matcher.matches()) {
+            val payload = message.getPayload()
+            val matcher = syslogNginxRegex.matcher(payload)
+            if (!matcher.find()) {
                 return
             }
 
@@ -174,10 +173,8 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
                 message["syslogProgram"] = tag
             }
 
-            val payload = matcher.group("payload")
-            if (payload != null) {
-                message["payload"] = payload
-            }
+            val headerLength = matcher.end()
+            message["payload"] = payload.substring(headerLength)
         }
     }
 }

@@ -28,6 +28,7 @@ class RegexpToken(private val delimiter: Char) : Token(initialChar = delimiter),
                     's' -> Pattern.DOTALL
                     'u' -> Pattern.UNICODE_CASE
                     'U' -> Pattern.UNICODE_CHARACTER_CLASS
+                    in 'a'..'z', in 'A'..'Z', in '0'..'9' -> throw ParseException("Invalid regexp modifier: $char")
                     // не модификатор = это начинается новый токен
                     else -> return super.addChar(char)
                 }

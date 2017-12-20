@@ -35,6 +35,28 @@ class ReplaceTest {
     }
 
     @Test
+    fun testReplaceBadRegexModifier() {
+        assertConfigFails(
+            """
+            |set ¥payload replace /cat/q 'dog';
+            |""".trimMargin().replace('¥', '$'),
+            "Invalid regexp modifier: q"
+        )
+    }
+
+    @Test
+    fun testReplaceGoodRegexModifier() {
+        assertConfigParses(
+            """
+            |set ¥payload replace /cat/i 'dog';
+            |""".trimMargin().replace('¥', '$'),
+            """
+            |set ¥payload replace /cat/i 'dog';
+            |""".trimMargin().replace('¥', '$')
+        )
+    }
+
+    @Test
     fun testReplaceWorks() {
         val setCommand = getCommandFromString("set \$payload replace /cat|dog/ animal")
 

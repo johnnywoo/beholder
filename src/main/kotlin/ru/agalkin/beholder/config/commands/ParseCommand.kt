@@ -10,7 +10,7 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     companion object {
         val help = """
             |parse syslog;
-            |parse /regexp-with-named-groups/;
+            |parse ~regexp-with-named-groups~;
             |parse beholder-stats;
             |
             |This command sets fields on messages according to chosen format.
@@ -28,10 +28,10 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |  ¥syslogProgram   -- program name (nginx calls this "tag")
             |  ¥payload         -- actual log message (this would've been written to a file by nginx)
             |
-            |Format `/regexp-with-named-groups/`: if the regexp matches, named groups from it
+            |Format `~regexp-with-named-groups~`: if the regexp matches, named groups from it
             |become message fields. Group names should not be prefixed with ¥.
             |Example:
-            |`parse /(?<logKind>access|error)/;`
+            |`parse ~(?<logKind>access|error)~;`
             |This will produce field ¥logKind with either 'access' or 'error' as value,
             |if either word occurs in ¥payload. If both words are present, earliest match is used.
             |

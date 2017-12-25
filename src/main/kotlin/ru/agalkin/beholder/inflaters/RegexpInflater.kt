@@ -9,7 +9,7 @@ class RegexpInflater(private val regexp: Pattern) : Inflater {
 
     init {
         if (regexp.flags() and Pattern.COMMENTS != 0) {
-            throw CommandException("Using 'x' modifier in `parse /re/` is not supported")
+            throw CommandException("Using 'x' modifier in `parse ~regexp~` is not supported")
         }
         val names = mutableSetOf<String>()
         val matcher = Pattern.compile("\\(\\?<([a-zA-Z][a-zA-Z0-9]*)>").matcher(regexp.pattern())

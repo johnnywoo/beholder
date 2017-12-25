@@ -38,12 +38,12 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |  time    -- Current time, e.g. 01:23:45.
             |  dump    -- Generates a dump payload with all fields of the message.
             |
-            |`set ¥field replace /regexp/ 'replacement'`
+            |`set ¥field replace ~regexp~ 'replacement'`
             |Takes value of ¥field, replaces all occurences of regexp with the replacement,
             |and stores the new value into ¥field.
             |Be aware of double-escaping in replacement strings!
             |Example:
-            |  `set ¥payload replace /\n/ '\\\\n'`
+            |  `set ¥payload replace ~\n~ '\\\\n'`
             |This command converts newlines into `\n` sequences.
             |""".trimMargin().replace("¥", "$")
     }

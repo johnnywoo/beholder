@@ -20,14 +20,14 @@ class BeholderStatsInflater : Inflater {
             else -> ((System.currentTimeMillis() - uptimeDate.time) / 1000).toInt()
         }
 
-        val udpMaxBytesIn = UdpListener.getAndResetMaxReceivedPacketSize()
+        val fromUdpMaxBytes = UdpListener.getAndResetMaxReceivedPacketSize()
 
-        message["uptimeSeconds"] = uptimeSeconds.toString()
-        message["heapBytes"]     = heapSize.toString()
-        message["heapUsedBytes"] = heapUsed.toString()
-        message["heapMaxBytes"]  = heapMax.toString()
-        message["udpMaxBytesIn"] = udpMaxBytesIn.toString()
-        message["payload"]       = "heap ${getMemoryString(heapSize)} heap-used ${getMemoryString(heapUsed)} heap-max ${getMemoryString(heapMax)} udp-max-bytes-in $udpMaxBytesIn uptime ${getUptimeString(uptimeSeconds)}"
+        message["uptimeSeconds"]   = uptimeSeconds.toString()
+        message["heapBytes"]       = heapSize.toString()
+        message["heapUsedBytes"]   = heapUsed.toString()
+        message["heapMaxBytes"]    = heapMax.toString()
+        message["fromUdpMaxBytes"] = fromUdpMaxBytes.toString()
+        message["payload"]         = "heap ${getMemoryString(heapSize)} heap-used ${getMemoryString(heapUsed)} heap-max ${getMemoryString(heapMax)} from-udp-max-bytes $fromUdpMaxBytes uptime ${getUptimeString(uptimeSeconds)}"
     }
 
     private val uptimeUnits = mapOf(

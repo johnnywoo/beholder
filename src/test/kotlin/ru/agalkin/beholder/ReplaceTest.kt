@@ -128,6 +128,18 @@ class ReplaceTest {
         assertEquals("""We've got huge cats and huge dogs""", message["payload"])
     }
 
+    @Test
+    fun testReplaceWithEmptyString() {
+        val setCommand = getCommandFromString("set \$payload replace ~cats and ~ ''")
+
+        val message = Message()
+        message["payload"] = "We've got cats and dogs"
+
+        setCommand.receiveMessage(message)
+
+        assertEquals("""We've got dogs""", message["payload"])
+    }
+
     private fun getCommandFromString(string: String): SetCommand {
         val tokens = Token.getTokens(string)
         val args = CommandArguments(tokens[0] as LiteralToken)

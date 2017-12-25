@@ -44,7 +44,7 @@ class UdpListener(val address: Address) {
 
     companion object {
         val MAX_BUFFER_COUNT  = 1000 // messages
-        val MAX_MESSAGE_CHARS = 10 * 1024 * 1024
+        val MAX_MESSAGE_CHARS = 60 * 1024
 
         private val listeners = ConcurrentHashMap<Address, UdpListener>()
 
@@ -57,6 +57,26 @@ class UdpListener(val address: Address) {
                 val newListener = listeners[address] ?: UdpListener(address)
                 listeners[address] = newListener
                 return newListener
+            }
+        }
+
+        @Volatile private var maxReceivedPacketSize = 0
+
+        fun getAndResetMaxReceivedPacketSize(): Int {
+            val udpMaxBytesIn = maxReceivedPacketSize
+            synchronized(this) {
+                maxReceivedPacketSize = 0
+            }
+            return udpMaxBytesIn
+        }
+
+        fun updateMaxReceivedPacketSize(size: Int) {
+            if (maxReceivedPacketSize < size) {
+                synchronized(this) {
+                    if (maxReceivedPacketSize < size) {
+                        maxReceivedPacketSize = size
+                    }
+                }
             }
         }
     }

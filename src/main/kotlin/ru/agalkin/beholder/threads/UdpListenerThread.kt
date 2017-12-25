@@ -40,6 +40,8 @@ class UdpListenerThread(private val udpListener: UdpListener) : Thread("from-udp
                 message["from"]         = "udp://${packet.address.hostAddress}:${packet.port}"
 
                 udpListener.queue.offer(message)
+
+                UdpListener.updateMaxReceivedPacketSize(packet.length)
             }
         }
 

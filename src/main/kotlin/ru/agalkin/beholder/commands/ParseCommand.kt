@@ -46,6 +46,7 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |  ¥heapBytes      -- Current heap size in bytes (memory usage)
             |  ¥heapUsedBytes  -- Used memory in the heap
             |  ¥heapMaxBytes   -- Maximal heap size
+            |  ¥udpMaxBytesIn  -- Maximal size of received UDP packet since last collection of stats
             |  ¥payload        -- A summary of Beholder stats
             |""".trimMargin().replace("¥", "$")
     }

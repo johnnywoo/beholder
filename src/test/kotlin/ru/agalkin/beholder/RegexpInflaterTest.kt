@@ -1,7 +1,6 @@
 package ru.agalkin.beholder
 
 import org.junit.Test
-import ru.agalkin.beholder.config.commands.Arguments
 import ru.agalkin.beholder.config.commands.CommandArguments
 import ru.agalkin.beholder.config.commands.ParseCommand
 import ru.agalkin.beholder.config.parser.ArgumentToken
@@ -16,9 +15,7 @@ class RegexpInflaterTest {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val parseCommand = ParseCommand(argumentsFromString("parse ~(?<animal>cat|dog)~"))
-        // commands modify messages in place (messages are copied ahead of time by routers)
-        parseCommand.receiveMessage(message)
+        processMessageWithCommand(message, "parse ~(?<animal>cat|dog)~")
 
         assertEquals(
             "\$payload=We've got cats and dogs\n" +
@@ -32,9 +29,7 @@ class RegexpInflaterTest {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val parseCommand = ParseCommand(argumentsFromString("parse ~(?<animal>whale)~"))
-        // commands modify messages in place (messages are copied ahead of time by routers)
-        parseCommand.receiveMessage(message)
+        processMessageWithCommand(message, "parse ~(?<animal>whale)~")
 
         assertEquals(
             "\$payload=We've got cats and dogs",
@@ -47,9 +42,7 @@ class RegexpInflaterTest {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val parseCommand = ParseCommand(argumentsFromString("parse ~(cat)~"))
-        // commands modify messages in place (messages are copied ahead of time by routers)
-        parseCommand.receiveMessage(message)
+        processMessageWithCommand(message, "parse ~(cat)~")
 
         // there are no named groups, so nothing should change
         assertEquals(
@@ -64,9 +57,7 @@ class RegexpInflaterTest {
         message["payload"] = "We've got cats and dogs"
         message["animal"]  = "headcrab"
 
-        val parseCommand = ParseCommand(argumentsFromString("parse ~(?<animal>whale)~"))
-        // commands modify messages in place (messages are copied ahead of time by routers)
-        parseCommand.receiveMessage(message)
+        processMessageWithCommand(message, "parse ~(?<animal>whale)~")
 
         assertEquals(
             "\$payload=We've got cats and dogs\n" +
@@ -75,13 +66,15 @@ class RegexpInflaterTest {
         )
     }
 
-    private fun argumentsFromString(command: String): Arguments {
+    private fun processMessageWithCommand(message: Message, command: String) {
         val tokens = Token.getTokens(command)
         val arguments = CommandArguments(tokens[0] as LiteralToken)
         for (token in tokens.drop(1)) {
             arguments.addToken(token as ArgumentToken)
         }
-        return arguments
+
+        // commands modify messages in place (messages are copied ahead of time by routers)
+        ParseCommand(arguments).receiveMessage(message)
     }
 
     private fun getMessageDump(message: Message)

@@ -53,7 +53,7 @@ abstract class Arguments {
         // we need to move the index over to "consume" the suffix token
         shiftToken(errorMessage)
 
-        if (token == null || token !is LiteralToken) {
+        if (token !is LiteralToken) {
             throw CommandException(errorMessage)
         }
 
@@ -64,11 +64,15 @@ abstract class Arguments {
         return number
     }
 
-    fun shiftRegexp(errorMessage: String): Pattern {
-        val arg = shiftToken(errorMessage)
-        if (arg !is RegexpToken) {
-            throw CommandException(errorMessage)
+    fun shiftRegexp(errorMessage: String)
+        = shiftRegexpOrNull() ?: throw CommandException(errorMessage)
+
+    fun shiftRegexpOrNull(): Pattern? {
+        val token = peekNext()
+        if (token != null && token is RegexpToken) {
+            shiftToken("")
+            return token.regexp
         }
-        return arg.regexp
+        return null
     }
 }

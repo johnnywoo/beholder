@@ -115,8 +115,6 @@ class ReplaceTest {
         assertEquals("""We've got felines and dogs""", message["payload"])
     }
 
-    // todo ошибки в регулярках
-
     @Test
     fun testReplaceInterpolationAndGroups() {
         val setCommand = getCommandFromString("set \$payload replace /(cat|dog)/ '\$size \$1'")

@@ -1,7 +1,7 @@
 package ru.agalkin.beholder.inflaters
 
 import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.config.commands.CommandException
+import ru.agalkin.beholder.config.expressions.CommandException
 import java.util.regex.Pattern
 
 class RegexpInflater(private val regexp: Pattern) : Inflater {

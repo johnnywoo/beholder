@@ -1,9 +1,10 @@
-package ru.agalkin.beholder.config.commands
+package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.INTERNAL_LOG_FROM_FIELD
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
+import ru.agalkin.beholder.config.expressions.*
 import ru.agalkin.beholder.threads.InternalLogListener
 import ru.agalkin.beholder.threads.TIMER_FROM_FIELD
 import ru.agalkin.beholder.threads.TimerListener

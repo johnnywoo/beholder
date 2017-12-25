@@ -1,6 +1,9 @@
-package ru.agalkin.beholder.config.commands
+package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.config.expressions.Arguments
+import ru.agalkin.beholder.config.expressions.CommandException
+import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.inflaters.BeholderStatsInflater
 import ru.agalkin.beholder.inflaters.Inflater
 import ru.agalkin.beholder.inflaters.RegexpInflater

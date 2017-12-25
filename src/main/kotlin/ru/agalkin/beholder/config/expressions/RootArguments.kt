@@ -1,4 +1,4 @@
-package ru.agalkin.beholder.config.commands
+package ru.agalkin.beholder.config.expressions
 
 import ru.agalkin.beholder.config.parser.ArgumentToken
 

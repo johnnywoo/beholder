@@ -1,8 +1,8 @@
 package ru.agalkin.beholder
 
 import org.apache.commons.cli.*
+import ru.agalkin.beholder.commands.*
 import ru.agalkin.beholder.config.Config
-import ru.agalkin.beholder.config.commands.*
 
 class Cli(args: Array<String>, onParseError: (ParseException) -> Nothing) {
     val isShortHelp: Boolean

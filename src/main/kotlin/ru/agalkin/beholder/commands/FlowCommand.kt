@@ -1,4 +1,6 @@
-package ru.agalkin.beholder.config.commands
+package ru.agalkin.beholder.commands
+
+import ru.agalkin.beholder.config.expressions.*
 
 open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
     companion object {

@@ -2,8 +2,8 @@ package ru.agalkin.beholder
 
 import org.junit.Test
 import ru.agalkin.beholder.config.Config
-import ru.agalkin.beholder.config.commands.CommandArguments
-import ru.agalkin.beholder.config.commands.SetCommand
+import ru.agalkin.beholder.config.expressions.CommandArguments
+import ru.agalkin.beholder.commands.SetCommand
 import ru.agalkin.beholder.config.parser.ArgumentToken
 import ru.agalkin.beholder.config.parser.LiteralToken
 import ru.agalkin.beholder.config.parser.ParseException

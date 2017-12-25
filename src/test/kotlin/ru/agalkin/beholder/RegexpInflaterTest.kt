@@ -43,6 +43,22 @@ class RegexpInflaterTest {
     }
 
     @Test
+    fun testRegexpInflaterNumberedGroup() {
+        val message = Message()
+        message["payload"] = "We've got cats and dogs"
+
+        val parseCommand = ParseCommand(argumentsFromString("parse ~(cat)~"))
+        // commands modify messages in place (messages are copied ahead of time by routers)
+        parseCommand.receiveMessage(message)
+
+        // there are no named groups, so nothing should change
+        assertEquals(
+            "\$payload=We've got cats and dogs",
+            getMessageDump(message)
+        )
+    }
+
+    @Test
     fun testRegexpInflaterNoMatchNoOverwrite() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"

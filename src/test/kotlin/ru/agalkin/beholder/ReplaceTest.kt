@@ -16,10 +16,10 @@ class ReplaceTest {
     fun testRegexParses() {
         assertConfigParses(
             """
-            |set ¥payload replace /cat/ 'dog';
+            |set ¥payload replace ~cat~ 'dog';
             |""".trimMargin().replace('¥', '$'),
             """
-            |set ¥payload replace /cat/ 'dog';
+            |set ¥payload replace ~cat~ 'dog';
             |""".trimMargin().replace('¥', '$')
         )
     }
@@ -38,7 +38,7 @@ class ReplaceTest {
     fun testReplaceBadRegexModifier() {
         assertConfigFails(
             """
-            |set ¥payload replace /cat/q 'dog';
+            |set ¥payload replace ~cat~q 'dog';
             |""".trimMargin().replace('¥', '$'),
             "Invalid regexp modifier: q"
         )
@@ -48,10 +48,10 @@ class ReplaceTest {
     fun testReplaceGoodRegexModifier() {
         assertConfigParses(
             """
-            |set ¥payload replace /cat/i 'dog';
+            |set ¥payload replace ~cat~i 'dog';
             |""".trimMargin().replace('¥', '$'),
             """
-            |set ¥payload replace /cat/i 'dog';
+            |set ¥payload replace ~cat~i 'dog';
             |""".trimMargin().replace('¥', '$')
         )
     }
@@ -60,14 +60,14 @@ class ReplaceTest {
     fun testReplaceBadRegexReplacement() {
         assertConfigParses(
             """
-            |set ¥payload replace /cat/ '$1';
+            |set ¥payload replace ~cat~ '$1';
             |""".trimMargin().replace('¥', '$'),
             """
-            |set ¥payload replace /cat/ '$1';
+            |set ¥payload replace ~cat~ '$1';
             |""".trimMargin().replace('¥', '$')
         )
 
-        val setCommand = getCommandFromString("set \$payload replace /cat/ 'huge \$1'")
+        val setCommand = getCommandFromString("set \$payload replace ~cat~ 'huge \$1'")
 
         val message = Message()
         message["payload"] = "We've got a cat here"
@@ -80,7 +80,7 @@ class ReplaceTest {
 
     @Test
     fun testReplaceWorks() {
-        val setCommand = getCommandFromString("set \$payload replace /cat|dog/ animal")
+        val setCommand = getCommandFromString("set \$payload replace ~cat|dog~ animal")
 
         val message = Message()
         message["payload"] = "We've got cats and dogs"
@@ -92,7 +92,7 @@ class ReplaceTest {
 
     @Test
     fun testReplaceNewlines() {
-        val setCommand = getCommandFromString("""set ¥payload replace /\n/ '\\\\n'""".replace('¥', '$'))
+        val setCommand = getCommandFromString("""set ¥payload replace ~\n~ '\\\\n'""".replace('¥', '$'))
 
         val message = Message()
         message["payload"] = "Line 1\nLine 2"
@@ -104,7 +104,7 @@ class ReplaceTest {
 
     @Test
     fun testReplaceInterpolationSimple() {
-        val setCommand = getCommandFromString("set \$payload replace /cat/ '\$animal'")
+        val setCommand = getCommandFromString("set \$payload replace ~cat~ '\$animal'")
 
         val message = Message()
         message["animal"]  = "feline"
@@ -117,7 +117,7 @@ class ReplaceTest {
 
     @Test
     fun testReplaceInterpolationAndGroups() {
-        val setCommand = getCommandFromString("set \$payload replace /(cat|dog)/ '\$size \$1'")
+        val setCommand = getCommandFromString("set \$payload replace ~(cat|dog)~ '\$size \$1'")
 
         val message = Message()
         message["size"]    = "huge"

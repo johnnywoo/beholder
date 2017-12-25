@@ -190,8 +190,8 @@ class ExpressionsTest {
     @Test
     fun testUnclosedRegexp() {
         assertConfigFails(
-            "set \$f replace /bla",
-            "Unclosed regexp detected: /bla"
+            "set \$f replace ~bla",
+            "Unclosed regexp detected: ~bla"
         )
     }
 
@@ -200,15 +200,15 @@ class ExpressionsTest {
         // проверяем, что когда у нас regexp последний токен, мы определяем корректно, что он закрылся
         // при этом в команде set будет ошибка, что не хватает аргументов (нет строки замены)
         assertConfigFails(
-            "set \$f replace /bla/",
-            "`replace` needs a replacement string: set \$f replace /bla/"
+            "set \$f replace ~bla~",
+            "`replace` needs a replacement string: set \$f replace ~bla~"
         )
     }
 
     @Test
     fun testRegexpInvalid() {
         assertConfigFails(
-            "set \$f replace /+/",
+            "set \$f replace ~+~",
             "Invalid regexp: Dangling meta character '+' near index 0\n+\n^"
         )
     }

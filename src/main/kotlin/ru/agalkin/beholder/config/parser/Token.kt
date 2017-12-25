@@ -34,7 +34,7 @@ open class Token(
             // токен комментария ничего не содержит, просто ждёт \n в пустом виде
             '#' -> return CommentToken()
             // delimiter = начинаем регулярку
-            '/', '~', '!' -> return RegexpToken(char)
+            '~' -> return RegexpToken(char)
             // кавычки = начинаем новый кавычечный токен
             '"', '\'' -> return QuotedStringToken(char)
             // ничего особенного не нашли

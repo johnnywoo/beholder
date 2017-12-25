@@ -16,7 +16,7 @@ class RegexpInflaterTest {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val parseCommand = ParseCommand(argumentsFromString("parse /(?<animal>cat|dog)/"))
+        val parseCommand = ParseCommand(argumentsFromString("parse ~(?<animal>cat|dog)~"))
         // commands modify messages in place (messages are copied ahead of time by routers)
         parseCommand.receiveMessage(message)
 
@@ -32,7 +32,7 @@ class RegexpInflaterTest {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val parseCommand = ParseCommand(argumentsFromString("parse /(?<animal>whale)/"))
+        val parseCommand = ParseCommand(argumentsFromString("parse ~(?<animal>whale)~"))
         // commands modify messages in place (messages are copied ahead of time by routers)
         parseCommand.receiveMessage(message)
 
@@ -48,7 +48,7 @@ class RegexpInflaterTest {
         message["payload"] = "We've got cats and dogs"
         message["animal"]  = "headcrab"
 
-        val parseCommand = ParseCommand(argumentsFromString("parse /(?<animal>whale)/"))
+        val parseCommand = ParseCommand(argumentsFromString("parse ~(?<animal>whale)~"))
         // commands modify messages in place (messages are copied ahead of time by routers)
         parseCommand.receiveMessage(message)
 

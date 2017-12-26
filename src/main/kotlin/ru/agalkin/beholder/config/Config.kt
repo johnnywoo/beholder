@@ -56,6 +56,7 @@ class Config(configText: String) {
             |There is no escaping in literal words.
             |Example: `127.0.0.1:1234`.
             |
+            |
             |Config commands
             |
             |flow   -- defines flow of messages between commands

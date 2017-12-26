@@ -9,7 +9,7 @@ import java.net.SocketTimeoutException
 import java.util.*
 
 class UdpListenerThread(private val udpListener: UdpListener) : Thread("from-udp-${udpListener.address}-listener") {
-    private val buffer = ByteArray(UdpListener.MAX_MESSAGE_CHARS)
+    private val buffer = ByteArray(FROM_UDP_MAX_MESSAGE_CHARS)
 
     override fun run() {
         InternalLog.info("Thread $name got started")
@@ -29,7 +29,7 @@ class UdpListenerThread(private val udpListener: UdpListener) : Thread("from-udp
                 }
 
                 // не даём очереди бесконтрольно расти (вытесняем старые записи)
-                if (udpListener.queue.size > UdpListener.MAX_BUFFER_COUNT) {
+                if (udpListener.queue.size > FROM_UDP_MAX_BUFFER_COUNT) {
                     udpListener.queue.take() // FIFO
                 }
 

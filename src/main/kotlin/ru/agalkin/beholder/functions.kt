@@ -38,3 +38,13 @@ fun addNewlineIfNeeded(text: String)
         true  -> text + "\n"
         false -> text
     }
+
+fun <T : Comparable<T>> getClosestFromRange(range: ClosedRange<T>, item: T): T {
+    if (item < range.start) {
+        return range.start
+    }
+    if (item > range.endInclusive) {
+        return range.endInclusive
+    }
+    return item
+}

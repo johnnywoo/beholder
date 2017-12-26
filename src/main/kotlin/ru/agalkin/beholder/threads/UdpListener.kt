@@ -8,11 +8,14 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
+const val FROM_UDP_MAX_BUFFER_COUNT  = 1000 // messages
+const val FROM_UDP_MAX_MESSAGE_CHARS = 60 * 1024
+
 class UdpListener(val address: Address) {
     val queue = LinkedBlockingQueue<Message>()
 
-    var isEmitterPaused = AtomicBoolean(false)
-    var isListenerDeleted = AtomicBoolean(false)
+    val isEmitterPaused = AtomicBoolean(false)
+    val isListenerDeleted = AtomicBoolean(false)
 
     val router = MessageRouter()
 
@@ -43,9 +46,6 @@ class UdpListener(val address: Address) {
     }
 
     companion object {
-        val MAX_BUFFER_COUNT  = 1000 // messages
-        val MAX_MESSAGE_CHARS = 60 * 1024
-
         private val listeners = ConcurrentHashMap<Address, UdpListener>()
 
         fun getListener(address: Address): UdpListener {

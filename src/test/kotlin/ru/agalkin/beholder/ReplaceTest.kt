@@ -75,7 +75,7 @@ class ReplaceTest {
         setCommand.receiveMessage(message)
 
         // текст не изменился, команда не упала с исключением
-        assertEquals("We've got a cat here", message["payload"])
+        assertEquals("We've got a cat here", message.getStringField("payload"))
     }
 
     @Test
@@ -87,7 +87,7 @@ class ReplaceTest {
 
         setCommand.receiveMessage(message)
 
-        assertEquals("We've got animals and animals", message["payload"])
+        assertEquals("We've got animals and animals", message.getStringField("payload"))
     }
 
     @Test
@@ -99,7 +99,7 @@ class ReplaceTest {
 
         setCommand.receiveMessage(message)
 
-        assertEquals("""Line 1\nLine 2""", message["payload"])
+        assertEquals("""Line 1\nLine 2""", message.getStringField("payload"))
     }
 
     @Test
@@ -112,7 +112,7 @@ class ReplaceTest {
 
         setCommand.receiveMessage(message)
 
-        assertEquals("""We've got felines and dogs""", message["payload"])
+        assertEquals("""We've got felines and dogs""", message.getStringField("payload"))
     }
 
     @Test
@@ -125,7 +125,7 @@ class ReplaceTest {
 
         setCommand.receiveMessage(message)
 
-        assertEquals("""We've got huge cats and huge dogs""", message["payload"])
+        assertEquals("""We've got huge cats and huge dogs""", message.getStringField("payload"))
     }
 
     @Test
@@ -137,7 +137,31 @@ class ReplaceTest {
 
         setCommand.receiveMessage(message)
 
-        assertEquals("""We've got dogs""", message["payload"])
+        assertEquals("""We've got dogs""", message.getStringField("payload"))
+    }
+
+    @Test
+    fun testReplaceWithUnknownField() {
+        val setCommand = getCommandFromString("set \$payload replace ~cats and ~ \$unknown")
+
+        val message = Message()
+        message["payload"] = "We've got cats and dogs"
+
+        setCommand.receiveMessage(message)
+
+        assertEquals("""We've got dogs""", message.getStringField("payload"))
+    }
+
+    @Test
+    fun testReplaceInUnknownField() {
+        val setCommand = getCommandFromString("set \$payload replace ~cats and ~ '' in \$unknown")
+
+        val message = Message()
+        message["payload"] = "We've got cats and dogs"
+
+        setCommand.receiveMessage(message)
+
+        assertEquals("", message.getStringField("payload"))
     }
 
     @Test
@@ -148,7 +172,7 @@ class ReplaceTest {
         val setCommand = getCommandFromString("set \$payload replace ~cat~ 'animal' in 'Zoo has cats'")
         setCommand.receiveMessage(message)
 
-        assertEquals("""Zoo has animals""", message["payload"])
+        assertEquals("""Zoo has animals""", message.getStringField("payload"))
     }
 
     @Test
@@ -160,7 +184,7 @@ class ReplaceTest {
         val setCommand = getCommandFromString("set \$payload replace ~cat~ 'animal' in \$text")
         setCommand.receiveMessage(message)
 
-        assertEquals("""Zoo has animals""", message["payload"])
+        assertEquals("""Zoo has animals""", message.getStringField("payload"))
     }
 
     @Test
@@ -172,7 +196,7 @@ class ReplaceTest {
         val setCommand = getCommandFromString("set \$payload replace ~cat~ 'feline' in 'Two cats: \$animal \$animal'")
         setCommand.receiveMessage(message)
 
-        assertEquals("""Two felines: feline feline""", message["payload"])
+        assertEquals("""Two felines: feline feline""", message.getStringField("payload"))
     }
 
     @Test
@@ -185,7 +209,7 @@ class ReplaceTest {
         val setCommand = getCommandFromString("set \$payload replace ~cat~ \$betterName in 'Two cats: \$animal \$animal'")
         setCommand.receiveMessage(message)
 
-        assertEquals("""Two felines: feline feline""", message["payload"])
+        assertEquals("""Two felines: feline feline""", message.getStringField("payload"))
     }
 
     @Test
@@ -196,7 +220,7 @@ class ReplaceTest {
         val setCommand = getCommandFromString("set \$payload replace ~warn(ing)?~i 'WARNING'")
         setCommand.receiveMessage(message)
 
-        assertEquals("127.0.0.1 WARNING PHP WARNING: some WARNING", message["payload"])
+        assertEquals("127.0.0.1 WARNING PHP WARNING: some WARNING", message.getStringField("payload"))
     }
 
     @Test
@@ -208,7 +232,7 @@ class ReplaceTest {
         val setCommand = getCommandFromString("set \$host replace ~^www\\.~ '' in '\$subdomain.\$domain'")
         setCommand.receiveMessage(message)
 
-        assertEquals("example.com", message["host"])
+        assertEquals("example.com", message.getStringField("host"))
 
         val message2 = Message()
         message2["subdomain"] = "mail"
@@ -216,7 +240,7 @@ class ReplaceTest {
 
         setCommand.receiveMessage(message2)
 
-        assertEquals("mail.example.com", message2["host"])
+        assertEquals("mail.example.com", message2.getStringField("host"))
     }
 
     @Test
@@ -227,7 +251,7 @@ class ReplaceTest {
         val setCommand = getCommandFromString("set \$payload replace ~\\n~ '\\\\\\\\n'")
         setCommand.receiveMessage(message)
 
-        assertEquals("a\\nb", message["payload"])
+        assertEquals("a\\nb", message.getStringField("payload"))
     }
 
     private fun getCommandFromString(string: String): SetCommand {

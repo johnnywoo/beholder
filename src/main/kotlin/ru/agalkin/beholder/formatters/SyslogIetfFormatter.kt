@@ -10,7 +10,7 @@ import java.util.*
  */
 class SyslogIetfFormatter : Formatter {
     // хост сам перезагрузится на SIGHUP, потому что мы пересоздадим все команды и их внутренности
-    private var defaultHost = InetAddress.getLocalHost().hostName
+    private val defaultHost = InetAddress.getLocalHost().hostName
 
     override fun formatMessage(message: Message): String {
         // <15>1 2017-03-03T09:26:44+00:00 sender-host program-name - - -
@@ -27,10 +27,10 @@ class SyslogIetfFormatter : Formatter {
         sb.append(formatDate(date)).append(' ')
 
         // host
-        sb.append(message["syslogHost"] ?: defaultHost).append(' ')
+        sb.append(message.getStringField("syslogHost", defaultHost)).append(' ')
 
         // program name
-        sb.append(message["syslogProgram"] ?: "-").append(' ')
+        sb.append(message.getStringField("syslogProgram", "-")).append(' ')
 
         // pid, message id, structured data
         sb.append("- - - ")

@@ -1,5 +1,6 @@
 package ru.agalkin.beholder
 
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
@@ -25,45 +26,43 @@ class Message {
         }
     }
 
-    operator fun get(field: String): String? {
-        val value = fields[field]
-        if (value == null || value.isEmpty()) {
-            return null
-        }
-        return value
-    }
-
     fun getFields(): Map<String, String>
         = fields
 
-    fun getPayload(): String
-        = get("payload") ?: ""
+    fun getPayload()
+        = getStringField("payload")
 
-    fun getStringField(field: String)
-        = get(field) ?: ""
+    fun getStringField(field: String, default: String = "")
+        = fields[field] ?: default
 
     private var dateFormat: SimpleDateFormat? = null
 
     fun getDateField(field: String): Date? {
-        if (dateFormat == null) {
-            dateFormat = getIsoDateFormatter()
+        var format = dateFormat
+        if (format == null) {
+            format = getIsoDateFormatter()
+            dateFormat = format
         }
         val string = fields[field]
-        if (string == null || string.isEmpty()) {
+        if (string == null) {
             return null
         }
-        return dateFormat!!.parse(string)
+        try {
+            return format.parse(string)
+        } catch (e: ParseException) {
+            return null
+        }
     }
 
-    // default is a parameter to avoid boxing
     fun getIntField(field: String, default: Int): Int {
         try {
             val string = fields[field]
-            if (string == null || string.isEmpty()) {
+            if (string == null) {
+                // пустой строки в fields не может быть, мы это проверяем на set()
                 return default
             }
             return string.toInt()
-        } catch (e: Throwable) {
+        } catch (e: NumberFormatException) {
             return default
         }
     }

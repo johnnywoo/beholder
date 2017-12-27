@@ -13,8 +13,9 @@ abstract class TemplateFormatter : Formatter {
                 return NoVariablesFormatter(template)
             }
             // whole template is $fieldName
-            if (regexp.matcher(template).matches()) {
-                return SingleFieldFormatter(template.substring(1))
+            val matcher = regexp.matcher(template)
+            if (matcher.matches()) {
+                return SingleFieldFormatter(matcher.group(1))
             }
 
             return InterpolateStringFormatter(template)
@@ -33,6 +34,6 @@ abstract class TemplateFormatter : Formatter {
 
     private class InterpolateStringFormatter(private val template: String) : TemplateFormatter() {
         override fun formatMessage(message: Message): String
-            = regexp.matcher(template).replaceAll({ message[it.group(1)] ?: "" })
+            = regexp.matcher(template).replaceAll({ message.getStringField(it.group(1)) })
     }
 }

@@ -31,6 +31,8 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |  We got red apples!
             |  We got green apples!
             |
+            |To unset a field, set it to an empty string: `set ¥host ''`.
+            |
             |When given a built-in function, `set` can construct different values for message fields.
             |
             |Functions:

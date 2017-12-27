@@ -4,19 +4,20 @@ import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import java.util.regex.Pattern
 
-class ReplaceFormatter(private val regexp: Pattern, replacement: String, private val field: String) : Formatter {
-    private val interpolateStringFormatter = InterpolateStringFormatter(replacement)
+class ReplaceFormatter(private val regexp: Pattern, replacement: String, subject: String) : Formatter {
+    private val replacementFormatter = InterpolateStringFormatter(replacement)
+    private val subjectFormatter = InterpolateStringFormatter(subject)
 
     override fun formatMessage(message: Message): String {
-        val interpolatedReplacement = interpolateStringFormatter.formatMessage(message)
-        val fieldValue = message.getStringField(field)
+        val interpolatedReplacement = replacementFormatter.formatMessage(message)
+        val interpolatedSubject = subjectFormatter.formatMessage(message)
         try {
-            return regexp.matcher(fieldValue).replaceAll(interpolatedReplacement) ?: fieldValue
+            return regexp.matcher(interpolatedSubject).replaceAll(interpolatedReplacement) ?: interpolatedSubject
         } catch (e: Throwable) {
             // не получилось по каким-то причинам совершить замену
             // скорее всего ошибка в строке замены
             InternalLog.exception(e)
-            return fieldValue
+            return interpolatedSubject
         }
     }
 }

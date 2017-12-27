@@ -140,6 +140,96 @@ class ReplaceTest {
         assertEquals("""We've got dogs""", message["payload"])
     }
 
+    @Test
+    fun testReplaceIn() {
+        val message = Message()
+        message["payload"] = "To be ignored"
+
+        val setCommand = getCommandFromString("set \$payload replace ~cat~ 'animal' in 'Zoo has cats'")
+        setCommand.receiveMessage(message)
+
+        assertEquals("""Zoo has animals""", message["payload"])
+    }
+
+    @Test
+    fun testReplaceInField() {
+        val message = Message()
+        message["text"]    = "Zoo has cats"
+        message["payload"] = "To be ignored"
+
+        val setCommand = getCommandFromString("set \$payload replace ~cat~ 'animal' in \$text")
+        setCommand.receiveMessage(message)
+
+        assertEquals("""Zoo has animals""", message["payload"])
+    }
+
+    @Test
+    fun testReplaceInWithFields() {
+        val message = Message()
+        message["animal"]  = "cat"
+        message["payload"] = "To be ignored"
+
+        val setCommand = getCommandFromString("set \$payload replace ~cat~ 'feline' in 'Two cats: \$animal \$animal'")
+        setCommand.receiveMessage(message)
+
+        assertEquals("""Two felines: feline feline""", message["payload"])
+    }
+
+    @Test
+    fun testReplaceInWithFieldsEverywhere() {
+        val message = Message()
+        message["animal"]     = "cat"
+        message["betterName"] = "feline"
+        message["payload"]    = "To be ignored"
+
+        val setCommand = getCommandFromString("set \$payload replace ~cat~ \$betterName in 'Two cats: \$animal \$animal'")
+        setCommand.receiveMessage(message)
+
+        assertEquals("""Two felines: feline feline""", message["payload"])
+    }
+
+    @Test
+    fun testReplaceFromHelp1() {
+        val message = Message()
+        message["payload"] = "127.0.0.1 WARN PHP Warning: some warning"
+
+        val setCommand = getCommandFromString("set \$payload replace ~warn(ing)?~i 'WARNING'")
+        setCommand.receiveMessage(message)
+
+        assertEquals("127.0.0.1 WARNING PHP WARNING: some WARNING", message["payload"])
+    }
+
+    @Test
+    fun testReplaceFromHelp2() {
+        val message = Message()
+        message["subdomain"] = "www"
+        message["domain"]    = "example.com"
+
+        val setCommand = getCommandFromString("set \$host replace ~^www\\.~ '' in '\$subdomain.\$domain'")
+        setCommand.receiveMessage(message)
+
+        assertEquals("example.com", message["host"])
+
+        val message2 = Message()
+        message2["subdomain"] = "mail"
+        message2["domain"]    = "example.com"
+
+        setCommand.receiveMessage(message2)
+
+        assertEquals("mail.example.com", message2["host"])
+    }
+
+    @Test
+    fun testReplaceFromHelp3() {
+        val message = Message()
+        message["payload"] = "a\nb"
+
+        val setCommand = getCommandFromString("set \$payload replace ~\\n~ '\\\\\\\\n'")
+        setCommand.receiveMessage(message)
+
+        assertEquals("a\\nb", message["payload"])
+    }
+
     private fun getCommandFromString(string: String): SetCommand {
         val tokens = Token.getTokens(string)
         val args = CommandArguments(tokens[0] as LiteralToken)

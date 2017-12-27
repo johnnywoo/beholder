@@ -40,12 +40,15 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             |  time    -- Current time, e.g. 01:23:45.
             |  dump    -- Generates a dump payload with all fields of the message.
             |
-            |`set ¥field replace ~regexp~ 'replacement'`
-            |Takes value of ¥field, replaces all occurences of regexp with the replacement,
-            |and stores the new value into ¥field.
+            |`set ¥field replace <regexp> <replacement> [in <subject>];`
+            |Takes subject string, replaces all occurences of regexp in it with the replacement,
+            |and stores the new value into ¥field. Default subject is ¥field itself.
+            |Examples:
+            |  `set ¥payload replace ~warn(ing)?~i 'WARNING';`
+            |  `set ¥host replace ~^www\.~ '' in '¥subdomain.¥domain';`
             |Be aware of double-escaping in replacement strings!
             |Example:
-            |  `set ¥payload replace ~\n~ '\\\\n'`
+            |  `set ¥payload replace ~\n~ '\\\\n';`
             |This command converts newlines into `\n` sequences.
             |""".trimMargin().replace("¥", "$")
     }
@@ -66,7 +69,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             "replace" -> ReplaceFormatter(
                 arguments.shiftRegexp("`replace` needs a regexp"),
                 arguments.shiftString("`replace` needs a replacement string"),
-                field
+                arguments.shiftPrefixedStringOrNull(setOf("in"), "`replace ... in` needs a string") ?: "\$$field"
             )
             else -> InterpolateStringFormatter(arg.getValue())
         }

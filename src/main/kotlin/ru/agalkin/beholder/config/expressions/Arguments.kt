@@ -64,6 +64,21 @@ abstract class Arguments {
         return number
     }
 
+    fun shiftPrefixedStringOrNull(prefixWords: Set<String>, errorMessage: String): String? {
+        // first token must be a literal word
+        // if it's not, we just return null
+        val prefixToken = peekNext()
+        if (prefixToken == null || prefixToken !is LiteralToken || !prefixWords.contains(prefixToken.getValue())) {
+            return null
+        }
+
+        // we need to move the index over to "consume" the prefix token
+        shiftToken(errorMessage)
+
+        // ok, there is the suffix word, so the second argument is required to be correct
+        return shiftString(errorMessage)
+    }
+
     fun shiftRegexp(errorMessage: String)
         = shiftRegexpOrNull() ?: throw CommandException(errorMessage)
 

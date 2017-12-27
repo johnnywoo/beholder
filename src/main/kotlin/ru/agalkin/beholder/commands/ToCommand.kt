@@ -6,7 +6,7 @@ import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
-import ru.agalkin.beholder.formatters.InterpolateStringFormatter
+import ru.agalkin.beholder.formatters.TemplateFormatter
 import ru.agalkin.beholder.threads.FileSender
 import ru.agalkin.beholder.threads.TcpSender
 import ru.agalkin.beholder.threads.UdpSender
@@ -107,7 +107,7 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     private class FileDestination(filenameTemplate: String) : Destination {
-        private val filenameFormatter = InterpolateStringFormatter(filenameTemplate)
+        private val filenameFormatter = TemplateFormatter.create(filenameTemplate)
 
         override fun write(message: Message) {
             val sender = FileSender.getSender(filenameFormatter.formatMessage(message))

@@ -71,7 +71,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
                 arguments.shiftString("`replace` needs a replacement string"),
                 arguments.shiftPrefixedStringOrNull(setOf("in"), "`replace ... in` needs a string") ?: "\$$field"
             )
-            else -> InterpolateStringFormatter(arg.getValue())
+            else -> TemplateFormatter.create(arg.getValue())
         }
 
         arguments.end()

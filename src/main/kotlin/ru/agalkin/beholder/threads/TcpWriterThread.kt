@@ -2,7 +2,6 @@ package ru.agalkin.beholder.threads
 
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.getClosestFromRange
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
@@ -66,7 +65,7 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
             if (!socket.isConnected) {
                 // socket was not connected
                 // increase the waiting interval
-                val newIntervalSeconds = getClosestFromRange(1..60, reconnectIntervalSeconds.get() * 2)
+                val newIntervalSeconds = (reconnectIntervalSeconds.get() * 2).coerceIn(1, 60)
                 reconnectIntervalSeconds.set(newIntervalSeconds)
                 InternalLog.info("Will reconnect to TCP $address after $newIntervalSeconds seconds")
             }

@@ -158,9 +158,11 @@ Fields produced by `from udp`:
 
 `from timer` emits a minimal message every second.
 It is useful for experimenting with beholder configurations.
+
 You can specify a number of seconds between messages like this:
-`from timer 30 seconds` for two messages per minute
-`from timer 1 second` is the default and equivalent to just `from timer`.
+
+* `from timer 30 seconds` for two messages per minute;
+* `from timer 1 second` is the default and equivalent to just `from timer`.
 
 Fields produced by `from timer`:
 

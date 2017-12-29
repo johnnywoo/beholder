@@ -6,8 +6,8 @@ set -e
 # Instead we are going to show help on empty args.
 # To start the bundled config daemon anyway, use `beholder --`.
 
-#if [ -z "$1" ]; then
-#    set -- --help
-#fi
+if [ -z "$1" ]; then
+    set -- -h
+fi
 
 java -server -Xms12m -jar /root/beholder*.jar "$@"

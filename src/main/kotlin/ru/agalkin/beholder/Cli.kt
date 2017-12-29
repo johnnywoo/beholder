@@ -51,7 +51,7 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Nothing) {
         options.addOption(
             Option.builder("t")
                 .longOpt("test")
-                .desc("Config test")
+                .desc("Config test: syntax and minimal validation")
                 .build()
         )
 

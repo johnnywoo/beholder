@@ -22,11 +22,6 @@ fun main(args: Array<String>) {
         exitProcess(0)
     }
 
-    if (cli.isFullHelp) {
-        cli.printHelp()
-        exitProcess(0)
-    }
-
     if (cli.isQuiet) {
         InternalLog.stopWritingToStdout()
     }

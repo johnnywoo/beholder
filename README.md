@@ -8,7 +8,6 @@ Beholder is a log processor. Its purpose is to receive, process, transfer and ex
      -c,--config <text>        Use config from the argument
      -f,--config-file <file>   Use config from a file
      -h                        Show usage
-        --help                 Show full help with command descriptions
      -l,--log <file>           Internal log file
      -q,--quiet                Do not print internal log into stdout
      -t,--test                 Config test: syntax and minimal validation

@@ -12,50 +12,6 @@ import ru.agalkin.beholder.threads.TcpSender
 import ru.agalkin.beholder.threads.UdpSender
 
 class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
-    companion object {
-        val help = """
-            |to stdout;
-            |to file <file>;
-            |to udp [<address>:]<port>;
-            |to tcp [<address>:]<port>;
-            |
-            |This command writes `¥payload` field of incoming messages to some destination.
-            |To format the payload, use `set ¥payload ...` command.
-            |
-            |Example config:
-            |  flow {
-            |      from timer {set ¥payload '¥receivedDate Just a repeating text message'}
-            |      to stdout;
-            |  }
-            |
-            |This example config will produce messages like these:
-            |  2017-11-27T21:14:01+03:00 Just a repeating text message
-            |  2017-11-27T21:14:02+03:00 Just a repeating text message
-            |  2017-11-27T21:14:03+03:00 Just a repeating text message
-            |
-            |`to stdout` simply sends payloads of messages into STDOUT of beholder process.
-            |A newline is appended unless the payload already ends with a newline.
-            |
-            |`to file <file>` stores payloads of messages into a file.
-            |A newline is appended unless the payload already ends with a newline.
-            |Relative filenames are resolved from CWD of beholder process.
-            |You can use message fields in filenames:
-            |  flow {
-            |      from udp 1234;
-            |      parse syslog;
-            |      set ¥payload syslog;
-            |      to file '/var/log/export/¥syslogHost/¥syslogProgram.log';
-            |  }
-            |
-            |`to udp [<address>:]<port>` sends payloads of messages as UDP packets.
-            |Default address is 127.0.0.1.
-            |
-            |`to tcp [<address>:]<port>` sends payloads of messages over a TCP connection.
-            |Default address is 127.0.0.1.
-            |A newline is appended unless the payload already ends with a newline.
-            |""".trimMargin().replace("¥", "$")
-    }
-
     private val destination: Destination
 
     init {

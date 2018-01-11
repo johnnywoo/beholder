@@ -7,65 +7,6 @@ import java.io.File
 
 class Config(configText: String) {
     companion object {
-        val help = """
-            |Config structure
-            |
-            |Config contains commands, which can have subcommands (and so on).
-            |Commands can produce, consume and modify messages.
-            |Messages are collections of arbitrary fields.
-            |
-            |Example:
-            |  flow {  # this command has no args, only subcommands
-            |      from udp 3820 {  # this command has both args and subcommands
-            |          parse syslog;  # this command has only arguments
-            |      }
-            |      to stdout;
-            |  }
-            |
-            |
-            |Config syntax
-            |
-            |Command arguments can be expressed as literal words, quoted strings and regexps.
-            |
-            |Quoted strings start with either `'` or `"`. There is no difference between the two.
-            |Escaping is done with backslashes. Special characters: `\n`, `\r`, `\t`.
-            |If any other character is prefixed with `\`, it is stripped of the backslash.
-            |Examples:
-            |`'this \' is a quote'` => this ' is a quote
-            |`'this \" is also a quote'` => this " is also a quote
-            |`'\z'` => z
-            |`'\n'` => newline character
-            |`'\\n'` => \n
-            |
-            |Quoted strings may contain message field names, which are replaced with their values.
-            |Example:
-            |`'date: ¥receivedDate payload: ¥payload'`
-            |Field names consist of alphanumeric characters (case-sensitive) and underscores.
-            |Field names cannot start with numbers.
-            |
-            |Regexps are recognized by a delimiter, which currently can only be `~`.
-            |The delimiter currently cannot be escaped in the regexp.
-            |Regexp must be in the form of `~body~modifiers`. Modifiers are optional.
-            |Examples:
-            |`~spaces are allowed~`
-            |`~http://[a-z.]+~`
-            |`~cat|dog~i`
-            |
-            |Literal word is a string of non-whitespace characters that is not a quoted string or regexp.
-            |Literal words may contain field names, which are replaced with their values.
-            |There is no escaping in literal words.
-            |Example: `127.0.0.1:1234`.
-            |
-            |
-            |Config commands
-            |
-            |flow   -- defines flow of messages between commands
-            |from   -- produces messages from some source
-            |set    -- puts values into message fields
-            |parse  -- populates message fields according to some format
-            |to     -- sends messages to destinations
-            |""".trimMargin().replace('¥', '$')
-
         fun fromFile(filename: String): Config {
             InternalLog.info("Reading config from $filename")
             return Config.fromStringWithLog(File(filename).readText())

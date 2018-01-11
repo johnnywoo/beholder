@@ -1,71 +1,16 @@
 package ru.agalkin.beholder.commands
 
-import ru.agalkin.beholder.INTERNAL_LOG_FROM_FIELD
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.config.expressions.*
+import ru.agalkin.beholder.config.expressions.Arguments
+import ru.agalkin.beholder.config.expressions.CommandAbstract
+import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.threads.InternalLogListener
-import ru.agalkin.beholder.threads.TIMER_FROM_FIELD
 import ru.agalkin.beholder.threads.TimerListener
 import ru.agalkin.beholder.threads.UdpListener
 
 class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
-    companion object {
-        val help = """
-            |from udp [<address>:]<port>;
-            |from timer [<n> seconds];
-            |from internal-log;
-            |
-            |Subcommands: `parse`, `set`.
-            |
-            |This command produces messages, applying subcommands to them if there are any.
-            |
-            |If there are any incoming messages (not produced by current `from` command),
-            |`from` will copy them to its output. Subcommands are not applied to those.
-            |
-            |You can use subcommands to pre-process messages before placing them into the flow.
-            |This way, you can easily receive messages in different formats from different sources.
-            |
-            |Example:
-            |  flow {
-            |      from udp 1001;
-            |      from udp 1002 {parse syslog}
-            |      set ¥payload dump;
-            |      to stdout;
-            |      # in stdout we will see raw messages from port 1001
-            |      # and processed syslog messages from port 1002
-            |  }
-            |
-            |Fields produced by `from udp`:
-            |  ¥receivedDate  -- ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
-            |  ¥from          -- URI of packet source (example: udp://1.2.3.4:57733)
-            |  ¥payload       -- Text as received from UDP
-            |
-            |`from timer` emits a minimal message every second.
-            |It is useful for experimenting with beholder configurations.
-            |You can specify a number of seconds between messages like this:
-            |`from timer 30 seconds` for two messages per minute
-            |`from timer 1 second` is the default and equivalent to just `from timer`.
-            |
-            |Fields produced by `from timer`:
-            |  ¥receivedDate  -- ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
-            |  ¥from          -- '$TIMER_FROM_FIELD'
-            |  ¥syslogProgram -- 'beholder'
-            |  ¥payload        -- A short random message
-            |
-            |`from internal-log` emits messages from the internal Beholder log. These are the same messages
-            |Beholder writes to stdout/stderr and its log file (see also CLI options --log and --quiet).
-            |
-            |Fields produced by `from internal-log`:
-            |  ¥receivedDate   -- ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
-            |  ¥from           -- '$INTERNAL_LOG_FROM_FIELD'
-            |  ¥syslogSeverity -- Severity of messages
-            |  ¥syslogProgram  -- 'beholder'
-            |  ¥payload        -- Log message text
-            |""".trimMargin().replace("¥", "$")
-    }
-
     override fun createSubcommand(args: Arguments): CommandAbstract?
         = when (args.getCommandName()) {
             "parse" -> ParseCommand(args)

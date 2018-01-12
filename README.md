@@ -262,6 +262,8 @@ Functions:
 * `replace` — String replacement with regexp. See below.
 * `time`    — Current time, e.g. 01:23:45.
 * `dump`    — Generates a dump payload with all fields of the message.
+* `prefix-with-length`  — Prefixes payload with its length in bytes
+               (for syslog over TCP, see RFC5425 "4.3. Sending Data").
 
 `set $field replace <regexp> <replacement> [in <subject>];`
 Takes subject string, replaces all occurences of regexp in it with the replacement,

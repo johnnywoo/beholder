@@ -17,9 +17,10 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         val arg = arguments.shiftStringToken("`set` needs at least two arguments")
 
         formatter = when ((arg as? LiteralToken)?.getValue()) {
-            "syslog"  -> SyslogIetfFormatter()
-            "dump"    -> DumpFormatter()
-            "time"    -> TimeFormatter()
+            "syslog" -> SyslogIetfFormatter()
+            "prefix-with-length" -> PrefixWithLengthFormatter()
+            "dump" -> DumpFormatter()
+            "time" -> TimeFormatter()
             "replace" -> ReplaceFormatter(
                 arguments.shiftRegexp("`replace` needs a regexp"),
                 arguments.shiftString("`replace` needs a replacement string"),

@@ -32,8 +32,11 @@ class SyslogIetfFormatter : Formatter {
         // program name
         sb.append(message.getStringField("syslogProgram", "-")).append(' ')
 
-        // pid, message id, structured data
-        sb.append("- - - ")
+        // pid
+        sb.append(message.getStringField("syslogPid", "-")).append(' ')
+
+        // message id, structured data
+        sb.append("- - ")
 
         // payload
         sb.append(message.getPayload())
@@ -46,6 +49,4 @@ class SyslogIetfFormatter : Formatter {
     // чтобы всё было как можно более одинаковое, мы заменим Z для UTC на +00:00
     private fun formatDate(date: Date): String
         = dateFormat.format(date).replace(Regex("Z$"), "+00:00")
-
-
 }

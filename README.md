@@ -95,13 +95,14 @@ Example: `127.0.0.1:1234`.
 * `flow`   — defines flow of messages between commands
 * `from`   — produces messages from some source
 * `set`    — puts values into message fields
+* `keep`   — removes unnecessary message fields
 * `parse`  — populates message fields according to some format
 * `to`     — sends messages to destinations
 
 
 ### `flow {subcommands}`
 
-Subcommands: `flow`, `from`, `parse`, `set`, `to`.
+Subcommands: `flow`, `from`, `parse`, `set`, `keep`, `to`.
 
 Use this command to create separate flows of messages.
 Rule of thumb is: what happens in `flow` stays in `flow`.
@@ -130,7 +131,7 @@ This config will create two separate flows of messages:
     from timer [<n> seconds];
     from internal-log;
 
-Subcommands: `parse`, `set`.
+Subcommands: `parse`, `set`, `keep`.
 
 This command produces messages, applying subcommands to them if there are any.
 
@@ -277,6 +278,13 @@ Be aware of double-escaping in replacement strings! Example:
     set $payload replace ~\n~ '\\\\n';
 
 This command converts newlines into `\n` sequences.
+
+
+### `keep`
+
+    keep $field [$field2 ...]
+
+Removes message fields that are not specified in arguments.
 
 
 ### `to`

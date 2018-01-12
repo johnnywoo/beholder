@@ -16,6 +16,9 @@ abstract class Arguments {
 
     abstract fun end()
 
+    fun hasMoreTokens()
+        = peekNext() != null
+
     fun shiftStringToken(errorMessage: String): ArgumentToken {
         val token = shiftToken(errorMessage)
         if (token is RegexpToken) {

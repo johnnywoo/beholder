@@ -15,6 +15,7 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
         = when (args.getCommandName()) {
             "parse" -> ParseCommand(args)
             "set"   -> SetCommand(args)
+            "keep"  -> KeepCommand(args)
             else    -> null
         }
 

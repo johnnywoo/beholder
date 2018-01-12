@@ -26,6 +26,10 @@ class Message {
         }
     }
 
+    fun remove(field: String) {
+        fields.remove(field)
+    }
+
     fun getFields(): Map<String, String>
         = fields
 

@@ -1,18 +1,9 @@
 package ru.agalkin.beholder
 
 import org.junit.Test
-import ru.agalkin.beholder.commands.KeepCommand
-import ru.agalkin.beholder.config.Config
-import ru.agalkin.beholder.config.expressions.CommandArguments
-import ru.agalkin.beholder.commands.SetCommand
-import ru.agalkin.beholder.config.parser.ArgumentToken
-import ru.agalkin.beholder.config.parser.LiteralToken
-import ru.agalkin.beholder.config.parser.ParseException
-import ru.agalkin.beholder.config.parser.Token
 import kotlin.test.assertEquals
-import kotlin.test.fail
 
-class KeepTest {
+class KeepTest : TestAbstract() {
     @Test
     fun testKeepParses() {
         assertConfigParses("keep \$a", "keep \$a;\n")
@@ -40,63 +31,35 @@ class KeepTest {
 
     @Test
     fun testKeepWorks() {
-        val command = getCommandFromString("keep \$payload")
-
         val message = Message()
         message["removed"] = "Removed"
         message["payload"] = "We've got cats and dogs"
 
-        command.receiveMessage(message)
+        val processedMessage = processMessageWithCommand(message, "keep \$payload")
 
-        assertEquals("payload", message.getFields().keys.joinToString { it })
+        assertEquals("payload", processedMessage!!.getFields().keys.joinToString { it })
     }
 
     @Test
     fun testKeepNonexistentField() {
-        val command = getCommandFromString("keep \$payload \$whatever")
-
         val message = Message()
         message["removed"] = "Removed"
         message["payload"] = "We've got cats and dogs"
 
-        command.receiveMessage(message)
+        val processedMessage = processMessageWithCommand(message, "keep \$payload \$whatever")
 
-        assertEquals("payload", message.getFields().keys.joinToString { it })
+        assertEquals("payload", processedMessage!!.getFields().keys.joinToString { it })
     }
 
     @Test
     fun testKeepMultipleFields() {
-        val command = getCommandFromString("keep \$payload \$kind")
-
         val message = Message()
         message["removed"] = "Removed"
         message["kind"]    = "Kind"
         message["payload"] = "We've got cats and dogs"
 
-        command.receiveMessage(message)
+        val processedMessage = processMessageWithCommand(message, "keep \$payload \$kind")
 
-        assertEquals("kind,payload", message.getFields().keys.sorted().joinToString(",") { it })
-    }
-
-    private fun getCommandFromString(string: String): KeepCommand {
-        val tokens = Token.getTokens(string)
-        val args = CommandArguments(tokens[0] as LiteralToken)
-        for (token in tokens.drop(1)) {
-            args.addToken(token as ArgumentToken)
-        }
-        return KeepCommand(args)
-    }
-
-    private fun assertConfigParses(fromText: String, toDefinition: String) {
-        assertEquals(toDefinition, Config(fromText).getDefinition())
-    }
-
-    private fun assertConfigFails(fromText: String, errorMessage: String) {
-        try {
-            val definition = Config(fromText).getDefinition()
-            fail("This config should not parse correctly: $fromText\n=== parsed ===\n$definition\n===")
-        } catch (e: ParseException) {
-            assertEquals(errorMessage, e.message)
-        }
+        assertEquals("kind,payload", processedMessage!!.getFields().keys.sorted().joinToString(",") { it })
     }
 }

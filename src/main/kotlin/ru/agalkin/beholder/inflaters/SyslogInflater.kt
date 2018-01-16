@@ -20,7 +20,7 @@ class SyslogInflater : Inflater {
         Pattern.COMMENTS
     )
 
-    override fun inflateMessageFields(message: Message) {
+    override fun inflateMessageFields(message: Message): Boolean {
         // мы тут хотим разобрать формат старого сислога и сложить данные из него в теги
         // формат старого сислога:
         // <190>Nov 25 13:46:44 vps nginx: 127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] "GET /api HTTP/1.1" 200 47 "-" "curl/7.38.0"
@@ -28,7 +28,7 @@ class SyslogInflater : Inflater {
         val payload = message.getPayload()
         val matcher = syslogNginxRegex.matcher(payload)
         if (!matcher.find()) {
-            return
+            return false
         }
 
         val priority = matcher.group("priority")
@@ -54,5 +54,7 @@ class SyslogInflater : Inflater {
 
         val headerLength = matcher.end()
         message["payload"] = payload.substring(headerLength)
+
+        return true
     }
 }

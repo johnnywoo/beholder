@@ -185,12 +185,13 @@ Fields produced by `from internal-log`:
 
 ### `parse`
 
-    parse syslog;
-    parse ~regexp-with-named-groups~;
+    parse [keep-unparsed] syslog;
+    parse [keep-unparsed] ~regexp-with-named-groups~;
     parse beholder-stats;
 
 This command sets fields on messages according to chosen format.
-If a message cannot be parsed, it will be left unchanged.
+If a message cannot be parsed, it will be dropped by default.
+If `keep-unparsed` option is specified, unparsed messages will be kept unchanged.
 
 Format `syslog`: the only syslog variant currently supported is
 a BSD-style syslog format as produced by nginx.

@@ -1,13 +1,10 @@
 package ru.agalkin.beholder
 
 import org.junit.Test
-import ru.agalkin.beholder.config.Config
-import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
 import kotlin.test.assertEquals
-import kotlin.test.fail
 
-class ExpressionsTest {
+class ExpressionsTest : TestAbstract() {
     @Test
     fun testFlowEmpty() {
         assertConfigParses(
@@ -223,18 +220,5 @@ class ExpressionsTest {
             sb.append('\n')
         }
         return sb.toString()
-    }
-
-    private fun assertConfigParses(fromText: String, toDefinition: String) {
-        assertEquals(toDefinition, Config(fromText).getDefinition())
-    }
-
-    private fun assertConfigFails(fromText: String, errorMessage: String) {
-        try {
-            val definition = Config(fromText).getDefinition()
-            fail("This config should not parse correctly: $fromText\n=== parsed ===\n$definition\n===")
-        } catch (e: ParseException) {
-            assertEquals(errorMessage, e.message)
-        }
     }
 }

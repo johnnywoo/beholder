@@ -1,26 +1,21 @@
 package ru.agalkin.beholder
 
 import org.junit.Test
-import ru.agalkin.beholder.commands.ParseCommand
-import ru.agalkin.beholder.config.expressions.CommandArguments
-import ru.agalkin.beholder.config.parser.ArgumentToken
-import ru.agalkin.beholder.config.parser.LiteralToken
-import ru.agalkin.beholder.config.parser.Token
-import ru.agalkin.beholder.formatters.DumpFormatter
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
-class RegexpInflaterTest {
+class RegexpInflaterTest : TestAbstract() {
     @Test
     fun testRegexpInflater() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        processMessageWithCommand(message, "parse ~(?<animal>cat|dog)~")
+        val parsedMessage = processMessageWithCommand(message, "parse ~(?<animal>cat|dog)~")
 
         assertEquals(
             "\$payload=We've got cats and dogs\n" +
                 "\$animal=cat",
-            getMessageDump(message)
+            getMessageDump(parsedMessage!!)
         )
     }
 
@@ -29,11 +24,21 @@ class RegexpInflaterTest {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        processMessageWithCommand(message, "parse ~(?<animal>whale)~")
+        val parsedMessage = processMessageWithCommand(message, "parse ~(?<animal>whale)~")
+
+        assertNull(parsedMessage)
+    }
+
+    @Test
+    fun testRegexpInflaterKeepUnparsed() {
+        val message = Message()
+        message["payload"] = "We've got cats and dogs"
+
+        val parsedMessage = processMessageWithCommand(message, "parse keep-unparsed ~(?<animal>whale)~")
 
         assertEquals(
             "\$payload=We've got cats and dogs",
-            getMessageDump(message)
+            getMessageDump(parsedMessage!!)
         )
     }
 
@@ -42,12 +47,12 @@ class RegexpInflaterTest {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        processMessageWithCommand(message, "parse ~(cat)~")
+        val parsedMessage = processMessageWithCommand(message, "parse ~(cat)~")
 
         // there are no named groups, so nothing should change
         assertEquals(
             "\$payload=We've got cats and dogs",
-            getMessageDump(message)
+            getMessageDump(parsedMessage!!)
         )
     }
 
@@ -57,26 +62,12 @@ class RegexpInflaterTest {
         message["payload"] = "We've got cats and dogs"
         message["animal"]  = "headcrab"
 
-        processMessageWithCommand(message, "parse ~(?<animal>whale)~")
+        val parsedMessage = processMessageWithCommand(message, "parse keep-unparsed ~(?<animal>whale)~")
 
         assertEquals(
             "\$payload=We've got cats and dogs\n" +
                 "\$animal=headcrab",
-            getMessageDump(message)
+            getMessageDump(parsedMessage!!)
         )
     }
-
-    private fun processMessageWithCommand(message: Message, command: String) {
-        val tokens = Token.getTokens(command)
-        val arguments = CommandArguments(tokens[0] as LiteralToken)
-        for (token in tokens.drop(1)) {
-            arguments.addToken(token as ArgumentToken)
-        }
-
-        // commands modify messages in place (messages are copied ahead of time by routers)
-        ParseCommand(arguments).receiveMessage(message)
-    }
-
-    private fun getMessageDump(message: Message)
-        = DumpFormatter().formatMessage(message).replace(Regex("^.*\n"), "")
 }

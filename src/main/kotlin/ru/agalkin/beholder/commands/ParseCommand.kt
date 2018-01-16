@@ -11,6 +11,7 @@ import ru.agalkin.beholder.inflaters.SyslogInflater
 
 class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     private val inflater: Inflater
+    private val shouldKeepUnparsed = arguments.shiftLiteralOrNull(setOf("keep-unparsed")) != null
 
     init {
         val regexp = arguments.shiftRegexpOrNull()
@@ -28,7 +29,8 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     override fun receiveMessage(message: Message) {
-        inflater.inflateMessageFields(message)
-        super.receiveMessage(message)
+        if (inflater.inflateMessageFields(message) || shouldKeepUnparsed) {
+            super.receiveMessage(message)
+        }
     }
 }

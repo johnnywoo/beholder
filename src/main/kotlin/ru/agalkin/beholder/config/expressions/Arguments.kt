@@ -42,11 +42,20 @@ abstract class Arguments {
         return arg.substring(1)
     }
 
+    fun shiftLiteralOrNull(words: Set<String>): String? {
+        val token = peekNext()
+        if (token is LiteralToken && token.getValue() in words) {
+            shiftToken("")
+            return token.getValue()
+        }
+        return null
+    }
+
     fun shiftSuffixedIntOrNull(suffixWords: Set<String>, errorMessage: String): Int? {
         // second token must be a literal word
         // if it's not, we just return null
         val suffixToken = peekNext(1)
-        if (suffixToken == null || suffixToken !is LiteralToken || !suffixWords.contains(suffixToken.getValue())) {
+        if (suffixToken == null || suffixToken !is LiteralToken || suffixToken.getValue() !in suffixWords) {
             return null
         }
 
@@ -71,7 +80,7 @@ abstract class Arguments {
         // first token must be a literal word
         // if it's not, we just return null
         val prefixToken = peekNext()
-        if (prefixToken == null || prefixToken !is LiteralToken || !prefixWords.contains(prefixToken.getValue())) {
+        if (prefixToken == null || prefixToken !is LiteralToken || prefixToken.getValue() !in prefixWords) {
             return null
         }
 

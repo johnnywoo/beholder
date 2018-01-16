@@ -19,10 +19,10 @@ class RegexpInflater(private val regexp: Pattern) : Inflater {
         groupNames = names
     }
 
-    override fun inflateMessageFields(message: Message) {
+    override fun inflateMessageFields(message: Message): Boolean {
         val matcher = regexp.matcher(message.getPayload())
         if (!matcher.find()) {
-            return
+            return false
         }
         for (name in groupNames) {
             val value = matcher.group(name)
@@ -30,5 +30,7 @@ class RegexpInflater(private val regexp: Pattern) : Inflater {
                 message[name] = value
             }
         }
+
+        return true
     }
 }

@@ -186,6 +186,7 @@ Fields produced by `from internal-log`:
 ### `parse`
 
     parse [keep-unparsed] syslog;
+    parse [keep-unparsed] json;
     parse [keep-unparsed] ~regexp-with-named-groups~;
     parse beholder-stats;
 
@@ -207,6 +208,10 @@ Fields produced by `parse syslog`:
 * `$syslogHost`      — source host from the message
 * `$syslogProgram`   — program name (nginx calls this "tag")
 * `$payload`         — actual log message (this would've been written to a file by nginx)
+
+Format `json`: parses $payload as a JSON object and sets its properties as message fields.
+The JSON object may only contain numbers, strings, booleans and nulls (no nested objects or arrays).
+Boolean values are converted to strings 'true' and 'false'.
 
 Format `~regexp-with-named-groups~`: if the regexp matches, named groups from it
 become message fields. Group names should not be prefixed with $.

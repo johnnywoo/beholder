@@ -4,10 +4,7 @@ import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
-import ru.agalkin.beholder.inflaters.BeholderStatsInflater
-import ru.agalkin.beholder.inflaters.Inflater
-import ru.agalkin.beholder.inflaters.RegexpInflater
-import ru.agalkin.beholder.inflaters.SyslogInflater
+import ru.agalkin.beholder.inflaters.*
 
 class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     private val inflater: Inflater
@@ -20,6 +17,7 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         } else {
             inflater = when (arguments.shiftString("We need some format to `parse`")) {
                 "syslog" -> SyslogInflater()
+                "json" -> JsonInflater()
                 "beholder-stats" -> BeholderStatsInflater()
                 else -> throw CommandException("Cannot understand arguments of `parse` command")
             }

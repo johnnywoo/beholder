@@ -21,6 +21,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             "prefix-with-length" -> PrefixWithLengthFormatter()
             "dump" -> DumpFormatter()
             "time" -> TimeFormatter()
+            "host" -> HostFormatter()
             "json" -> JsonFormatter(nullIfEmpty(scanArgumentsAsFieldNames(arguments, "`set ... json` arguments must be field names")))
             "replace" -> ReplaceFormatter(
                 arguments.shiftRegexp("`replace` needs a regexp"),

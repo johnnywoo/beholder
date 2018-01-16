@@ -268,6 +268,7 @@ Functions:
                see `parse syslog` for details.
 * `replace` — String replacement with regexp. See below.
 * `time`    — Current time, e.g. 01:23:45.
+* `host`    — Current hostname.
 * `dump`    — Generates a dump payload with all fields of the message.
 * `json`    — Generates a JSON string with all fields of the message.
                Alternatively you may specify which fields to keep:

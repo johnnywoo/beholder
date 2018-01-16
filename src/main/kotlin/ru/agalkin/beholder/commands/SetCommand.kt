@@ -21,6 +21,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             "prefix-with-length" -> PrefixWithLengthFormatter()
             "dump" -> DumpFormatter()
             "time" -> TimeFormatter()
+            "json" -> JsonFormatter(nullIfEmpty(scanArgumentsAsFieldNames(arguments, "`set ... json` arguments must be field names")))
             "replace" -> ReplaceFormatter(
                 arguments.shiftRegexp("`replace` needs a regexp"),
                 arguments.shiftString("`replace` needs a replacement string"),
@@ -30,6 +31,18 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         }
 
         arguments.end()
+    }
+
+    private fun scanArgumentsAsFieldNames(arguments: Arguments, errorMessage: String): List<String> {
+        val fields = mutableListOf<String>()
+        while (arguments.hasMoreTokens()) {
+            fields.add(arguments.shiftFieldName(errorMessage))
+        }
+        return fields
+    }
+
+    private fun <T> nullIfEmpty(list: List<T>): List<T>? {
+        return if(list.isEmpty()) null else list
     }
 
     override fun receiveMessage(message: Message) {

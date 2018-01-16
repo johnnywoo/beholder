@@ -263,6 +263,9 @@ Functions:
 * `replace` — String replacement with regexp. See below.
 * `time`    — Current time, e.g. 01:23:45.
 * `dump`    — Generates a dump payload with all fields of the message.
+* `json`    — Generates a JSON string with all fields of the message.
+               Alternatively you may specify which fields to keep:
+               `set $payload json $field $field2`
 * `prefix-with-length`  — Prefixes payload with its length in bytes
                (for syslog over TCP, see RFC5425 "4.3. Sending Data").
 

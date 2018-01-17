@@ -2,7 +2,7 @@ group 'ru.agalkin'
 version '0.1'
 
 buildscript {
-    ext.kotlin_version = '1.2.10'
+    ext.kotlin_version = '1.2.20'
 
     repositories {
         mavenCentral()
@@ -14,11 +14,11 @@ buildscript {
 
 apply plugin: 'kotlin'
 
-kotlin {
-    experimental {
-        coroutines 'enable'
-    }
-}
+//kotlin {
+//    experimental {
+//        coroutines 'enable'
+//    }
+//}
 
 jar {
     baseName = "beholder"
@@ -38,7 +38,7 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     // compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19.3"
     compile "commons-cli:commons-cli:1.4"

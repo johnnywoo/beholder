@@ -1,6 +1,6 @@
 package ru.agalkin.beholder
 
-import ru.agalkin.beholder.threads.InternalLogListener
+import ru.agalkin.beholder.listeners.InternalLogListener
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter

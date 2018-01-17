@@ -7,9 +7,9 @@ import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.formatters.TemplateFormatter
-import ru.agalkin.beholder.threads.FileSender
-import ru.agalkin.beholder.threads.TcpSender
-import ru.agalkin.beholder.threads.UdpSender
+import ru.agalkin.beholder.senders.FileSender
+import ru.agalkin.beholder.senders.TcpSender
+import ru.agalkin.beholder.senders.UdpSender
 
 class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     private val destination: Destination

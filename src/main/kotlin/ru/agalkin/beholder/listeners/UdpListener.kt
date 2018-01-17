@@ -1,4 +1,4 @@
-package ru.agalkin.beholder.threads
+package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message

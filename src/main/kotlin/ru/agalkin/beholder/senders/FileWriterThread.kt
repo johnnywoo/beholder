@@ -1,4 +1,4 @@
-package ru.agalkin.beholder.threads
+package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.InternalLog
 import java.io.BufferedWriter

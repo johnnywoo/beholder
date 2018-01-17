@@ -1,4 +1,4 @@
-package ru.agalkin.beholder.threads
+package ru.agalkin.beholder.listeners
 
 const val TIMER_FROM_FIELD = "beholder://timer"
 

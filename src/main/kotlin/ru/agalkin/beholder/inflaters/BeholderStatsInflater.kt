@@ -2,7 +2,7 @@ package ru.agalkin.beholder.inflaters
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.threads.UdpListener
+import ru.agalkin.beholder.listeners.UdpListener
 
 class BeholderStatsInflater : Inflater {
     override fun inflateMessageFields(message: Message): Boolean {

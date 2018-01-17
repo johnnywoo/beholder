@@ -6,9 +6,9 @@ import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandAbstract
 import ru.agalkin.beholder.config.expressions.CommandException
-import ru.agalkin.beholder.threads.InternalLogListener
-import ru.agalkin.beholder.threads.TimerListener
-import ru.agalkin.beholder.threads.UdpListener
+import ru.agalkin.beholder.listeners.InternalLogListener
+import ru.agalkin.beholder.listeners.TimerListener
+import ru.agalkin.beholder.listeners.UdpListener
 
 class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
     override fun createSubcommand(args: Arguments): CommandAbstract?

@@ -341,6 +341,7 @@ Removes message fields that are not specified in arguments.
     to file <file>;
     to udp [<address>:]<port>;
     to tcp [<address>:]<port>;
+    to shell <command>;
 
 This command writes `$payload` field of incoming messages to some destination.
 To format the payload, use `set $payload ...` command.
@@ -379,6 +380,20 @@ Default address is 127.0.0.1.
 `to tcp [<address>:]<port>` sends payloads of messages over a TCP connection.
 Default address is 127.0.0.1.
 A newline is appended to every payload unless it already ends with a newline.
+
+`to shell <command>` sends payloads of messages into a process started with a shell command.
+The command should not exit immediately, but instead keep reading from stdout and processing messages.
+A newline is appended to every payload unless it already ends with a newline.
+
+Beware of stdin buffering! If your shell command is a bash script, bash will buffer
+incoming messages before passing them into the script. Test your scripts early!
+
+    #!/usr/bin/php
+    <?php
+    // example log receiver script in PHP
+    while ($f = fgets(STDIN)) {
+        file_put_contents('receiver.log', date('r') . ' ' . $f, FILE_APPEND);
+    }
 
 
 ## Building

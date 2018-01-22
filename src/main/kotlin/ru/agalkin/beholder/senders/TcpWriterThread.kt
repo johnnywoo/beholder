@@ -2,14 +2,13 @@ package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
+import ru.agalkin.beholder.readInputStreamAndDiscard
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.net.SocketException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.concurrent.thread
 import kotlin.math.min
 
 class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$address") {
@@ -84,7 +83,7 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
             socket.keepAlive = true
 
             // ignore any input from the connection
-            ignoreSocketInput(socket)
+            readInputStreamAndDiscard(socket.getInputStream(), "$name-skipper")
 
             val outputStream = socket.getOutputStream()
             while (true) {
@@ -112,27 +111,6 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
                 outputStream.flush()
 
                 undeliveredText = null
-            }
-        }
-    }
-
-    private fun ignoreSocketInput(socket: Socket) {
-        // ignore any input from the connection
-        thread(isDaemon = true, name = "$name-skipper") {
-            val devNull = ByteArray(1024)
-            val inputStream = socket.getInputStream()
-            while (true) {
-                try {
-                    // тут возможны два варианта
-                    // 1. read() будет ждать чего-то читать в блокирующем режиме
-                    // 2. read() почует, что там всё кончилось (end of file is detected) и начнёт отдавать -1 без задержки
-                    if (inputStream.read(devNull) < 0) {
-                        break
-                    }
-                    InternalLog.info("Wrapping inputStream.read(devNull)")
-                } catch (ignored: SocketException) {
-                    InternalLog.info("inputStream.read(devNull) made exception ${ignored::class.simpleName} ${ignored.message}")
-                }
             }
         }
     }

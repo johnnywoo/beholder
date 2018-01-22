@@ -1,8 +1,11 @@
 package ru.agalkin.beholder
 
+import java.io.InputStream
 import java.io.InputStreamReader
+import java.net.SocketException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.concurrent.thread
 
 fun getIsoDateFormatter()
     = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
@@ -38,3 +41,30 @@ fun addNewlineIfNeeded(text: String)
         true  -> text + "\n"
         false -> text
     }
+
+fun substringUpTo(string: String, maxLength: Int): String {
+    if (string.length > maxLength) {
+        return string.substring(0, maxLength)
+    }
+    return string
+}
+
+fun readInputStreamAndDiscard(inputStream: InputStream, threadName: String) {
+    // ignore any input from the process
+    thread(isDaemon = true, name = threadName) {
+        val devNull = ByteArray(1024)
+        while (true) {
+            try {
+                // тут возможны два варианта
+                // 1. read() будет ждать чего-то читать в блокирующем режиме
+                // 2. read() почует, что там всё кончилось (end of file is detected) и начнёт отдавать -1 без задержки
+                if (inputStream.read(devNull) < 0) {
+                    break
+                }
+                InternalLog.info("Wrapping inputStream.read(devNull)")
+            } catch (ignored: SocketException) {
+                InternalLog.info("inputStream.read(devNull) made exception ${ignored::class.simpleName} ${ignored.message}")
+            }
+        }
+    }
+}

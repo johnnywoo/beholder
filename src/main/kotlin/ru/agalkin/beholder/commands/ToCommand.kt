@@ -8,6 +8,7 @@ import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.formatters.TemplateFormatter
 import ru.agalkin.beholder.senders.FileSender
+import ru.agalkin.beholder.senders.ShellSender
 import ru.agalkin.beholder.senders.TcpSender
 import ru.agalkin.beholder.senders.UdpSender
 
@@ -23,6 +24,7 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
                 "file"   -> FileDestination(arguments.shiftString("`to file` needs a filename"))
                 "udp"    -> UdpDestination(Address.fromString(arguments.shiftString("`to udp` needs at least a port number"), "127.0.0.1"))
                 "tcp"    -> TcpDestination(Address.fromString(arguments.shiftString("`to tcp` needs at least a port number"), "127.0.0.1"))
+                "shell"  -> ShellDestination(arguments.shiftString("`to shell` needs a shell command"))
                 else     -> throw CommandException("Unsupported destination type: $destinationName")
             }
         } catch (e: Address.AddressException) {
@@ -92,6 +94,18 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
 
         override fun stop() {
             sender.decrementReferenceCount()
+        }
+    }
+
+    private class ShellDestination(shellCommand: String) : Destination {
+        private val sender = ShellSender.createSender(shellCommand)
+
+        override fun write(message: Message) {
+            sender.writeMessagePayload(addNewlineIfNeeded(message.getPayload()))
+        }
+
+        override fun stop() {
+            sender.stop()
         }
     }
 }

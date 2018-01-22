@@ -4,21 +4,13 @@ import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
-import ru.agalkin.beholder.config.expressions.CommandAbstract
 import ru.agalkin.beholder.config.expressions.CommandException
+import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.listeners.InternalLogListener
 import ru.agalkin.beholder.listeners.TimerListener
 import ru.agalkin.beholder.listeners.UdpListener
 
-class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
-    override fun createSubcommand(args: Arguments): CommandAbstract?
-        = when (args.getCommandName()) {
-            "parse" -> ParseCommand(args)
-            "set"   -> SetCommand(args)
-            "keep"  -> KeepCommand(args)
-            else    -> null
-        }
-
+class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     private val source: Source
 
     init {
@@ -54,25 +46,8 @@ class FromCommand(arguments: Arguments) : CommandAbstract(arguments) {
         }
     }
 
-    override fun start() {
-        // детишки соединяются в цепочку
-        for (i in subcommands.indices) {
-            val command = subcommands[i]
-            if (subcommands.indices.contains(i + 1)) {
-                val nextCommand = subcommands[i + 1]
-                // не последний ребенок направляется в следующего
-                // (сообщения, вылезающие из него, попадают в следующего ребенка)
-                command.router.addSubscriber({ nextCommand.receiveMessage(it) })
-            } else {
-                // последний ребенок направляется в наш эмиттер
-                // (сообщения, вылезающие из него, будут вылезать из команды from)
-                command.router.addSubscriber({ receiveMessage(it) })
-            }
-        }
-
-        // включаем лисенер
-        source.start()
-    }
+    override fun start()
+        = source.start()
 
     override fun stop()
         = source.stop()

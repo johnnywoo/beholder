@@ -47,8 +47,9 @@ Commands can produce, consume and modify messages.
 Messages are collections of arbitrary fields.
 
     flow {  # this command has no args, only subcommands
-        from udp 3820 {  # this command has both args and subcommands
-            parse syslog;  # this command has only arguments
+        flow out {  # this command has both args and subcommands
+            from udp 3820;  # this command has only arguments
+            parse syslog;
         }
         to stdout;
     }
@@ -100,17 +101,54 @@ Example: `127.0.0.1:1234`.
 * `to`     — sends messages to destinations
 
 
-### `flow {subcommands}`
+### `flow`
+
+    flow {<subcommands>}
+    flow out {<subcommands>}
+    flow closed {<subcommands>}
 
 Subcommands: `flow`, `from`, `parse`, `set`, `keep`, `to`.
 
 Use this command to create separate flows of messages.
-Rule of thumb is: what happens in `flow` stays in `flow`.
 
-Message routing:
-Incoming message: a copy goes into first subcommand, a copy is emitted out of the `flow`.
-Exit of each subcommand is routed into next subcommand.
-Exit of last subcommand: messages are discarded.
+Message routing for `flow` in default mode:
+
+    from udp 1001;
+    flow {
+        # incoming messages are duplicated:
+        # one is emitted out, one is passed into first subcommand
+        from udp 1002;
+        to file some.log; # receives messages from ports 1001 AND 1002
+        # after last subcommand messages are discarded
+    }
+    to stdout; # this command receives messages only from port 1001
+
+Message routing for `flow out`:
+
+    from udp 1001;
+    flow out {
+        # incoming messages are only emitted out of the flow,
+        # subcommands do not receive them
+        from udp 1002;
+        to file some.log; # receives messages only from port 1002
+        # after last subcommand messages are emitted out of the flow
+    }
+    to stdout; # receives messages from ports 1001 AND 1002
+
+Message routing for `flow closed`:
+
+    from udp 1001;
+    flow closed {
+        # incoming messages are only emitted out of the flow,
+        # subcommands do not receive them
+        from udp 1002;
+        to file some.log; # receives messages only from port 1002
+        # after last subcommand messages are discarded
+    }
+    to stdout; # receives messages only from port 1001
+
+Incoming messages are always emitted out of the `flow`.
+Inside the `flow` messages are consecutively passed between subcommands.
 
 Example config with a caveat:
 
@@ -131,19 +169,19 @@ This config will create two separate flows of messages:
     from timer [<n> seconds];
     from internal-log;
 
-Subcommands: `parse`, `set`, `keep`.
-
-This command produces messages, applying subcommands to them if there are any.
+This command produces messages.
 
 If there are any incoming messages (not produced by current `from` command),
-`from` will copy them to its output. Subcommands are not applied to those.
+`from` will copy them to its output.
 
-You can use subcommands to pre-process messages before placing them into the flow.
-This way, you can easily receive messages in different formats from different sources.
+To receive messages in different formats from different sources, use `flow out`.
 
     flow {
         from udp 1001;
-        from udp 1002 {parse syslog}
+        flow out {
+            from udp 1002;
+            parse syslog;
+        }
         set $payload dump;
         to stdout;
         # in stdout we will see raw messages from port 1001
@@ -245,8 +283,8 @@ When given a quoted string, `set` will substitute field names in the string
 with corresponding values from the message.
 
     flow {
-        from timer {set $color 'red'}
-        from timer {set $color 'green'}
+        flow out {from timer; set $color 'red'}
+        flow out {from timer; set $color 'green'}
         set $payload 'We got $color apples!';
         to stdout;
     }
@@ -308,7 +346,8 @@ This command writes `$payload` field of incoming messages to some destination.
 To format the payload, use `set $payload ...` command.
 
     flow {
-        from timer {set $payload '$receivedDate Just a repeating text message'}
+        from timer;
+        set $payload '$receivedDate Just a repeating text message';
         to stdout;
     }
 

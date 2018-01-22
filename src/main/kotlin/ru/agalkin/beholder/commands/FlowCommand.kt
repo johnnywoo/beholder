@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.commands
 
+import ru.agalkin.beholder.BeholderException
 import ru.agalkin.beholder.config.expressions.*
 
 open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
@@ -14,35 +15,63 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
             else    -> null
         }
 
+    private val isOpenAtStart: Boolean
+    private val isOpenAtEnd: Boolean
+
     init {
+        when (arguments.shiftLiteralOrNull(setOf("out", "closed"))) {
+            "out" -> {
+                isOpenAtStart = false
+                isOpenAtEnd   = true
+            }
+            "closed" -> {
+                isOpenAtStart = false
+                isOpenAtEnd   = false
+            }
+            else -> {
+                isOpenAtStart = true
+                isOpenAtEnd   = false
+            }
+        }
+
         arguments.end()
     }
 
     override fun start() {
-        // внутри flow команды по очереди обрабатывают сообщения
+        if (isOpenAtStart && isOpenAtEnd) {
+            // если наш flow открыт с обеих сторон, роутер заклинит в бесконечном цикле
+            // мы так не хотим
+            throw BeholderException("Invalid flow configuration: isOpenAtStart and isOpenAtEnd cannot be both enabled")
+        }
 
-        // вход flow направляем в первую вложенную команду
-        // также он будет проброшен на выход (для этого наш текущий flow должен находиться внутри другого flow или рута)
-        val firstCommand = subcommands.getOrNull(0)
-        if (firstCommand != null) {
+        // стандартный режим flow (не out и не closed)
+        if (isOpenAtStart && !subcommands.isEmpty()) {
+            // вход flow направляем в первую вложенную команду
+            val firstCommand = subcommands[0]
             router.addSubscriber({ firstCommand.receiveMessage(it) })
         }
 
+        // внутри flow команды по очереди обрабатывают сообщения
         // если команда одна, то соединять будет нечего
-        if (subcommands.size < 2) {
-            return
+        if (subcommands.size >= 2) {
+            // соединяем команды в конвейер
+            for (i in subcommands.indices) {
+                if (!subcommands.indices.contains(i + 1)) {
+                    continue
+                }
+                val prevCommand = subcommands[i]
+                val nextCommand = subcommands[i + 1]
+
+                // сообщение из первой команды пихаем во вторую, и т.д.
+                prevCommand.router.addSubscriber({ nextCommand.receiveMessage(it) })
+            }
         }
 
-        // соединяем команды в конвейер
-        for (i in subcommands.indices) {
-            if (!subcommands.indices.contains(i + 1)) {
-                continue
-            }
-            val prevCommand = subcommands[i]
-            val nextCommand = subcommands[i + 1]
-
-            // сообщение из первой команды пихаем во вторую, и т.д.
-            prevCommand.router.addSubscriber({ nextCommand.receiveMessage(it) })
+        // режим flow out (не стандартный и не closed)
+        if (isOpenAtEnd && !subcommands.isEmpty()) {
+            // выход последней команды направляем на выход из flow
+            val lastCommand = subcommands.last()
+            lastCommand.router.addSubscriber { receiveMessage(it) }
         }
 
         super.start()

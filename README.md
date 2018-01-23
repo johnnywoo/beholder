@@ -103,13 +103,50 @@ Example: `127.0.0.1:1234`.
 
 ### `flow`
 
-    flow {<subcommands>}
-    flow out {<subcommands>}
-    flow closed {<subcommands>}
+    flow {<subcommands>}        -- copy incoming, discard results
+    flow out {<subcommands>}    -- produce results, ignore incoming
+    flow closed {<subcommands>} -- ignore everything
 
 Subcommands: `flow`, `from`, `parse`, `set`, `keep`, `to`.
 
 Use this command to create separate flows of messages.
+
+Some use cases of `flow`:
+
+* Creating separate processing chains:
+
+      # WRONG
+      from udp 1001;
+      to tcp 1.2.3.4:1002;
+      from udp 1003;
+      to tcp 1.2.3.4:1004; # receives messages from both ports 1001 AND 1003!
+
+      # separate flows
+      flow {from udp 1001; to tcp 1.2.3.4:1002}
+      flow {from udp 1003; to tcp 1.2.3.4:1004}
+
+* Inserting a temporary dump in the middle of your config:
+
+      from udp 1001;
+      parse syslog;
+
+      # Here we want to look at the message between `parse` and `set`.
+      # If we just inserted dump commands here, they would modify the message,
+      # which we do not want. Instead, we can copy messages into a flow
+      # and modify the copies, which are then discarded.
+      flow {
+          set $payload dump;
+          to file dump.log;
+      }
+
+      set $payload json;
+      to tcp 1234;
+
+* Applying some commands to message from a specific source:
+
+      flow out { from udp 1001; parse syslog; }
+      flow out { from udp 1002; parse json; }
+      to file '$syslogHost.log';
 
 Message routing for `flow` in default mode:
 
@@ -149,18 +186,6 @@ Message routing for `flow closed`:
 
 Incoming messages are always emitted out of the `flow`.
 Inside the `flow` messages are consecutively passed between subcommands.
-
-Example config with a caveat:
-
-    from udp 1001;
-    to tcp 1.2.3.4:1002; # here we send messages from port 1001
-    from udp 1003;
-    to tcp 1.2.3.4:1004; # receives messages from both ports 1001 AND 1003!
-
-This config will create two separate flows of messages:
-
-    flow {from udp 1001; to tcp 1.2.3.4:1002}
-    flow {from udp 1003; to tcp 1.2.3.4:1004}
 
 
 ### `from`
@@ -309,8 +334,8 @@ Functions:
 * `host`    — Current hostname.
 * `dump`    — Generates a dump payload with all fields of the message.
 * `json`    — Generates a JSON string with all fields of the message.
-               Alternatively you may specify which fields to keep:
-               `set $payload json $field $field2`
+               Alternatively you may specify which fields to include:
+               `set $payload json $field $field2`.
 * `prefix-with-length`  — Prefixes payload with its length in bytes
                (for syslog over TCP, see RFC5425 "4.3. Sending Data").
 
@@ -358,7 +383,7 @@ This example config will produce messages like these:
     2017-11-27T21:14:02+03:00 Just a repeating text message
     2017-11-27T21:14:03+03:00 Just a repeating text message
 
-`to stdout` simply sends payloads of messages into STDOUT of beholder process.
+`to stdout` simply sends payloads of messages into stdout of beholder process.
 A newline is appended to every payload unless it already ends with a newline.
 
 `to file <file>` stores payloads of messages into a file.
@@ -382,7 +407,7 @@ Default address is 127.0.0.1.
 A newline is appended to every payload unless it already ends with a newline.
 
 `to shell <command>` sends payloads of messages into a process started with a shell command.
-The command should not exit immediately, but instead keep reading from stdout and processing messages.
+The command should not exit immediately, but instead keep reading messages from stdin.
 A newline is appended to every payload unless it already ends with a newline.
 
 Beware of stdin buffering! If your shell command is a bash script, bash will buffer

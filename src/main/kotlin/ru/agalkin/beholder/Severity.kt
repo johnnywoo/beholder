@@ -15,9 +15,4 @@ enum class Severity(private val value: Int) {
 
     fun isMoreUrgentThan(x: Severity?)
         = x != null && x.value > value
-
-    companion object {
-        fun fromString(str: String?)
-            = Severity.values().firstOrNull { it.getNumberAsString() == str }
-    }
 }

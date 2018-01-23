@@ -10,9 +10,9 @@ abstract class Arguments {
 
     abstract fun toList(): List<ArgumentToken>
 
-    abstract protected fun shiftToken(errorMessage: String): ArgumentToken
+    protected abstract fun shiftToken(errorMessage: String): ArgumentToken
 
-    abstract protected fun peekNext(skip: Int = 0): ArgumentToken?
+    protected abstract fun peekNext(skip: Int = 0): ArgumentToken?
 
     abstract fun end()
 

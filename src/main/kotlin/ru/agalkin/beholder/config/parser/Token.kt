@@ -22,7 +22,7 @@ open class Token(
     private fun isEmpty()
         = characters.isEmpty()
 
-    open protected fun addChar(char: Char): Token {
+    protected open fun addChar(char: Char): Token {
         // не внутри кавычек = может происходить смена токена
         when (char) {
             // пробелы = наш токен кончился, выдаём новый, сам пробел никуда не сохраняем

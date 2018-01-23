@@ -13,7 +13,7 @@ import ru.agalkin.beholder.listToString
  * command arg arg { child; child }
  */
 abstract class CommandAbstract(private val arguments: Arguments) {
-    abstract protected fun createSubcommand(args: Arguments) : CommandAbstract?
+    protected abstract fun createSubcommand(args: Arguments) : CommandAbstract?
 
     open fun start() {
         for (command in subcommands) {

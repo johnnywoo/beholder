@@ -10,11 +10,10 @@ object RootArguments : Arguments() {
         throw CommandException(errorMessage)
     }
 
-    override fun peekNext(skip: Int)
+    override fun peekNext(skip: Int): ArgumentToken?
         = null
 
-    override fun end() {
-    }
+    override fun end() {}
 
     override fun getCommandName()
         = "<root>"

@@ -4,7 +4,9 @@ import ru.agalkin.beholder.charListToString
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
-class RegexpToken(private val delimiter: Char) : Token(initialChar = delimiter), ArgumentToken {
+class RegexpToken(initialChar: LocatedChar) : Token(initialChar), ArgumentToken {
+    private val delimiter = initialChar.char
+
     private val body      = ArrayList<Char>()
     private var modifiers = 0
 
@@ -15,7 +17,7 @@ class RegexpToken(private val delimiter: Char) : Token(initialChar = delimiter),
         try {
             Pattern.compile(charListToString(body), modifiers)!!
         } catch (e: PatternSyntaxException) {
-            throw ParseException("Invalid regexp: ${e.message}").apply { addSuppressed(e) }
+            throw ParseException("Invalid regexp: ${e.message} ${getLocationSummary()}").apply { addSuppressed(e) }
         }
     }
 
@@ -27,10 +29,10 @@ class RegexpToken(private val delimiter: Char) : Token(initialChar = delimiter),
     fun isSecondDelimiterPresent()
         = isInModifiers
 
-    override fun addChar(char: Char): Token {
+    override fun addChar(locatedChar: LocatedChar): Token {
         when {
             isInModifiers -> {
-                modifiers = modifiers or when (char) {
+                modifiers = modifiers or when (locatedChar.char) {
                     'i' -> Pattern.CASE_INSENSITIVE
                     'd' -> Pattern.UNIX_LINES
                     'x' -> Pattern.COMMENTS
@@ -38,20 +40,20 @@ class RegexpToken(private val delimiter: Char) : Token(initialChar = delimiter),
                     's' -> Pattern.DOTALL
                     'u' -> Pattern.UNICODE_CASE
                     'U' -> Pattern.UNICODE_CHARACTER_CLASS
-                    in 'a'..'z', in 'A'..'Z', in '0'..'9' -> throw ParseException("Invalid regexp modifier: $char")
+                    in 'a'..'z', in 'A'..'Z', in '0'..'9' -> throw ParseException("Invalid regexp modifier: ${locatedChar.char} ${locatedChar.getLocationSummary()}")
                     // не модификатор = это начинается новый токен
-                    else -> return super.addChar(char)
+                    else -> return super.addChar(locatedChar)
                 }
             }
-            char == delimiter -> {
+            locatedChar.char == delimiter -> {
                 isInModifiers = true
             }
             else -> {
-                body.add(char)
+                body.add(locatedChar.char)
             }
         }
 
-        characters.add(char)
+        characters.add(locatedChar)
         return this
     }
 }

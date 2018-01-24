@@ -20,6 +20,6 @@ class FlowTest : TestAbstract() {
 
     @Test
     fun testFlowBadMode() {
-        assertConfigFails("flow whatever {to stdout}", "Too many arguments for `flow`: flow whatever")
+        assertConfigFails("flow whatever {to stdout}", "Too many arguments for `flow`: flow whatever [test-config:1]")
     }
 }

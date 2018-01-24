@@ -1,3 +1,3 @@
 package ru.agalkin.beholder.config.parser
 
-class SemicolonToken: Token(initialChar = ';', isSingleChar = true)
+class SemicolonToken(locatedChar: LocatedChar) : Token(initialChar = locatedChar, isSingleChar = true)

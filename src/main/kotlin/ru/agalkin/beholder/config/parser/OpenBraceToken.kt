@@ -1,3 +1,3 @@
 package ru.agalkin.beholder.config.parser
 
-class OpenBraceToken : Token(initialChar = '{', isSingleChar = true)
+class OpenBraceToken(locatedChar: LocatedChar) : Token(initialChar = locatedChar, isSingleChar = true)

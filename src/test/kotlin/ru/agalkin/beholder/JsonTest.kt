@@ -23,12 +23,12 @@ class JsonTest : TestAbstract() {
 
     @Test
     fun testJsonFailsStringArg() {
-        assertConfigFails("set \$json json \$a 'b'", "`set ... json` arguments must be field names: set \$json json \$a 'b'")
+        assertConfigFails("set \$json json \$a 'b'", "`set ... json` arguments must be field names: set \$json json \$a 'b' [test-config:1]")
     }
 
     @Test
     fun testJsonFailsRegexpArg() {
-        assertConfigFails("set \$json json \$a ~b~", "`set ... json` arguments must be field names: set \$json json \$a ~b~")
+        assertConfigFails("set \$json json \$a ~b~", "`set ... json` arguments must be field names: set \$json json \$a ~b~ [test-config:1]")
     }
 
     @Test

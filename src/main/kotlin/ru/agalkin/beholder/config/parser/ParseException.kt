@@ -8,12 +8,19 @@ class ParseException(message: String) : BeholderException(message) {
             rewindIterator(tokens, rewind)
 
             val sb = StringBuilder(message)
+            var locationSummary: String? = null
             while (tokens.hasNext()) {
                 val token = tokens.next()
+                if (locationSummary == null) {
+                    locationSummary = token.getLocationSummary()
+                }
                 if (token !is SemicolonToken) {
                     sb.append(" ")
                 }
-                sb.append(token.getDefinition())
+                sb.append(token.getDefinitionWithLocation())
+            }
+            if (locationSummary != null) {
+                sb.append(' ').append(locationSummary)
             }
             return ParseException(sb.toString())
         }
@@ -25,16 +32,16 @@ class ParseException(message: String) : BeholderException(message) {
             }
         }
 
-        fun fromList(message: String, tokens: List<*>): ParseException {
+        fun fromList(message: String, tokens: List<ArgumentToken>): ParseException {
             val sb = StringBuilder(message)
             for (token in tokens) {
                 if (token !is Token) {
                     continue
                 }
-                if (token !is SemicolonToken) {
-                    sb.append(" ")
-                }
-                sb.append(token.getDefinition())
+                sb.append(' ').append(token.getDefinition())
+            }
+            if (!tokens.isEmpty()) {
+                sb.append(' ').append(tokens.first().getLocationSummary())
             }
             return ParseException(sb.toString())
         }

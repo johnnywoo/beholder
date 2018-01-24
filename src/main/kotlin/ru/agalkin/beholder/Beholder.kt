@@ -7,7 +7,7 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 const val BEHOLDER_SYSLOG_PROGRAM = "beholder"
 
-class Beholder(private val configFile: String?, private val configText: String?) {
+class Beholder(private val configFile: String?, private val configText: String?, private val configSourceDescription: String?) {
     // тут не ловим никаких ошибок, чтобы при старте с кривым конфигом сразу упасть
     var config: Config = readConfig()
 
@@ -38,7 +38,7 @@ class Beholder(private val configFile: String?, private val configText: String?)
 
     private fun readConfig(): Config {
         if (configText != null) {
-            return Config.fromStringWithLog(configText)
+            return Config.fromStringWithLog(configText, configSourceDescription ?: "unknown")
         }
 
         if (configFile != null) {

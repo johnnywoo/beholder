@@ -40,14 +40,15 @@ fun main(args: Array<String>) {
         }
     })
 
-    val configFile: String?
-    val configText: String?
+    var configFile: String? = null
+    var configText: String? = null
+    var configSourceDescription: String? = null
 
     when {
         // beholder --config="flow {from udp 3231; to stdout}"
         cli.configText != null -> {
-            configFile = null
             configText = cli.configText + "\n"
+            configSourceDescription = "cli-arg"
             InternalLog.info("Using config from CLI arguments")
         }
 
@@ -62,7 +63,6 @@ fun main(args: Array<String>) {
             }
 
             configFile = filename
-            configText = null // config reader will read the file by itself
 
             InternalLog.info("Using config from file: $filename")
         }
@@ -71,8 +71,8 @@ fun main(args: Array<String>) {
         // use bundled config from resources
         // this is intended primarily for development purposes
         else -> {
-            configFile = null
             configText = readTextFromResource("default-config.conf")
+            configSourceDescription = "config-from-jar"
 
             InternalLog.info("Using bundled config from jar resources")
         }
@@ -80,7 +80,7 @@ fun main(args: Array<String>) {
 
     val app: Beholder
     try {
-        app = Beholder(configFile, configText)
+        app = Beholder(configFile, configText, configSourceDescription)
     } catch (e: ParseException) {
         InternalLog.err("=== Error: invalid config ===")
         InternalLog.err(e.message)

@@ -2,7 +2,9 @@ package ru.agalkin.beholder.config.parser
 
 import ru.agalkin.beholder.charListToString
 
-class QuotedStringToken(private val quoteChar: Char) : Token(initialChar = quoteChar), ArgumentToken {
+class QuotedStringToken(initialChar: LocatedChar) : Token(initialChar), ArgumentToken {
+    private val quoteChar = initialChar.char
+
     private val stringValue = ArrayList<Char>()
 
     override fun getValue()
@@ -10,31 +12,31 @@ class QuotedStringToken(private val quoteChar: Char) : Token(initialChar = quote
 
     private var isEscapeSequence = false
 
-    override fun addChar(char: Char): Token {
-        characters.add(char)
+    override fun addChar(locatedChar: LocatedChar): Token {
+        characters.add(locatedChar)
 
         if (isEscapeSequence) {
             isEscapeSequence = false
-            stringValue.add(when (char) {
+            stringValue.add(when (locatedChar.char) {
                 'n' -> '\n'
                 'r' -> '\r'
                 't' -> '\t'
-                else -> char
+                else -> locatedChar.char
             })
             return this
         }
 
-        if (char == '\\') {
+        if (locatedChar.char == '\\') {
             isEscapeSequence = true
             return this
         }
 
-        if (char == quoteChar) {
+        if (locatedChar.char == quoteChar) {
             // закрыли кавычки
             return Token()
         }
 
-        stringValue.add(char)
+        stringValue.add(locatedChar.char)
         return this
     }
 }

@@ -49,7 +49,7 @@ class ExpressionsTest : TestAbstract() {
     fun testFromTimerError() {
         assertConfigFails(
             "from timer n second;",
-            "Correct syntax is `from timer 10 seconds`: from timer n second"
+            "Correct syntax is `from timer 10 seconds`: from timer n second [test-config:1]"
         )
     }
 
@@ -57,7 +57,7 @@ class ExpressionsTest : TestAbstract() {
     fun testFromTimerSuffixError() {
         assertConfigFails(
             "from timer 1 lightyear;",
-            "Too many arguments for `from`: from timer 1 lightyear"
+            "Too many arguments for `from`: from timer 1 lightyear [test-config:1]"
         )
     }
 
@@ -65,7 +65,7 @@ class ExpressionsTest : TestAbstract() {
     fun testFromTimerExtraTokenAfterOptional() {
         assertConfigFails(
             "from timer 1 second foo;",
-            "Too many arguments for `from`: from timer 1 second foo"
+            "Too many arguments for `from`: from timer 1 second foo [test-config:1]"
         )
     }
 
@@ -91,7 +91,7 @@ class ExpressionsTest : TestAbstract() {
         )
         assertConfigFails(
             "unknown-command",
-            "Command `unknown-command` is not allowed inside RootCommand: unknown-command"
+            "Command `unknown-command` is not allowed inside RootCommand: unknown-command [test-config:1]"
         )
     }
 
@@ -106,7 +106,7 @@ class ExpressionsTest : TestAbstract() {
         )
         assertConfigFails(
             "unknown-command;",
-            "Command `unknown-command` is not allowed inside RootCommand: unknown-command"
+            "Command `unknown-command` is not allowed inside RootCommand: unknown-command [test-config:1]"
         )
     }
 
@@ -164,7 +164,7 @@ class ExpressionsTest : TestAbstract() {
     fun testBadPort() {
         assertConfigFails(
             "from udp wtf;",
-            "Invalid network address 'wtf': from udp wtf"
+            "Invalid network address 'wtf': from udp wtf [test-config:1]"
         )
     }
 
@@ -172,7 +172,7 @@ class ExpressionsTest : TestAbstract() {
     fun testUnclosedQuotes() {
         assertConfigFails(
             "set \$f 'bla",
-            "Unclosed string literal detected: 'bla"
+            "Unclosed string literal detected: 'bla [test-config:1]"
         )
     }
 
@@ -188,7 +188,7 @@ class ExpressionsTest : TestAbstract() {
     fun testUnclosedRegexp() {
         assertConfigFails(
             "set \$f replace ~bla",
-            "Unclosed regexp detected: ~bla"
+            "Unclosed regexp detected: ~bla [test-config:1]"
         )
     }
 
@@ -198,7 +198,7 @@ class ExpressionsTest : TestAbstract() {
         // при этом в команде set будет ошибка, что не хватает аргументов (нет строки замены)
         assertConfigFails(
             "set \$f replace ~bla~",
-            "`replace` needs a replacement string: set \$f replace ~bla~"
+            "`replace` needs a replacement string: set \$f replace ~bla~ [test-config:1]"
         )
     }
 
@@ -206,12 +206,12 @@ class ExpressionsTest : TestAbstract() {
     fun testRegexpInvalid() {
         assertConfigFails(
             "set \$f replace ~+~",
-            "Invalid regexp: Dangling meta character '+' near index 0\n+\n^"
+            "Invalid regexp: Dangling meta character '+' near index 0\n+\n^ [test-config:1]"
         )
     }
 
     private fun dumpTokens(configText: String): String {
-        val tokens = Token.getTokens(configText)
+        val tokens = Token.getTokens(configText, "test-config")
         val sb = StringBuilder()
         for (token in tokens) {
             sb.append(token::class.simpleName)

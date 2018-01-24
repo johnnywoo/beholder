@@ -22,7 +22,7 @@ class ReplaceTest : TestAbstract() {
             """
             |set ¥payload replace 'cat' 'dog';
             |""".trimMargin().replace('¥', '$'),
-            "`replace` needs a regexp: set \$payload replace 'cat' 'dog'"
+            "`replace` needs a regexp: set \$payload replace 'cat' 'dog' [test-config:1]"
         )
     }
 
@@ -32,7 +32,7 @@ class ReplaceTest : TestAbstract() {
             """
             |set ¥payload replace ~cat~q 'dog';
             |""".trimMargin().replace('¥', '$'),
-            "Invalid regexp modifier: q"
+            "Invalid regexp modifier: q [test-config:1]"
         )
     }
 

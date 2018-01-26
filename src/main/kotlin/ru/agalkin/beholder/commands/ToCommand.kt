@@ -16,16 +16,14 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     private val destination: Destination
 
     init {
-        val destinationName = arguments.shiftString("Destination type was not specified")
-
         try {
-            destination = when (destinationName) {
+            destination = when (arguments.shiftAnyLiteral("Destination type was not specified")) {
                 "stdout" -> StdoutDestination()
-                "file"   -> FileDestination(arguments.shiftString("`to file` needs a filename"))
-                "udp"    -> UdpDestination(Address.fromString(arguments.shiftString("`to udp` needs at least a port number"), "127.0.0.1"))
-                "tcp"    -> TcpDestination(Address.fromString(arguments.shiftString("`to tcp` needs at least a port number"), "127.0.0.1"))
-                "shell"  -> ShellDestination(arguments.shiftString("`to shell` needs a shell command"))
-                else     -> throw CommandException("Unsupported destination type: $destinationName")
+                "file"   -> FileDestination(arguments.shiftStringTemplate("`to file` needs a filename"))
+                "udp"    -> UdpDestination(Address.fromString(arguments.shiftFixedString("`to udp` needs at least a port number"), "127.0.0.1"))
+                "tcp"    -> TcpDestination(Address.fromString(arguments.shiftFixedString("`to tcp` needs at least a port number"), "127.0.0.1"))
+                "shell"  -> ShellDestination(arguments.shiftFixedString("`to shell` needs a shell command"))
+                else     -> throw CommandException("Unsupported destination type")
             }
         } catch (e: Address.AddressException) {
             throw CommandException(e).apply { addSuppressed(e) }
@@ -64,8 +62,8 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         }
     }
 
-    private class FileDestination(filenameTemplate: String) : Destination {
-        private val filenameFormatter = TemplateFormatter.create(filenameTemplate)
+    private class FileDestination(filenameTemplate: TemplateFormatter) : Destination {
+        private val filenameFormatter = filenameTemplate
 
         override fun write(message: Message) {
             val sender = FileSender.getSender(filenameFormatter.formatMessage(message))

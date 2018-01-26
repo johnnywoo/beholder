@@ -15,7 +15,7 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         if (regexp != null) {
             inflater = RegexpInflater(regexp)
         } else {
-            inflater = when (arguments.shiftString("We need some format to `parse`")) {
+            inflater = when (arguments.shiftAnyLiteral("We need some format to `parse`")) {
                 "syslog" -> SyslogInflater()
                 "json" -> JsonInflater()
                 "beholder-stats" -> BeholderStatsInflater()

@@ -169,6 +169,22 @@ class ExpressionsTest : TestAbstract() {
     }
 
     @Test
+    fun testBadAddressWithFields() {
+        assertConfigFails(
+            "from udp 127.0.0.1:\$port;",
+            "`from udp` needs at least a port number (message fields are not allowed here): from udp 127.0.0.1:\$port [test-config:1]"
+        )
+    }
+
+    @Test
+    fun testBadAddressWithFieldsQuoted() {
+        assertConfigFails(
+            "from udp '127.0.0.1:\$port';",
+            "`from udp` needs at least a port number (message fields are not allowed here): from udp '127.0.0.1:\$port' [test-config:1]"
+        )
+    }
+
+    @Test
     fun testUnclosedQuotes() {
         assertConfigFails(
             "set \$f 'bla",

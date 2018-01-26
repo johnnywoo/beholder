@@ -15,9 +15,9 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
 
     init {
         try {
-            source = when (arguments.shiftString("`from` needs a type of message source")) {
+            source = when (arguments.shiftAnyLiteral("`from` needs a type of message source")) {
                 "udp" -> UdpSource(Address.fromString(
-                    arguments.shiftString("`from udp` needs at least a port number"),
+                    arguments.shiftFixedString("`from udp` needs at least a port number"),
                     "0.0.0.0"
                 ))
                 "timer" -> TimerSource(

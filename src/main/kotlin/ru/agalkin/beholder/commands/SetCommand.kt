@@ -3,7 +3,6 @@ package ru.agalkin.beholder.commands
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
-import ru.agalkin.beholder.config.parser.LiteralToken
 import ru.agalkin.beholder.formatters.*
 
 class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
@@ -14,22 +13,25 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         // set $field function [...]
         // set $field 'interpolated-value'
 
-        val arg = arguments.shiftStringToken("`set` needs at least two arguments")
-
-        formatter = when ((arg as? LiteralToken)?.getValue()) {
+        val arg = arguments.shiftAnyLiteralOrNull()
+        formatter = when (arg) {
             "syslog" -> SyslogIetfFormatter()
             "prefix-with-length" -> PrefixWithLengthFormatter()
             "dump" -> DumpFormatter()
             "time" -> TimeFormatter()
             "host" -> HostFormatter()
-            "env" -> EnvFormatter(arguments.shiftString("`set ... env` needs an environment variable name"))
+            "env" -> EnvFormatter(arguments.shiftFixedString("`set ... env` needs an environment variable name"))
             "json" -> JsonFormatter(nullIfEmpty(scanArgumentsAsFieldNames(arguments, "`set ... json` arguments must be field names")))
             "replace" -> ReplaceFormatter(
                 arguments.shiftRegexp("`replace` needs a regexp"),
-                arguments.shiftString("`replace` needs a replacement string"),
-                arguments.shiftPrefixedStringOrNull(setOf("in"), "`replace ... in` needs a string") ?: "\$$field"
+                arguments.shiftStringTemplate("`replace` needs a replacement string"),
+                arguments.shiftPrefixedStringTemplateOrNull(
+                    setOf("in"),
+                    "`replace ... in` needs a string"
+                ) ?: TemplateFormatter.create("\$$field")
             )
-            else -> TemplateFormatter.create(arg.getValue())
+            null -> arguments.shiftStringTemplate("`set` needs at least two arguments")
+            else -> TemplateFormatter.create(arg)
         }
 
         arguments.end()

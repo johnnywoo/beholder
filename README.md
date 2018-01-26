@@ -70,6 +70,7 @@ Backslashes prefixing any other characters are stripped off.
 * `'\\n'` => \n
 
 Quoted strings may contain message field names, which are replaced with their values.
+Some arguments to certain commands do not allow field names; be sure to validate your configs.
 
     'date: $receivedDate payload: $payload'
 

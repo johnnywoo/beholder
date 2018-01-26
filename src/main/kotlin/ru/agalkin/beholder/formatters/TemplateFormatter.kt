@@ -7,9 +7,9 @@ abstract class TemplateFormatter : Formatter {
     companion object {
         private val regexp = Pattern.compile("\\$([a-z][a-z0-9_]*)", Pattern.CASE_INSENSITIVE)
 
-        fun create(template: String): Formatter {
+        fun create(template: String): TemplateFormatter {
             // template does not contain any fields
-            if (!regexp.matcher(template).find()) {
+            if (!hasTemplates(template)) {
                 return NoVariablesFormatter(template)
             }
             // whole template is $fieldName
@@ -20,6 +20,9 @@ abstract class TemplateFormatter : Formatter {
 
             return InterpolateStringFormatter(template)
         }
+
+        fun hasTemplates(string: String)
+            = regexp.matcher(string).find()
     }
 
     private class NoVariablesFormatter(private val template: String) : TemplateFormatter() {

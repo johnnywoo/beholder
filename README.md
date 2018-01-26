@@ -332,6 +332,7 @@ Functions:
 * `replace` — String replacement with regexp. See below.
 * `time`    — Current time, e.g. 01:23:45.
 * `host`    — Current hostname.
+* `env`     — Environment variable value: `set $path env PATH`.
 * `dump`    — Generates a dump payload with all fields of the message.
 * `json`    — Generates a JSON string with all fields of the message.
                Alternatively you may specify which fields to include:

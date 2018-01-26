@@ -7,14 +7,17 @@ import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
-const val INTERNAL_LOG_FROM_FIELD = "beholder://internal-log"
-
 class InternalLog {
     companion object {
-        private var isWritingToStdoutAllowed = true
+        private var allowRegularOutput = true
+        private var allowErrorOutput = true
 
         fun stopWritingToStdout() {
-            isWritingToStdoutAllowed = false
+            allowRegularOutput = false
+        }
+
+        fun stopWritingToStderr() {
+            allowErrorOutput = false
         }
 
         private var logFile: File? = null
@@ -50,15 +53,13 @@ class InternalLog {
             val date = Date()
 
             val destination = when (Severity.WARNING.isMoreUrgentThan(severity)) {
-                true  -> System.out
-                false -> System.err
+                true  -> if (allowRegularOutput) System.out else null
+                false -> if (allowErrorOutput) System.err else null
             }
-            if (destination !== System.out || isWritingToStdoutAllowed) {
-                destination.println(
-                    SimpleDateFormat("HH:mm:ss").format(date)
-                        + " " + text
-                )
-            }
+            destination?.println(
+                SimpleDateFormat("HH:mm:ss").format(date)
+                    + " " + text
+            )
 
             logFile?.appendText(
                 (getIsoDate(date))
@@ -69,7 +70,7 @@ class InternalLog {
             val message = Message()
 
             message["receivedDate"]   = getIsoDate()
-            message["from"]           = INTERNAL_LOG_FROM_FIELD
+            message["from"]           = "beholder://internal-log"
             message["payload"]        = text
             message["syslogProgram"]  = BEHOLDER_SYSLOG_PROGRAM
             message["syslogSeverity"] = severity.getNumberAsString()

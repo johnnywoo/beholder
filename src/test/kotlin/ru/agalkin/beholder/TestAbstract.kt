@@ -1,5 +1,7 @@
 package ru.agalkin.beholder
 
+import org.junit.Before
+import org.junit.BeforeClass
 import ru.agalkin.beholder.commands.KeepCommand
 import ru.agalkin.beholder.commands.ParseCommand
 import ru.agalkin.beholder.commands.SetCommand
@@ -48,6 +50,14 @@ abstract class TestAbstract {
             fail("This config should not parse correctly: $fromText\n=== parsed ===\n$definition\n===")
         } catch (e: ParseException) {
             assertEquals(errorMessage, e.message)
+        }
+    }
+
+    companion object {
+        @JvmStatic @BeforeClass
+        fun beforeAllTests() {
+            InternalLog.stopWritingToStdout()
+            InternalLog.stopWritingToStderr()
         }
     }
 }

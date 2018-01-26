@@ -22,14 +22,19 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             "host" -> HostFormatter()
             "env" -> EnvFormatter(arguments.shiftFixedString("`set ... env` needs an environment variable name"))
             "json" -> JsonFormatter(nullIfEmpty(scanArgumentsAsFieldNames(arguments, "`set ... json` arguments must be field names")))
-            "replace" -> ReplaceFormatter(
-                arguments.shiftRegexp("`replace` needs a regexp"),
-                arguments.shiftStringTemplate("`replace` needs a replacement string"),
-                arguments.shiftPrefixedStringTemplateOrNull(
-                    setOf("in"),
-                    "`replace ... in` needs a string"
-                ) ?: TemplateFormatter.create("\$$field")
-            )
+            "replace" -> {
+                val regexp = arguments.shiftRegexp("`replace` needs a regexp")
+                val replacementTemplate = arguments.shiftStringTemplate("`replace` needs a replacement string")
+
+                val subjectTemplate: TemplateFormatter
+                if (arguments.shiftLiteralOrNull("in") != null) {
+                    subjectTemplate = arguments.shiftStringTemplate("`replace ... in` needs a string")
+                } else {
+                    subjectTemplate = TemplateFormatter.create("\$$field")
+                }
+
+                ReplaceFormatter(regexp, replacementTemplate, subjectTemplate)
+            }
             null -> arguments.shiftStringTemplate("`set` needs at least two arguments")
             else -> TemplateFormatter.create(arg)
         }

@@ -8,7 +8,7 @@ import ru.agalkin.beholder.inflaters.*
 
 class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     private val inflater: Inflater
-    private val shouldKeepUnparsed = arguments.shiftLiteralOrNull(setOf("keep-unparsed")) != null
+    private val shouldKeepUnparsed = arguments.shiftLiteralOrNull("keep-unparsed") != null
 
     init {
         val regexp = arguments.shiftRegexpOrNull()

@@ -2,6 +2,7 @@ package ru.agalkin.beholder.config.expressions
 
 import ru.agalkin.beholder.config.parser.ArgumentToken
 import ru.agalkin.beholder.config.parser.LiteralToken
+import ru.agalkin.beholder.config.parser.QuotedStringToken
 import ru.agalkin.beholder.config.parser.RegexpToken
 import ru.agalkin.beholder.formatters.TemplateFormatter
 import java.util.regex.Pattern
@@ -9,20 +10,37 @@ import java.util.regex.Pattern
 abstract class Arguments {
     abstract fun getCommandName(): String
 
-    abstract fun toList(): List<ArgumentToken>
+    protected val args = mutableListOf<ArgumentToken>()
 
-    protected abstract fun shiftToken(errorMessage: String): ArgumentToken
+    private var index = 0
 
-    protected abstract fun peekNext(skip: Int = 0): ArgumentToken?
+    fun toList()
+        = args.toList()
 
-    abstract fun end()
+    private fun peekNext(skip: Int = 0)
+        = args.getOrNull(index + 1 + skip)
+
+    private fun shiftToken(errorMessage: String): ArgumentToken {
+        val token = peekNext() ?: throw CommandException(errorMessage)
+        index++
+        return token
+    }
+
+    fun addToken(argumentToken: ArgumentToken)
+        = args.add(argumentToken)
 
     fun hasMoreTokens()
         = peekNext() != null
 
+    fun end() {
+        if (hasMoreTokens()) {
+            throw CommandException("Too many arguments for `${getCommandName()}`")
+        }
+    }
+
     private fun shiftString(errorMessage: String): String {
         val token = shiftToken(errorMessage)
-        if (token is RegexpToken) {
+        if (token !is LiteralToken && token !is QuotedStringToken) {
             throw CommandException(errorMessage)
         }
         return token.getValue()
@@ -60,7 +78,7 @@ abstract class Arguments {
         return null
     }
 
-    fun shiftLiteralOrNull(words: Set<String>): String? {
+    fun shiftLiteralOrNull(vararg words: String): String? {
         val token = peekNext()
         if (token is LiteralToken && token.getValue() in words) {
             shiftToken("")
@@ -84,21 +102,6 @@ abstract class Arguments {
         shiftToken(errorMessage)
 
         return arg.toIntOrNull() ?: throw CommandException(errorMessage)
-    }
-
-    fun shiftPrefixedStringTemplateOrNull(prefixWords: Set<String>, errorMessage: String): TemplateFormatter? {
-        // first token must be a literal word
-        // if it's not, we just return null
-        val prefixToken = peekNext()
-        if (prefixToken == null || prefixToken !is LiteralToken || prefixToken.getValue() !in prefixWords) {
-            return null
-        }
-
-        // we need to move the index over to "consume" the prefix token
-        shiftToken(errorMessage)
-
-        // ok, there is the suffix word, so the second argument is required to be correct
-        return shiftStringTemplate(errorMessage)
     }
 
     fun shiftRegexp(errorMessage: String)

@@ -19,7 +19,7 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
     private val isOpenAtEnd: Boolean
 
     init {
-        when (arguments.shiftLiteralOrNull(setOf("out", "closed"))) {
+        when (arguments.shiftLiteralOrNull("out", "closed")) {
             "out" -> {
                 isOpenAtStart = false
                 isOpenAtEnd   = true

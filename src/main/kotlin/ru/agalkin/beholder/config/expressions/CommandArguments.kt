@@ -1,36 +1,12 @@
 package ru.agalkin.beholder.config.expressions
 
-import ru.agalkin.beholder.config.parser.ArgumentToken
 import ru.agalkin.beholder.config.parser.LiteralToken
 
 class CommandArguments(commandNameToken: LiteralToken) : Arguments() {
-    private val args = mutableListOf<ArgumentToken>(commandNameToken)
-
-    private var index = 0
-
-    fun addToken(argumentToken: ArgumentToken)
-        = args.add(argumentToken)
+    init {
+        addToken(commandNameToken)
+    }
 
     override fun getCommandName()
         = args[0].getValue()
-
-    override fun toList(): List<ArgumentToken>
-        = args.toList()
-
-    override fun peekNext(skip: Int)
-        = args.getOrNull(index + 1 + skip)
-
-    override fun shiftToken(errorMessage: String): ArgumentToken {
-        if (args.indices.contains(index + 1)) {
-            index++
-            return args[index]
-        }
-        throw CommandException(errorMessage)
-    }
-
-    override fun end() {
-        if (args.indices.contains(index + 1)) {
-            throw CommandException("Too many arguments for `${getCommandName()}`")
-        }
-    }
 }

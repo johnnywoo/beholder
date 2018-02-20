@@ -423,14 +423,18 @@ incoming messages before passing them into the script. Test your scripts early!
     }
 
 
-## Building
+## Building Beholder
 
-To build a jar file with all dependencies:
+To build the jar file with all dependencies:
 
-    ./gradlew jar
-    ls build/libs/beholder*.jar
+    $ ./gradlew jar
+    $ ls build/libs/beholder*.jar
 
 To build a docker container with the jar:
 
-    ./gradlew jar
-    docker build -t beholder .
+    $ docker build -t beholder .
+    $ docker run -ti beholder beholder
+    usage: beholder
+    ...
+
+To use the docker container, mount your config into it as `/etc/beholder/beholder.conf`.

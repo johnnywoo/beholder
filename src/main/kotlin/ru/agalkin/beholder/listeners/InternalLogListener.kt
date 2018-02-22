@@ -1,25 +1,12 @@
 package ru.agalkin.beholder.listeners
 
-import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.MessageRouter
+import java.util.concurrent.atomic.AtomicBoolean
 
 class InternalLogListener {
-    val emitterThread = InternalLogEmitterThread()
-
+    val emitterThread = QueueEmitterThread(AtomicBoolean(false), router, "internal-log-emitter")
     init {
-        Beholder.reloadListeners.add(object : Beholder.ReloadListener {
-            override fun before() {
-                // перед тем, как заменять конфиг приложения,
-                // мы хотим поставить раздачу сообщений на паузу
-                emitterThread.isEmitterPaused.set(true)
-            }
-
-            override fun after() {
-                emitterThread.isEmitterPaused.set(false)
-            }
-        })
-
         emitterThread.start()
     }
 
@@ -28,9 +15,11 @@ class InternalLogListener {
 
         private var ignoreAllMessages = true
 
+        private val router = MessageRouter()
+
         fun getMessageRouter(): MessageRouter {
             ignoreAllMessages = false
-            return InternalLogEmitterThread.router
+            return router
         }
 
         fun add(message: Message) {

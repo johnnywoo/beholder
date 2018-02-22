@@ -4,7 +4,7 @@ import org.apache.commons.cli.*
 
 class Cli(args: Array<String>, onParseError: (ParseException) -> Nothing) {
     val isShortHelp: Boolean
-        get() = cliArgs.hasOption("h")
+        get() = cliArgs.hasOption("help")
 
     val isQuiet: Boolean
         get() = cliArgs.hasOption("quiet")
@@ -68,6 +68,7 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Nothing) {
 
         options.addOption(
             Option.builder("h")
+                .longOpt("help")
                 .desc("Show usage")
                 .build()
         )

@@ -7,8 +7,12 @@ import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.SocketTimeoutException
 import java.util.*
+import java.util.concurrent.BlockingQueue
 
-class UdpListenerThread(private val udpListener: UdpListener) : Thread("from-udp-${udpListener.address}-listener") {
+class UdpListenerThread(
+    private val udpListener: UdpListener,
+    private val queue: BlockingQueue<Message>
+) : Thread("from-udp-${udpListener.address}-listener") {
     private val buffer = ByteArray(FROM_UDP_MAX_MESSAGE_CHARS)
 
     override fun run() {
@@ -29,8 +33,8 @@ class UdpListenerThread(private val udpListener: UdpListener) : Thread("from-udp
                 }
 
                 // не даём очереди бесконтрольно расти (вытесняем старые записи)
-                if (udpListener.queue.size > FROM_UDP_MAX_BUFFER_COUNT) {
-                    udpListener.queue.take() // FIFO
+                if (queue.size > FROM_UDP_MAX_BUFFER_COUNT) {
+                    queue.take() // FIFO
                 }
 
                 val message = Message()
@@ -39,7 +43,7 @@ class UdpListenerThread(private val udpListener: UdpListener) : Thread("from-udp
                 message["receivedDate"] = curDateIso()
                 message["from"]         = "udp://${packet.address.hostAddress}:${packet.port}"
 
-                udpListener.queue.offer(message)
+                queue.offer(message)
 
                 UdpListener.updateMaxReceivedPacketSize(packet.length)
             }

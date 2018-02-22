@@ -7,6 +7,7 @@ import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.listeners.InternalLogListener
+import ru.agalkin.beholder.listeners.TcpListener
 import ru.agalkin.beholder.listeners.TimerListener
 import ru.agalkin.beholder.listeners.UdpListener
 
@@ -18,6 +19,10 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             source = when (arguments.shiftAnyLiteral("`from` needs a type of message source")) {
                 "udp" -> UdpSource(Address.fromString(
                     arguments.shiftFixedString("`from udp` needs at least a port number"),
+                    "0.0.0.0"
+                ))
+                "tcp" -> TcpSource(Address.fromString(
+                    arguments.shiftFixedString("`from tcp` needs at least a port number"),
                     "0.0.0.0"
                 ))
                 "timer" -> TimerSource(
@@ -60,7 +65,7 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     private inner class UdpSource(private val address: Address) : Source {
-        val receiver: (Message) -> Unit = { onMessageFromSource(it) }
+        private val receiver: (Message) -> Unit = { onMessageFromSource(it) }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to UDP listener at $address")
@@ -70,6 +75,20 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
             UdpListener.getListener(address).router.removeSubscriber(receiver)
+        }
+    }
+
+    private inner class TcpSource(private val address: Address) : Source {
+        private val receiver: (Message) -> Unit = { onMessageFromSource(it) }
+
+        override fun start() {
+            InternalLog.info("${this::class.simpleName} start: connecting to TCP listener at $address")
+            TcpListener.getListener(address).router.addSubscriber(receiver)
+        }
+
+        override fun stop() {
+            InternalLog.info("${this::class.simpleName} stop: disconnecting from TCP listener at $address")
+            TcpListener.getListener(address).router.removeSubscriber(receiver)
         }
     }
 

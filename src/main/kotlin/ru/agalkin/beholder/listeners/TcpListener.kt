@@ -1,10 +1,7 @@
 package ru.agalkin.beholder.listeners
 
-import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.MessageRouter
+import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.getIsoDateFormatter
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.InterruptedIOException
@@ -15,21 +12,21 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-const val FROM_TCP_MAX_BUFFER_COUNT  = 1000 // messages
-
 class TcpListener(val address: Address) {
     val isListenerDeleted = AtomicBoolean(false)
 
     val router = MessageRouter()
 
-    private val emitterThread = QueueEmitterThread(isListenerDeleted, router, "from-tcp-$address-emitter")
+    private val queue = MessageQueue(ConfigOption.FROM_TCP_BUFFER_MESSAGES_COUNT)
+
+    private val emitterThread = QueueEmitterThread(isListenerDeleted, router, queue, "from-tcp-$address-emitter")
 
     init {
         Beholder.reloadListeners.add(object : Beholder.ReloadListener {
-            override fun before() {
+            override fun before(app: Beholder) {
             }
 
-            override fun after() {
+            override fun after(app: Beholder) {
                 if (!router.hasSubscribers()) {
                    // после перезагрузки конфига оказалось, что листенер никому больше не нужен
                     isListenerDeleted.set(true)
@@ -87,11 +84,6 @@ class TcpListener(val address: Address) {
                         break
                     }
 
-                    // не даём очереди бесконтрольно расти (вытесняем старые записи)
-                    if (emitterThread.queue.size > FROM_TCP_MAX_BUFFER_COUNT) {
-                        emitterThread.queue.take() // FIFO
-                    }
-
                     val remoteSocketAddress = connection.remoteSocketAddress as? InetSocketAddress
 
                     val message = Message()
@@ -100,7 +92,7 @@ class TcpListener(val address: Address) {
                     message["receivedDate"] = curDateIso()
                     message["from"]         = "tcp://${remoteSocketAddress?.address}:${remoteSocketAddress?.port}"
 
-                    emitterThread.queue.offer(message)
+                    queue.add(message)
                 }
             }
         }

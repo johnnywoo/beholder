@@ -1,30 +1,25 @@
 package ru.agalkin.beholder.listeners
 
-import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.MessageRouter
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
+import ru.agalkin.beholder.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 class QueueEmitterThread(
     private val shouldStop: AtomicBoolean,
     private val router: MessageRouter,
+    private val queue: MessageQueue,
     threadName: String
 ) : Thread(threadName) {
-    val queue = LinkedBlockingQueue<Message>()
 
     private val isPaused = AtomicBoolean(false)
 
     private val reloadListener = object : Beholder.ReloadListener {
-        override fun before() {
+        override fun before(app: Beholder) {
             // перед тем, как заменять конфиг приложения,
             // мы хотим поставить приём сообщений на паузу
             isPaused.set(true)
         }
 
-        override fun after() {
+        override fun after(app: Beholder) {
             isPaused.set(false)
         }
     }
@@ -43,7 +38,7 @@ class QueueEmitterThread(
                 continue
             }
 
-            val message = queue.poll(100, TimeUnit.MILLISECONDS) // blocking for 100 millis
+            val message = queue.shift(100) // blocking for 100 millis
             if (message == null) {
                 // за 100 мс ничего не нашли
                 // проверим все условия и поедем ждать заново
@@ -58,8 +53,7 @@ class QueueEmitterThread(
             router.sendMessageToSubscribers(message)
         }
 
-        // на всякий случай, если мы будем перезапускать лисенер, надо тут всё зачистить
-        queue.clear()
+        queue.destroy()
 
         Beholder.reloadListeners.remove(reloadListener)
 

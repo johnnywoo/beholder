@@ -41,16 +41,6 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         arguments.end()
     }
 
-    private fun onMessageFromSource(message: Message) {
-        if (!subcommands.isEmpty()) {
-            // есть детишки = сообщение из нашего источника сначала прогоняется через них
-            subcommands[0].receiveMessage(message)
-        } else {
-            // нет детишек = сообщение напрямую вылезает из команды from
-            receiveMessage(message)
-        }
-    }
-
     override fun start()
         = source.start()
 
@@ -65,7 +55,7 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     private inner class UdpSource(private val address: Address) : Source {
-        private val receiver: (Message) -> Unit = { onMessageFromSource(it) }
+        private val receiver: (Message) -> Unit = { receiveMessage(it) }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to UDP listener at $address")
@@ -79,7 +69,7 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     private inner class TcpSource(private val address: Address) : Source {
-        private val receiver: (Message) -> Unit = { onMessageFromSource(it) }
+        private val receiver: (Message) -> Unit = { receiveMessage(it) }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to TCP listener at $address")
@@ -94,10 +84,10 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
 
     private inner class TimerSource(intervalSeconds: Int) : Source {
         private var secondsToSkip = 0
-        val receiver: (Message) -> Unit = {
+        private val receiver: (Message) -> Unit = {
             if (secondsToSkip <= 0) {
                 secondsToSkip = intervalSeconds
-                onMessageFromSource(it)
+                receiveMessage(it)
             }
             secondsToSkip--
         }
@@ -114,7 +104,7 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     private inner class InternalLogSource : Source {
-        val receiver: (Message) -> Unit = { onMessageFromSource(it) }
+        private val receiver: (Message) -> Unit = { receiveMessage(it) }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to internal log")

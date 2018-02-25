@@ -14,6 +14,8 @@ class Beholder(private val configFile: String?, private val configText: String?,
     fun start() {
         config.start()
         uptimeDate = Date()
+
+        notifyAfter(this)
     }
 
     fun reload() {
@@ -27,13 +29,13 @@ class Beholder(private val configFile: String?, private val configText: String?,
             return
         }
 
-        notifyBefore()
+        notifyBefore(this)
 
         config.stop()
         config = newConfig
         config.start()
 
-        notifyAfter()
+        notifyAfter(this)
     }
 
     private fun readConfig(): Config {
@@ -53,21 +55,21 @@ class Beholder(private val configFile: String?, private val configText: String?,
 
         var uptimeDate: Date? = null
 
-        private fun notifyBefore() {
+        private fun notifyBefore(app: Beholder) {
             for (receiver in reloadListeners) {
-                receiver.before()
+                receiver.before(app)
             }
         }
 
-        private fun notifyAfter() {
+        private fun notifyAfter(app: Beholder) {
             for (receiver in reloadListeners) {
-                receiver.after()
+                receiver.after(app)
             }
         }
     }
 
     interface ReloadListener {
-        fun before()
-        fun after()
+        fun before(app: Beholder)
+        fun after(app: Beholder)
     }
 }

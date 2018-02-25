@@ -1,13 +1,14 @@
 package ru.agalkin.beholder.senders
 
+import ru.agalkin.beholder.ConfigOption
 import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.StringQueue
 import ru.agalkin.beholder.config.Address
 import java.net.DatagramPacket
 import java.net.DatagramSocket
-import java.util.concurrent.LinkedBlockingQueue
 
 class UdpWriterThread(private val address: Address) : Thread("udp-writer-$address") {
-    val queue = LinkedBlockingQueue<String>()
+    val queue = StringQueue(ConfigOption.TO_UDP_BUFFER_MESSAGES_COUNT)
 
     override fun run() {
         InternalLog.info("Thread $name got started")
@@ -16,7 +17,7 @@ class UdpWriterThread(private val address: Address) : Thread("udp-writer-$addres
         val inetAddress = address.getInetAddress()
 
         while (true) {
-            val text = queue.take() // blocking
+            val text = queue.shift(1000) // blocking
             if (text == null) {
                 // почему-то ничего не нашли, надо ждать заново
                 continue

@@ -1,12 +1,12 @@
 package ru.agalkin.beholder.senders
 
+import ru.agalkin.beholder.ConfigOption
 import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.StringQueue
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.readInputStreamAndDiscard
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
@@ -15,7 +15,7 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
     val isWriterPaused = AtomicBoolean(false)
     val isWriterDestroyed = AtomicBoolean(false)
 
-    val queue = LinkedBlockingQueue<String>()
+    val queue = StringQueue(ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT)
 
     val reconnectIntervalSeconds = AtomicInteger()
 
@@ -89,7 +89,7 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
             while (true) {
                 sleepWhilePaused()
 
-                val text = undeliveredText ?: queue.poll(100, TimeUnit.MILLISECONDS) // blocking for 100 millis
+                val text = undeliveredText ?: queue.shift(100) // blocking for 100 millis
                 if (text == null) {
                     if (isWriterDestroyed.get()) {
                         // очередь закончилась и коннект больше не нужен

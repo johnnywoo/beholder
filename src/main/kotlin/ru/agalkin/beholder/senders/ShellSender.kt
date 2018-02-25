@@ -9,11 +9,7 @@ class ShellSender(shellCommand: String) {
     }
 
     fun writeMessagePayload(text: String) {
-        // не даём очереди бесконтрольно расти (вытесняем старые записи)
-        while (writerThread.queue.size > TO_UDP_MAX_BUFFER_COUNT) {
-            writerThread.queue.take() // FIFO
-        }
-        writerThread.queue.offer(text)
+        writerThread.queue.add(text)
     }
 
     fun stop() {

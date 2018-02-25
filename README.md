@@ -100,6 +100,7 @@ Example: `127.0.0.1:1234`.
 * `keep`   — removes unnecessary message fields
 * `parse`  — populates message fields according to some format
 * `to`     — sends messages to destinations
+* settings — global configuration options
 
 
 ### `flow`
@@ -192,6 +193,7 @@ Inside the `flow` messages are consecutively passed between subcommands.
 ### `from`
 
     from udp [<address>:]<port>;
+    from tcp [<address>:]<port>;
     from timer [<n> seconds];
     from internal-log;
 
@@ -219,6 +221,15 @@ Fields produced by `from udp`:
 * `$receivedDate`  — ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
 * `$from`          — URI of packet source (example: udp://1.2.3.4:57733)
 * `$payload`       — Text as received from UDP
+
+`from tcp` reads messages from a TCP server socket. Messages should be terminated by newlines.
+To pass multiline messages over TCP, wrap your messages into a single-line format, like JSON.
+
+Fields produced by `from tcp`:
+
+* `$receivedDate`  — ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
+* `$from`          — URI of packet source (example: tcp://1.2.3.4:57733)
+* `$payload`       — Text as received from TCP
 
 `from timer` emits a minimal message every second.
 It is useful for experimenting with beholder configurations.
@@ -421,6 +432,32 @@ incoming messages before passing them into the script. Test your scripts early!
     while ($f = fgets(STDIN)) {
         file_put_contents('receiver.log', date('r') . ' ' . $f, FILE_APPEND);
     }
+
+
+### Settings
+
+Global settings may be provided at the top level of the config.
+It is done in form of a command.
+
+`from` buffers are used when Beholder cannot process incoming messages quickly enough.
+These buffers hold incoming messages while Beholder is reloading.
+Every source has its own buffer; if you are listening on two different TCP ports,
+Beholder will create a separate buffer for each of those ports.
+
+    from_internal_log_buffer_messages_count 1000;
+    from_tcp_buffer_messages_count 1000;
+    from_udp_buffer_messages_count 1000;
+
+`to` buffers hold messages to be written to a destination. If a destination cannot accept
+new data quickly enough, Beholder will put it into a buffer. When the buffer is full,
+old messages are deleted to make space for new ones.
+Every destination has its own buffer; if you are writing messages into two different files,
+Beholder will create a separate buffer for each of those files.
+
+    to_file_buffer_messages_count 1000;
+    to_shell_buffer_messages_count 1000;
+    to_tcp_buffer_messages_count 1000;
+    to_udp_buffer_messages_count 1000;
 
 
 ## Building Beholder

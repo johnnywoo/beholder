@@ -4,27 +4,21 @@ import ru.agalkin.beholder.Beholder
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
-const val TO_FILE_MAX_BUFFER_COUNT = 1000 // string payloads
-
 class FileSender(file: File) {
     private val fileThread = FileWriterThread(file)
 
     fun writeMessagePayload(text: String) {
-        // не даём очереди бесконтрольно расти (вытесняем старые записи)
-        while (fileThread.queue.size > TO_FILE_MAX_BUFFER_COUNT) {
-            fileThread.queue.take() // FIFO
-        }
-        fileThread.queue.offer(text)
+        fileThread.queue.add(text)
     }
 
     init {
         Beholder.reloadListeners.add(object : Beholder.ReloadListener {
-            override fun before() {
+            override fun before(app: Beholder) {
                 fileThread.isWriterStopped.set(true)
                 fileThread.isReloadNeeded.set(true)
             }
 
-            override fun after()
+            override fun after(app: Beholder)
                 = fileThread.isWriterStopped.set(false)
         })
 

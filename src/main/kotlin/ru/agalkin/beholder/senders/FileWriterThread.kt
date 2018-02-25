@@ -1,18 +1,18 @@
 package ru.agalkin.beholder.senders
 
+import ru.agalkin.beholder.ConfigOption
 import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.StringQueue
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FileWriterThread(private val file: File) : Thread("file-writer-${file.name}") {
     val isWriterStopped = AtomicBoolean(false)
     val isReloadNeeded  = AtomicBoolean(false)
 
-    val queue = LinkedBlockingQueue<String>()
+    val queue = StringQueue(ConfigOption.TO_FILE_BUFFER_MESSAGES_COUNT)
 
     private var bufferedWriter: BufferedWriter? = null
 
@@ -75,7 +75,7 @@ class FileWriterThread(private val file: File) : Thread("file-writer-${file.name
                 Thread.sleep(50)
             }
 
-            val text = queue.poll(100, TimeUnit.MILLISECONDS) // blocking for 100 millis
+            val text = queue.shift(100) // blocking for 100 millis
             if (text == null) {
                 // за 100 мс ничего не нашли
                 // проверим все условия и поедем ждать заново

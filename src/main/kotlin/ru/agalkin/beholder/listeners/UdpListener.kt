@@ -1,12 +1,13 @@
 package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.ConfigOption
+import ru.agalkin.beholder.MessageQueue
 import ru.agalkin.beholder.MessageRouter
 import ru.agalkin.beholder.config.Address
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-const val FROM_UDP_MAX_BUFFER_COUNT  = 1000 // messages
 const val FROM_UDP_MAX_MESSAGE_CHARS = 60 * 1024
 
 class UdpListener(val address: Address) {
@@ -14,15 +15,17 @@ class UdpListener(val address: Address) {
 
     val router = MessageRouter()
 
-    private val emitterThread  = QueueEmitterThread(isListenerDeleted, router, "from-udp-$address-emitter")
-    private val listenerThread = UdpListenerThread(this, emitterThread.queue)
+    private val queue = MessageQueue(ConfigOption.FROM_UDP_BUFFER_MESSAGES_COUNT)
+
+    private val emitterThread  = QueueEmitterThread(isListenerDeleted, router, queue, "from-udp-$address-emitter")
+    private val listenerThread = UdpListenerThread(this, queue)
 
     init {
         Beholder.reloadListeners.add(object : Beholder.ReloadListener {
-            override fun before() {
+            override fun before(app: Beholder) {
             }
 
-            override fun after() {
+            override fun after(app: Beholder) {
                 if (!router.hasSubscribers()) {
                    // после перезагрузки конфига оказалось, что листенер никому больше не нужен
                     isListenerDeleted.set(true)

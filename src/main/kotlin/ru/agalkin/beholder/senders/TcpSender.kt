@@ -5,26 +5,21 @@ import ru.agalkin.beholder.config.Address
 import java.util.concurrent.ConcurrentHashMap
 
 const val TO_TCP_CONNECT_TIMEOUT_MILLIS = 2000
-const val TO_TCP_MAX_BUFFER_COUNT = 1000 // string payloads
 
 class TcpSender(address: Address) {
     private val writerThread = TcpWriterThread(address)
 
     fun writeMessagePayload(text: String) {
-        // не даём очереди бесконтрольно расти (вытесняем старые записи)
-        while (writerThread.queue.size > TO_TCP_MAX_BUFFER_COUNT) {
-            writerThread.queue.take() // FIFO
-        }
-        writerThread.queue.offer(text)
+        writerThread.queue.add(text)
     }
 
     init {
         Beholder.reloadListeners.add(object : Beholder.ReloadListener {
-            override fun before() {
+            override fun before(app: Beholder) {
                 writerThread.isWriterPaused.set(true)
             }
 
-            override fun after() {
+            override fun after(app: Beholder) {
                 writerThread.isWriterPaused.set(false)
 
                 // Пока система работает, она пытается переподключить тухлое соединение

@@ -1,16 +1,12 @@
 package ru.agalkin.beholder.senders
 
-import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.readInputStreamAndDiscard
-import ru.agalkin.beholder.substringUpTo
+import ru.agalkin.beholder.*
 import java.io.File
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 class ShellWriterThread(private val shellCommand: String) : Thread("shell-writer-${getCommandDescription(shellCommand)}") {
-    val queue = LinkedBlockingQueue<String>()
+    val queue = StringQueue(ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT)
 
     val isWriterDestroyed = AtomicBoolean(false)
 
@@ -68,7 +64,7 @@ class ShellWriterThread(private val shellCommand: String) : Thread("shell-writer
 
         process.outputStream.use { outputStream ->
             while (true) {
-                val text = undeliveredText ?: queue.poll(100, TimeUnit.MILLISECONDS) // blocking for 100 millis
+                val text = undeliveredText ?: queue.shift(100) // blocking for 100 millis
                 if (text == null) {
                     // за 100 мс ничего не нашли
                     // проверим isWriterDestroyed и поедем ждать заново

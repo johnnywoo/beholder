@@ -3,8 +3,6 @@ package ru.agalkin.beholder.senders
 import ru.agalkin.beholder.config.Address
 import java.util.concurrent.ConcurrentHashMap
 
-const val TO_UDP_MAX_BUFFER_COUNT = 1000 // string payloads
-
 class UdpSender(address: Address) {
     private val writerThread = UdpWriterThread(address)
     init {
@@ -12,11 +10,7 @@ class UdpSender(address: Address) {
     }
 
     fun writeMessagePayload(text: String) {
-        // не даём очереди бесконтрольно расти (вытесняем старые записи)
-        while (writerThread.queue.size > TO_UDP_MAX_BUFFER_COUNT) {
-            writerThread.queue.take() // FIFO
-        }
-        writerThread.queue.offer(text)
+        writerThread.queue.add(text)
     }
 
     companion object {

@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.config
 
+import ru.agalkin.beholder.ConfigOption
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.expressions.RootCommand
 import ru.agalkin.beholder.config.parser.Token
@@ -42,5 +43,8 @@ class Config(configText: String, configSourceDescription: String) {
 
     fun stop()
         = root.stop()
-}
 
+    fun getIntOption(name: ConfigOption): Int {
+        return root.optionValues[name] as Int
+    }
+}

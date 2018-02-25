@@ -2,16 +2,16 @@ package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.MessageQueue
 import ru.agalkin.beholder.getIsoDateFormatter
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.SocketTimeoutException
 import java.util.*
-import java.util.concurrent.BlockingQueue
 
 class UdpListenerThread(
     private val udpListener: UdpListener,
-    private val queue: BlockingQueue<Message>
+    private val queue: MessageQueue
 ) : Thread("from-udp-${udpListener.address}-listener") {
     private val buffer = ByteArray(FROM_UDP_MAX_MESSAGE_CHARS)
 
@@ -32,18 +32,13 @@ class UdpListenerThread(
                     continue
                 }
 
-                // не даём очереди бесконтрольно расти (вытесняем старые записи)
-                if (queue.size > FROM_UDP_MAX_BUFFER_COUNT) {
-                    queue.take() // FIFO
-                }
-
                 val message = Message()
 
                 message["payload"]      = String(packet.data, 0, packet.length)
                 message["receivedDate"] = curDateIso()
                 message["from"]         = "udp://${packet.address.hostAddress}:${packet.port}"
 
-                queue.offer(message)
+                queue.add(message)
 
                 UdpListener.updateMaxReceivedPacketSize(packet.length)
             }

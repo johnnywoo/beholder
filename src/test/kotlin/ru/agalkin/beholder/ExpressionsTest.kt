@@ -117,12 +117,12 @@ class ExpressionsTest : TestAbstract() {
             |flow {
             |    flow {
             |        from timer;
-            |        set ¥payload '¥receivedDate ¥payload';
+            |        set ¥payload '¥date ¥payload';
             |        to stdout;
             |    }
             |    flow {
             |        from timer;
-            |        set ¥payload '¥receivedDate ¥payload';
+            |        set ¥payload '¥date ¥payload';
             |        to stdout;
             |    }
             |}
@@ -131,12 +131,12 @@ class ExpressionsTest : TestAbstract() {
             |flow {
             |    flow {
             |        from timer;
-            |        set ¥payload '¥receivedDate ¥payload';
+            |        set ¥payload '¥date ¥payload';
             |        to stdout;
             |    }
             |    flow {
             |        from timer;
-            |        set ¥payload '¥receivedDate ¥payload';
+            |        set ¥payload '¥date ¥payload';
             |        to stdout;
             |    }
             |}
@@ -149,12 +149,12 @@ class ExpressionsTest : TestAbstract() {
         assertConfigParses(
             """
             |from timer;
-            |set ¥payload '¥receivedDate ¥payload';
+            |set ¥payload '¥date ¥payload';
             |to stdout;
             |""".trimMargin().replace('¥', '$'),
             """
             |from timer;
-            |set ¥payload '¥receivedDate ¥payload';
+            |set ¥payload '¥date ¥payload';
             |to stdout;
             |""".trimMargin().replace('¥', '$')
         )

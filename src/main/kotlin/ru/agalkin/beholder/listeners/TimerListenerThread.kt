@@ -15,9 +15,9 @@ class TimerListenerThread : Thread("timer-listener") {
             router.sendUniqueMessagesToSubscribers {
                 val message = Message()
 
-                message["receivedDate"]  = curDateIso()
-                message["syslogProgram"] = BEHOLDER_SYSLOG_PROGRAM
-                message["from"]          = TIMER_FROM_FIELD
+                message["date"]    = curDateIso()
+                message["program"] = BEHOLDER_SYSLOG_PROGRAM
+                message["from"]    = TIMER_FROM_FIELD
 
                 val sb = StringBuilder()
                 for (set in messageParts) {

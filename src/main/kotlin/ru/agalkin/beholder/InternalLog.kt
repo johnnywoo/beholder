@@ -69,11 +69,11 @@ class InternalLog {
 
             val message = Message()
 
-            message["receivedDate"]   = getIsoDate()
-            message["from"]           = "beholder://internal-log"
-            message["payload"]        = text
-            message["syslogProgram"]  = BEHOLDER_SYSLOG_PROGRAM
-            message["syslogSeverity"] = severity.getNumberAsString()
+            message["date"]     = getIsoDate()
+            message["from"]     = "beholder://internal-log"
+            message["payload"]  = text
+            message["program"]  = BEHOLDER_SYSLOG_PROGRAM
+            message["severity"] = severity.getNumberAsString()
 
             InternalLogListener.add(message)
         }

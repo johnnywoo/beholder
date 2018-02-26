@@ -72,7 +72,7 @@ Backslashes prefixing any other characters are stripped off.
 Quoted strings may contain message field names, which are replaced with their values.
 Some arguments to certain commands do not allow field names; be sure to validate your configs.
 
-    'date: $receivedDate payload: $payload'
+    'date: $date payload: $payload'
 
 Field names consist of alphanumeric characters (case-sensitive) and underscores.
 Field names cannot start with numbers.
@@ -148,7 +148,7 @@ Some use cases of `flow`:
 
       flow out { from udp 1001; parse syslog; }
       flow out { from udp 1002; parse json; }
-      to file '$syslogHost.log';
+      to file '$host.log';
 
 Message routing for `flow` in default mode:
 
@@ -218,18 +218,17 @@ To receive messages in different formats from different sources, use `flow out`.
 
 Fields produced by `from udp`:
 
-* `$receivedDate`  — ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
-* `$from`          — URI of packet source (example: udp://1.2.3.4:57733)
-* `$payload`       — Text as received from UDP
+* `$date`    — ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
+* `$from`    — URI of packet source (example: udp://1.2.3.4:57733)
+* `$payload` — Text as received from UDP
 
-`from tcp` reads messages from a TCP server socket. Messages should be terminated by newlines.
-To pass multiline messages over TCP, wrap your messages into a single-line format, like JSON.
+`from tcp` reads messages from a TCP
 
 Fields produced by `from tcp`:
 
-* `$receivedDate`  — ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
-* `$from`          — URI of packet source (example: tcp://1.2.3.4:57733)
-* `$payload`       — Text as received from TCP
+* `$date`    — ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
+* `$from`    — URI of packet source (example: udp://1.2.3.4:57733)
+* `$payload` — Text as received from UDP
 
 `from timer` emits a minimal message every second.
 It is useful for experimenting with beholder configurations.
@@ -241,21 +240,21 @@ You can specify a number of seconds between messages like this:
 
 Fields produced by `from timer`:
 
-* `$receivedDate`  — ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
-* `$from`          — 'beholder://timer'
-* `$syslogProgram` — 'beholder'
-* `$payload`       — A short random message
+* `$date`    — ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
+* `$from`    — 'beholder://timer'
+* `$program` — 'beholder'
+* `$payload` — A short random message
 
 `from internal-log` emits messages from the internal Beholder log. These are the same messages
 Beholder writes to stdout/stderr and its log file (see also CLI options `--log` and `--quiet`).
 
 Fields produced by `from internal-log`:
 
-* `$receivedDate`   — ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
-* `$from`           — 'beholder://internal-log'
-* `$syslogSeverity` — Severity of messages
-* `$syslogProgram`  — 'beholder'
-* `$payload`        — Log message text
+* `$date`     — ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
+* `$from`     — 'beholder://internal-log'
+* `$severity` — Severity of messages
+* `$program`  — 'beholder'
+* `$payload`  — Log message text
 
 
 ### `parse`
@@ -278,11 +277,11 @@ Incoming messages look like this:
 
 Fields produced by `parse syslog`:
 
-* `$syslogFacility`  — numeric syslog facility
-* `$syslogSeverity`  — numeric syslog severity
-* `$syslogHost`      — source host from the message
-* `$syslogProgram`   — program name (nginx calls this "tag")
-* `$payload`         — actual log message (this would've been written to a file by nginx)
+* `$facility` — numeric syslog facility
+* `$severity` — numeric syslog severity
+* `$host`     — source host from the message
+* `$program`  — program name (nginx calls this "tag")
+* `$payload`  — actual log message (this would've been written to a file by nginx)
 
 Format `json`: parses $payload as a JSON object and sets its properties as message fields.
 The JSON object may only contain numbers, strings, booleans and nulls (no nested objects or arrays).
@@ -386,7 +385,7 @@ To format the payload, use `set $payload ...` command.
 
     flow {
         from timer;
-        set $payload '$receivedDate Just a repeating text message';
+        set $payload '$date Just a repeating text message';
         to stdout;
     }
 
@@ -409,7 +408,7 @@ You can use message fields in filenames:
         from udp 1234;
         parse syslog;
         set $payload syslog;
-        to file '/var/log/export/$syslogHost/$syslogProgram.log';
+        to file '/var/log/export/$host/$program.log';
     }
 
 `to udp [<address>:]<port>` sends payloads of messages as UDP packets.

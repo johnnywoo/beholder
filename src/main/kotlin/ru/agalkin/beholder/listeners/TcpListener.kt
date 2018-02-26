@@ -88,9 +88,9 @@ class TcpListener(val address: Address) {
 
                     val message = Message()
 
-                    message["payload"]      = line
-                    message["receivedDate"] = curDateIso()
-                    message["from"]         = "tcp://${remoteSocketAddress?.address}:${remoteSocketAddress?.port}"
+                    message["payload"] = line
+                    message["date"]    = curDateIso()
+                    message["from"]    = "tcp://${remoteSocketAddress?.address}:${remoteSocketAddress?.port}"
 
                     queue.add(message)
                 }

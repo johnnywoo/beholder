@@ -15,10 +15,10 @@ class SyslogInflaterTest : TestAbstract() {
         assertEquals(
             """
                 |¥payload=127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] "GET /api HTTP/1.1" 200 47 "-" "curl/7.38.0"
-                |¥syslogFacility=23
-                |¥syslogSeverity=6
-                |¥syslogHost=vps
-                |¥syslogProgram=nginx
+                |¥facility=23
+                |¥severity=6
+                |¥host=vps
+                |¥program=nginx
                 """.trimMargin().replace('¥', '$'),
             DumpFormatter().formatMessage(processedMessage!!).replace(Regex("^.*\n"), "")
         )

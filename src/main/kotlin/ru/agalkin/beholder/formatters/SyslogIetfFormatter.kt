@@ -16,24 +16,24 @@ class SyslogIetfFormatter : Formatter {
         // <15>1 2017-03-03T09:26:44+00:00 sender-host program-name - - -
         val sb = StringBuilder()
 
-        val facility = message.getIntField("syslogFacility", 1) // 1 = user
-        val severity = message.getIntField("syslogSeverity", 6) // 6 = info
+        val facility = message.getIntField("facility", 1) // 1 = user
+        val severity = message.getIntField("severity", 6) // 6 = info
 
         // header
         sb.append("<").append(facility * 8 + severity).append(">1 ")
 
         // time (received time for now)
-        val date = message.getDateField("receivedDate") ?: Date()
+        val date = message.getDateField("date") ?: Date()
         sb.append(formatDate(date)).append(' ')
 
         // host
-        sb.append(message.getStringField("syslogHost", defaultHost)).append(' ')
+        sb.append(message.getStringField("host", defaultHost)).append(' ')
 
         // program name
-        sb.append(message.getStringField("syslogProgram", "-")).append(' ')
+        sb.append(message.getStringField("program", "-")).append(' ')
 
         // pid
-        sb.append(message.getStringField("syslogPid", "-")).append(' ')
+        sb.append(message.getStringField("pid", "-")).append(' ')
 
         // message id, structured data
         sb.append("- - ")

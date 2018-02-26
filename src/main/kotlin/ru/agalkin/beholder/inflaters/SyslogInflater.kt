@@ -37,19 +37,19 @@ class SyslogInflater : Inflater {
                 val int = Integer.parseInt(priority)
                 // The Priority value is calculated by first multiplying the Facility number by 8
                 // and then adding the numerical value of the Severity.
-                message["syslogFacility"] = (int / 8).toString()
-                message["syslogSeverity"] = (int % 8).toString()
+                message["facility"] = (int / 8).toString()
+                message["severity"] = (int % 8).toString()
             } catch (ignored: NumberFormatException) {}
         }
 
         val host = matcher.group("host")
         if (host != null) {
-            message["syslogHost"] = host
+            message["host"] = host
         }
 
         val tag = matcher.group("tag")
         if (tag != null) {
-            message["syslogProgram"] = tag
+            message["program"] = tag
         }
 
         val headerLength = matcher.end()

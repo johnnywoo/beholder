@@ -222,13 +222,14 @@ Fields produced by `from udp`:
 * `$from`    — URI of packet source (example: udp://1.2.3.4:57733)
 * `$payload` — Text as received from UDP
 
-`from tcp` reads messages from a TCP
+`from tcp` reads messages from a TCP server socket. Messages should be terminated by newlines.
+To transfer multiline messages over TCP, encode them into a single-line format such as JSON.
 
 Fields produced by `from tcp`:
 
 * `$date`    — ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
-* `$from`    — URI of packet source (example: udp://1.2.3.4:57733)
-* `$payload` — Text as received from UDP
+* `$from`    — URI of packet source (example: tcp://1.2.3.4:57733)
+* `$payload` — Text as received from the TCP connection
 
 `from timer` emits a minimal message every second.
 It is useful for experimenting with beholder configurations.
@@ -345,9 +346,7 @@ Functions:
 * `host`    — Current hostname.
 * `env`     — Environment variable value: `set $path env PATH`.
 * `dump`    — Generates a dump payload with all fields of the message.
-* `json`    — Generates a JSON string with all fields of the message.
-               Alternatively you may specify which fields to include:
-               `set $payload json $field $field2`.
+* `json`    — Generates a JSON string with message fields. See below.
 * `prefix-with-length`  — Prefixes payload with its length in bytes
                (for syslog over TCP, see RFC5425 "4.3. Sending Data").
 
@@ -363,6 +362,16 @@ Be aware of double-escaping in replacement strings! Example:
     set $payload replace ~\n~ '\\\\n';
 
 This command converts newlines into `\n` sequences.
+
+`set $payload json` generates a JSON string with all fields of the message.
+Alternatively you may specify which fields to include: `set $payload json $field $field2`.
+Resulting JSON string will not contain any literal newline characters.
+
+    set $animal cat;
+    set $description 'A cat.\nYou should know what a cat is.';
+    set $payload json $animal $description;
+    # Multiline fields will be encoded with escape sequences:
+    # {"animal":"cat","description":"A cat.\nYou should know what a cat is."}
 
 
 ### `keep`

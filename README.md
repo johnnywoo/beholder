@@ -2,6 +2,9 @@
 
 Beholder is a log processor. Its purpose is to receive, process, transfer and export log messages.
 
+WARNING: Beholder has no stable version yet.
+Config syntax, commands, options, behaviour, everything is going to be changed without any backwards compatibility.
+
 ## Usage
 
     usage: beholder

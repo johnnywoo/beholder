@@ -8,4 +8,10 @@ commitNumber="$( git log | wc -l )"
 # removing whitespace
 commitNumber="${commitNumber// /}"
 
-echo "$baseVersion.$commitNumber"
+version="$baseVersion.$commitNumber"
+echo "$version"
+
+if [ "x$1" = "x-t" ]; then
+    git tag "$version"
+    git push origin "$version"
+fi

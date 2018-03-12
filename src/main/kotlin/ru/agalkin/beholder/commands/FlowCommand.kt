@@ -44,34 +44,29 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
             throw BeholderException("Invalid flow configuration: isOpenAtStart and isOpenAtEnd cannot be both enabled")
         }
 
+        if (subcommands.isEmpty()) {
+            return
+        }
+
         // стандартный режим flow (не out и не closed)
-        if (isOpenAtStart && !subcommands.isEmpty()) {
+        if (isOpenAtStart) {
             // вход flow направляем в первую вложенную команду
             val firstCommand = subcommands[0]
-            router.addSubscriber({ firstCommand.receiveMessage(it) })
+            router.addSubscriber(firstCommand::receiveMessage)
         }
 
         // внутри flow команды по очереди обрабатывают сообщения
-        // если команда одна, то соединять будет нечего
-        if (subcommands.size >= 2) {
-            // соединяем команды в конвейер
-            for (i in subcommands.indices) {
-                if (!subcommands.indices.contains(i + 1)) {
-                    continue
-                }
-                val prevCommand = subcommands[i]
-                val nextCommand = subcommands[i + 1]
-
-                // сообщение из первой команды пихаем во вторую, и т.д.
-                prevCommand.router.addSubscriber({ nextCommand.receiveMessage(it) })
-            }
+        // соединяем команды в конвейер
+        for ((prevCommand, nextCommand) in subcommands.zipWithNext()) {
+            // сообщение из первой команды пихаем во вторую, и т.д.
+            prevCommand.router.addSubscriber(nextCommand::receiveMessage)
         }
 
         // режим flow out (не стандартный и не closed)
-        if (isOpenAtEnd && !subcommands.isEmpty()) {
+        if (isOpenAtEnd) {
             // выход последней команды направляем на выход из flow
             val lastCommand = subcommands.last()
-            lastCommand.router.addSubscriber { receiveMessage(it) }
+            lastCommand.router.addSubscriber(::receiveMessage)
         }
 
         super.start()

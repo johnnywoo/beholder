@@ -5,6 +5,26 @@ Beholder is a log processor. Its purpose is to receive, process, transfer and ex
 WARNING: Beholder has no stable version yet.
 Config syntax, commands, options, behaviour, everything is going to be changed without any backwards compatibility.
 
+
+## Building Beholder
+
+A ready-made Docker image is available at https://hub.docker.com/r/johnnywoo/beholder/
+
+To use the docker container, mount your config into it as `/etc/beholder/beholder.conf`.
+
+To build the jar file with all dependencies:
+
+    $ ./gradlew jar
+    $ ls build/libs/beholder*.jar
+
+To build a docker container with the jar:
+
+    $ docker build -t beholder .
+    $ docker run -ti beholder beholder
+    usage: beholder
+    ...
+
+
 ## Usage
 
     usage: beholder
@@ -471,18 +491,3 @@ Beholder will create a separate buffer for each of those files.
     to_udp_buffer_messages_count 1000;
 
 
-## Building Beholder
-
-To build the jar file with all dependencies:
-
-    $ ./gradlew jar
-    $ ls build/libs/beholder*.jar
-
-To build a docker container with the jar:
-
-    $ docker build -t beholder .
-    $ docker run -ti beholder beholder
-    usage: beholder
-    ...
-
-To use the docker container, mount your config into it as `/etc/beholder/beholder.conf`.

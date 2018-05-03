@@ -1,12 +1,12 @@
 package ru.agalkin.beholder
 
-import org.junit.Before
 import org.junit.BeforeClass
 import ru.agalkin.beholder.commands.KeepCommand
 import ru.agalkin.beholder.commands.ParseCommand
 import ru.agalkin.beholder.commands.SetCommand
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.expressions.CommandArguments
+import ru.agalkin.beholder.config.expressions.RootCommand
 import ru.agalkin.beholder.config.parser.ArgumentToken
 import ru.agalkin.beholder.config.parser.LiteralToken
 import ru.agalkin.beholder.config.parser.ParseException
@@ -31,11 +31,24 @@ abstract class TestAbstract {
         }
 
         var processedMessage: Message? = null
-        commandObj.router.addSubscriber { processedMessage = it }
-        commandObj.receiveMessage(message)
+        commandObj.output.addSubscriber { processedMessage = it }
+        commandObj.input(message)
 
         return processedMessage
     }
+
+    protected fun processMessageWithConfig(message: Message, config: String): Message? {
+        val root = RootCommand.fromTokens(Token.getTokens(config, "test-config"))
+        root.start()
+
+        val commandObj = root.subcommands.first()
+
+        var processedMessage: Message? = null
+        commandObj.output.addSubscriber { processedMessage = it }
+        commandObj.input(message)
+
+         return processedMessage
+     }
 
     protected fun getMessageDump(message: Message)
         = DumpFormatter().formatMessage(message).replace(Regex("^.*\n"), "")

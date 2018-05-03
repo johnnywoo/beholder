@@ -54,8 +54,8 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         return if(list.isEmpty()) null else list
     }
 
-    override fun receiveMessage(message: Message) {
+    override fun input(message: Message) {
         message[field] = formatter.formatMessage(message)
-        super.receiveMessage(message)
+        output.sendMessageToSubscribers(message)
     }
 }

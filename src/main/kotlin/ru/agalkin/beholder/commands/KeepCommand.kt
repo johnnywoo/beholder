@@ -23,10 +23,10 @@ class KeepCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         fieldsToKeep = fieldNames
     }
 
-    override fun receiveMessage(message: Message) {
+    override fun input(message: Message) {
         for (field in message.getFields().keys.minus(fieldsToKeep)) {
             message.remove(field)
         }
-        super.receiveMessage(message)
+        output.sendMessageToSubscribers(message)
     }
 }

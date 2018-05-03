@@ -47,7 +47,9 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     override fun stop()
         = source.stop()
 
-
+    override fun input(message: Message) {
+        output.sendMessageToSubscribers(message)
+    }
 
     private interface Source {
         fun start()
@@ -55,7 +57,7 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     private inner class UdpSource(private val address: Address) : Source {
-        private val receiver: (Message) -> Unit = { receiveMessage(it) }
+        private val receiver: (Message) -> Unit = { input(it) }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to UDP listener at $address")
@@ -69,7 +71,7 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     private inner class TcpSource(private val address: Address) : Source {
-        private val receiver: (Message) -> Unit = { receiveMessage(it) }
+        private val receiver: (Message) -> Unit = { input(it) }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to TCP listener at $address")
@@ -87,7 +89,7 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         private val receiver: (Message) -> Unit = {
             if (secondsToSkip <= 0) {
                 secondsToSkip = intervalSeconds
-                receiveMessage(it)
+                input(it)
             }
             secondsToSkip--
         }
@@ -104,7 +106,7 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     private inner class InternalLogSource : Source {
-        private val receiver: (Message) -> Unit = { receiveMessage(it) }
+        private val receiver: (Message) -> Unit = { input(it) }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to internal log")

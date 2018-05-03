@@ -2,9 +2,10 @@ package ru.agalkin.beholder.inflaters
 
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.CommandException
+import ru.agalkin.beholder.formatters.TemplateFormatter
 import java.util.regex.Pattern
 
-class RegexpInflater(private val regexp: Pattern) : Inflater {
+class RegexpInflater(private val regexp: Pattern, private val template: TemplateFormatter = TemplateFormatter.payloadFormatter) : Inflater {
     private val groupNames: Set<String>
 
     init {
@@ -20,7 +21,7 @@ class RegexpInflater(private val regexp: Pattern) : Inflater {
     }
 
     override fun inflateMessageFields(message: Message): Boolean {
-        val matcher = regexp.matcher(message.getPayload())
+        val matcher = regexp.matcher(template.formatMessage(message))
         if (!matcher.find()) {
             return false
         }

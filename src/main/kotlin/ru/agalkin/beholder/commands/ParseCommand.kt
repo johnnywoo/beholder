@@ -26,9 +26,9 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         arguments.end()
     }
 
-    override fun receiveMessage(message: Message) {
+    override fun input(message: Message) {
         if (inflater.inflateMessageFields(message) || shouldKeepUnparsed) {
-            super.receiveMessage(message)
+            output.sendMessageToSubscribers(message)
         }
     }
 }

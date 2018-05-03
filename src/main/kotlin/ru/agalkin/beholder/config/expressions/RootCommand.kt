@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.config.expressions
 
 import ru.agalkin.beholder.ConfigOption
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.commands.FlowCommand
 import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
@@ -42,6 +43,10 @@ class RootCommand : FlowCommand(RootArguments) {
                 }
             }
             arguments.end()
+        }
+
+        override fun input(message: Message) {
+            // Ничего не делаем, тут сообщения не ходят
         }
     }
 }

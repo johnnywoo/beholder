@@ -21,6 +21,8 @@ abstract class TemplateFormatter : Formatter {
             return InterpolateStringFormatter(template)
         }
 
+        val payloadFormatter = create("\$payload")
+
         fun hasTemplates(string: String)
             = regexp.matcher(string).find()
     }

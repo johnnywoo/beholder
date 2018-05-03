@@ -119,10 +119,11 @@ Example: `127.0.0.1:1234`.
 
 * `flow`   — defines flow of messages between commands
 * `from`   — produces messages from some source
+* `to`     — sends messages to destinations
 * `set`    — puts values into message fields
 * `keep`   — removes unnecessary message fields
+* `switch` — conditional processing
 * `parse`  — populates message fields according to some format
-* `to`     — sends messages to destinations
 * settings — global configuration options
 
 
@@ -132,9 +133,9 @@ Example: `127.0.0.1:1234`.
     flow out {<subcommands>}    -- produce results, ignore incoming
     flow closed {<subcommands>} -- ignore everything
 
-Subcommands: `flow`, `from`, `parse`, `set`, `keep`, `to`.
-
 Use this command to create separate flows of messages.
+
+Subcommands: `flow`, `from`, `to`, `set`, `keep`, `switch`, `parse`.
 
 Some use cases of `flow`:
 
@@ -281,55 +282,65 @@ Fields produced by `from internal-log`:
 * `$payload`  — Log message text
 
 
-### `parse`
+### `to`
 
-    parse [keep-unparsed] syslog;
-    parse [keep-unparsed] json;
-    parse [keep-unparsed] ~regexp-with-named-groups~;
-    parse beholder-stats;
+    to stdout;
+    to file <file>;
+    to udp [<address>:]<port>;
+    to tcp [<address>:]<port>;
+    to shell <command>;
 
-This command sets fields on messages according to chosen format.
-If a message cannot be parsed, it will be dropped by default.
-If `keep-unparsed` option is specified, unparsed messages will be kept unchanged.
+This command writes `$payload` field of incoming messages to some destination.
+To format the payload, use `set $payload ...` command.
 
-Format `syslog`: the only syslog variant currently supported is
-a BSD-style syslog format as produced by nginx.
+    flow {
+        from timer;
+        set $payload '$date Just a repeating text message';
+        to stdout;
+    }
 
-Incoming messages look like this:
+This example config will produce messages like these:
 
-    <190>Nov 25 13:46:44 host nginx: <actual log message>
+    2017-11-27T21:14:01+03:00 Just a repeating text message
+    2017-11-27T21:14:02+03:00 Just a repeating text message
+    2017-11-27T21:14:03+03:00 Just a repeating text message
 
-Fields produced by `parse syslog`:
+`to stdout` simply sends payloads of messages into stdout of beholder process.
+A newline is appended to every payload unless it already ends with a newline.
 
-* `$facility` — numeric syslog facility
-* `$severity` — numeric syslog severity
-* `$host`     — source host from the message
-* `$program`  — program name (nginx calls this "tag")
-* `$payload`  — actual log message (this would've been written to a file by nginx)
+`to file <file>` stores payloads of messages into a file.
+A newline is appended to every payload unless it already ends with a newline.
+Relative filenames are resolved from CWD of beholder process.
 
-Format `json`: parses $payload as a JSON object and sets its properties as message fields.
-The JSON object may only contain numbers, strings, booleans and nulls (no nested objects or arrays).
-Boolean values are converted to strings 'true' and 'false'.
+You can use message fields in filenames:
 
-Format `~regexp-with-named-groups~`: if the regexp matches, named groups from it
-become message fields. Group names should not be prefixed with $.
+    flow {
+        from udp 1234;
+        parse syslog;
+        set $payload syslog;
+        to file '/var/log/export/$host/$program.log';
+    }
 
-    parse ~(?<logKind>access|error)~;
+`to udp [<address>:]<port>` sends payloads of messages as UDP packets.
+Default address is 127.0.0.1.
 
-This will produce field $logKind with either 'access' or 'error' as value,
-if either word occurs in $payload. If both words are present, earliest match is used.
+`to tcp [<address>:]<port>` sends payloads of messages over a TCP connection.
+Default address is 127.0.0.1.
+A newline is appended to every payload unless it already ends with a newline.
 
-Format `beholder-stats`: fills the message with internal Beholder stats.
-Use this with `from timer` to create a health log.
+`to shell <command>` sends payloads of messages into a process started with a shell command.
+The command should not exit immediately, but instead keep reading messages from stdin.
+A newline is appended to every payload unless it already ends with a newline.
 
-Fields produced by `parse beholder-stats`:
+Beware of stdin buffering! If your shell command is a bash script, bash will buffer
+incoming messages before passing them into the script. Test your scripts early!
 
-* `$uptimeSeconds`  — Uptime in seconds
-* `$heapBytes`      — Current heap size in bytes (memory usage)
-* `$heapUsedBytes`  — Used memory in the heap
-* `$heapMaxBytes`   — Maximal heap size
-* `$udpMaxBytesIn`  — Maximal size of received UDP packet since last collection of stats
-* `$payload`        — A summary of Beholder stats
+    #!/usr/bin/php
+    <?php
+    // example log receiver script in PHP
+    while ($f = fgets(STDIN)) {
+        file_put_contents('receiver.log', date('r') . ' ' . $f, FILE_APPEND);
+    }
 
 
 ### `set`
@@ -401,68 +412,92 @@ Resulting JSON string will not contain any literal newline characters.
 
     keep $field [$field2 ...]
 
-Removes message fields that are not specified in arguments.
+Only keeps certain fields in the message. All fields that are not specified in arguments are removed.
 
 
-### `to`
+### `switch`
 
-    to stdout;
-    to file <file>;
-    to udp [<address>:]<port>;
-    to tcp [<address>:]<port>;
-    to shell <command>;
-
-This command writes `$payload` field of incoming messages to some destination.
-To format the payload, use `set $payload ...` command.
-
-    flow {
-        from timer;
-        set $payload '$date Just a repeating text message';
-        to stdout;
+    switch 'template with $fields' {
+        case ~regexp~ {
+            <subcommands>
+        }
+        default {
+            <subcommands>
+        }
     }
 
-This example config will produce messages like these:
+Allows conditional processing of messages.
 
-    2017-11-27T21:14:01+03:00 Just a repeating text message
-    2017-11-27T21:14:02+03:00 Just a repeating text message
-    2017-11-27T21:14:03+03:00 Just a repeating text message
+Subcommands of `switch`: `case`, `default`.
 
-`to stdout` simply sends payloads of messages into stdout of beholder process.
-A newline is appended to every payload unless it already ends with a newline.
+Subcommands of `case`/`default`: `flow`, `from`, `to`, `set`, `keep`, `switch`, `parse`.
 
-`to file <file>` stores payloads of messages into a file.
-A newline is appended to every payload unless it already ends with a newline.
-Relative filenames are resolved from CWD of beholder process.
+`case` regexps are matched against the template provided as the argument to `switch`.
+First matching `case` wins: its subcommands receive the message.
+If there was no match, an optional `default` block receives the message.
+There can be multiple `case` blocks, but only one `default`.
 
-You can use message fields in filenames:
+Although `from` subcommand is permitted inside `case`/`default`, its use there is discouraged.
+Messages emitted inside `case`/`default` ignore conditions and are emitted out of `switch`.
 
-    flow {
-        from udp 1234;
-        parse syslog;
-        set $payload syslog;
-        to file '/var/log/export/$host/$program.log';
+If your regexp has named groups, those groups will be placed as fields into the message:
+
+    switch $program {
+        case ~^nginx-(?<kind>access|error)$~ {
+            # $kind now is either 'access' or 'error'
+        }
     }
 
-`to udp [<address>:]<port>` sends payloads of messages as UDP packets.
-Default address is 127.0.0.1.
 
-`to tcp [<address>:]<port>` sends payloads of messages over a TCP connection.
-Default address is 127.0.0.1.
-A newline is appended to every payload unless it already ends with a newline.
+### `parse`
 
-`to shell <command>` sends payloads of messages into a process started with a shell command.
-The command should not exit immediately, but instead keep reading messages from stdin.
-A newline is appended to every payload unless it already ends with a newline.
+    parse [keep-unparsed] syslog;
+    parse [keep-unparsed] json;
+    parse [keep-unparsed] ~regexp-with-named-groups~;
+    parse beholder-stats;
 
-Beware of stdin buffering! If your shell command is a bash script, bash will buffer
-incoming messages before passing them into the script. Test your scripts early!
+This command sets fields on messages according to chosen format.
+If a message cannot be parsed, it will be dropped by default.
+If `keep-unparsed` option is specified, unparsed messages will be kept unchanged.
 
-    #!/usr/bin/php
-    <?php
-    // example log receiver script in PHP
-    while ($f = fgets(STDIN)) {
-        file_put_contents('receiver.log', date('r') . ' ' . $f, FILE_APPEND);
-    }
+Format `syslog`: the only syslog variant currently supported is
+a BSD-style syslog format as produced by nginx.
+
+Incoming messages look like this:
+
+    <190>Nov 25 13:46:44 host nginx: <actual log message>
+
+Fields produced by `parse syslog`:
+
+* `$facility` — numeric syslog facility
+* `$severity` — numeric syslog severity
+* `$host`     — source host from the message
+* `$program`  — program name (nginx calls this "tag")
+* `$payload`  — actual log message (this would've been written to a file by nginx)
+
+Format `json`: parses $payload as a JSON object and sets its properties as message fields.
+The JSON object may only contain numbers, strings, booleans and nulls (no nested objects or arrays).
+Boolean values are converted to strings 'true' and 'false'.
+
+Format `~regexp-with-named-groups~`: if the regexp matches, named groups from it
+become message fields. Group names should not be prefixed with $.
+
+    parse ~(?<logKind>access|error)~;
+
+This will produce field $logKind with either 'access' or 'error' as value,
+if either word occurs in $payload. If both words are present, earliest match is used.
+
+Format `beholder-stats`: fills the message with internal Beholder stats.
+Use this with `from timer` to create a health log.
+
+Fields produced by `parse beholder-stats`:
+
+* `$uptimeSeconds`  — Uptime in seconds
+* `$heapBytes`      — Current heap size in bytes (memory usage)
+* `$heapUsedBytes`  — Used memory in the heap
+* `$heapMaxBytes`   — Maximal heap size
+* `$udpMaxBytesIn`  — Maximal size of received UDP packet since last collection of stats
+* `$payload`        — A summary of Beholder stats
 
 
 ### Settings

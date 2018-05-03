@@ -7,6 +7,8 @@ import ru.agalkin.beholder.config.expressions.CommandAbstract
 abstract class SwitchBranchCommandAbstract(arguments: Arguments) : CommandAbstract(arguments) {
     override fun createSubcommand(args: Arguments): CommandAbstract?
         = when (args.getCommandName()) {
+            "flow"   -> SwitchCommand(args)
+            "from"   -> FromCommand(args)
             "switch" -> SwitchCommand(args)
             "parse"  -> ParseCommand(args)
             "set"    -> SetCommand(args)

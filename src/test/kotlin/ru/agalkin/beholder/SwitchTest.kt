@@ -22,10 +22,75 @@ class SwitchTest : TestAbstract() {
     @Test
     fun testSwitchWorks() {
         val message = Message()
-        message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithConfig(message, "switch 'cat' { case ~cat~ { set \$animal 'feline' } default { set \$animal 'alien' }}")
+        val processedMessage = processMessageWithConfig(message, "switch 'cat' { case ~cat~ { set \$animal 'feline' } }")
 
         assertEquals("feline", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchMultipleCasesFirstMatch() {
+        val message = Message()
+
+        val processedMessage = processMessageWithConfig(message, "switch 'cat' { case ~cat~ { set \$animal 'feline' } case ~dog~ { set \$animal 'canine' } }")
+
+        assertEquals("feline", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchMultipleCasesMiddleMatch() {
+        val message = Message()
+
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { case ~cat~ { set \$animal 'feline' } case ~dog~ { set \$animal 'canine' } case ~tiger~ { set \$animal 'feline' } }")
+
+        assertEquals("canine", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchMultipleCasesLastMatch() {
+        val message = Message()
+
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { case ~cat~ { set \$animal 'feline' } case ~dog~ { set \$animal 'canine' } }")
+
+        assertEquals("canine", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchDefault() {
+        val message = Message()
+
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { case ~cat~ { set \$animal 'feline' } default { set \$animal 'canine' } }")
+
+        assertEquals("canine", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchEmptyBlock() {
+        val message = Message()
+        message["animal"] = "initial"
+
+        val processedMessage = processMessageWithConfig(message, "switch 'cat' { case ~cat~ {} default { set \$animal 'unknown' } }")
+
+        assertEquals("initial", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchEmptyDefault() {
+        val message = Message()
+        message["animal"] = "initial"
+
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { case ~cat~ {} default { set \$animal 'unknown' } }")
+
+        assertEquals("unknown", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchOnlyDefault() {
+        val message = Message()
+        message["animal"] = "initial"
+
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { default { set \$animal 'unknown' } }")
+
+        assertEquals("unknown", processedMessage!!.getStringField("animal"))
     }
 }

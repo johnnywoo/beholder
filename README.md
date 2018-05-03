@@ -426,7 +426,7 @@ Only keeps certain fields in the message. All fields that are not specified in a
         }
     }
 
-Allows conditional processing of messages.
+This command allows conditional processing of messages.
 
 Subcommands of `switch`: `case`, `default`.
 
@@ -435,7 +435,13 @@ Subcommands of `case`/`default`: `flow`, `from`, `to`, `set`, `keep`, `switch`, 
 `case` regexps are matched against the template provided as the argument to `switch`.
 First matching `case` wins: its subcommands receive the message.
 If there was no match, an optional `default` block receives the message.
-There can be multiple `case` blocks, but only one `default`.
+There can be multiple `case` blocks, but only one `default`, and it must be the last block in `switch`.
+
+If a message does not match any `case` and there is no `default`, the message will be discarded.
+This way `switch` can work as an if-statement:
+
+    switch $host { case ~.~ {} }
+    to stdout; # Only prints messages with non-empty $host
 
 Although `from` subcommand is permitted inside `case`/`default`, its use there is discouraged.
 Messages emitted inside `case`/`default` ignore conditions and are emitted out of `switch`.

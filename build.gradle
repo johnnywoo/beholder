@@ -27,22 +27,6 @@ jar {
         attributes "Main-Class": "ru.agalkin.beholder.MainKt"
     }
 
-    def process = './version.sh -f'.execute()
-    def stdout = new StringBuffer()
-    def stderr = new StringBuffer()
-    process.consumeProcessOutput(stdout, stderr)
-
-    println('--- version detection ---')
-    print(stdout)
-    println('--- /stdout ---')
-    print(stderr)
-    println('--- /stderr ---')
-
-    def exitCode = process.waitFor()
-    if (exitCode != 0) {
-        throw new Exception('Could not execute version.sh, exit code ' + exitCode)
-    }
-
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     }

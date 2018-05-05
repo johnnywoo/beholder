@@ -6,7 +6,11 @@ set -e
 baseVersion="$( grep version build.gradle | head -n 1 | cut -d"'" -f2 )"
 
 # patch version is the number of commits
-commitNumber="$( git rev-list master | wc -l )"
+if [ "x$1" = "x--next" ]; then
+    commitNumber="$( (git rev-list master ; echo) | wc -l )"
+else
+    commitNumber="$( git rev-list master | wc -l )"
+fi
 # removing whitespace
 commitNumber="${commitNumber// /}"
 

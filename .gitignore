@@ -4,5 +4,6 @@
 /out
 
 /beholder.log
+/src/main/resources/version.txt
 
 .DS_Store

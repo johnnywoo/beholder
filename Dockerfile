@@ -7,6 +7,7 @@ RUN set -xe \
     && apt-get dist-upgrade -qq \
     && apt-get install -qqy --no-install-recommends \
         openjdk-9-jdk-headless \
+        git-core \
     && mkdir /var/sources
 
 COPY gradle /var/sources/gradle
@@ -17,9 +18,7 @@ RUN set -xe \
     && cd /var/sources \
     && ./gradlew --no-daemon --version
 
-COPY build.gradle /var/sources/build.gradle
-COPY settings.gradle /var/sources/settings.gradle
-COPY src /var/sources/src
+COPY . /var/sources
 
 RUN set -xe \
     && cd /var/sources \

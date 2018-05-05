@@ -34,6 +34,7 @@ To build a docker container with the jar:
      -l,--log <file>           Internal log file
      -q,--quiet                Do not print internal log into stdout
      -t,--test                 Config test: syntax and minimal validation
+     -v,--version              Show version
 
 ## Recipes
 

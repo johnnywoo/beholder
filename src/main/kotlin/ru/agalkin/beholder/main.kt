@@ -19,6 +19,18 @@ fun main(args: Array<String>) {
 
     if (cli.isShortHelp) {
         cli.printUsage()
+        println("Docs: https://github.com/johnnywoo/beholder")
+        exitProcess(0)
+    }
+
+    if (cli.isVersion) {
+        var version: String
+        try {
+            version = readTextFromResource("version.txt").trim()
+        } catch (e: Throwable) {
+            version = "of unknown version: ${e.message}"
+        }
+        println("beholder $version")
         exitProcess(0)
     }
 

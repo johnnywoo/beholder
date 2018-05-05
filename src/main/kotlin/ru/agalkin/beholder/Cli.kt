@@ -6,6 +6,9 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Nothing) {
     val isShortHelp: Boolean
         get() = cliArgs.hasOption("help")
 
+    val isVersion: Boolean
+        get() = cliArgs.hasOption("version")
+
     val isQuiet: Boolean
         get() = cliArgs.hasOption("quiet")
 
@@ -70,6 +73,13 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Nothing) {
             Option.builder("h")
                 .longOpt("help")
                 .desc("Show usage")
+                .build()
+        )
+
+        options.addOption(
+            Option.builder("v")
+                .longOpt("version")
+                .desc("Show version")
                 .build()
         )
 

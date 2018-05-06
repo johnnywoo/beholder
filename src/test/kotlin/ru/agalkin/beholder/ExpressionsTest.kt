@@ -226,6 +226,68 @@ class ExpressionsTest : TestAbstract() {
         )
     }
 
+    @Test
+    fun testLiteralField() {
+        val message = Message()
+        message["cat"] = "a gray cat"
+
+        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in \$cat")
+        assertEquals("a gray dog", processedMessage?.getStringField("result"))
+    }
+
+    @Test
+    fun testQuotedField() {
+        val message = Message()
+        message["cat"] = "a gray cat"
+
+        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in '\$cat'")
+        assertEquals("a gray dog", processedMessage?.getStringField("result"))
+    }
+
+    @Test
+    fun testDoubleQuotedField() {
+        val message = Message()
+        message["cat"] = "a gray cat"
+
+        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in \"\$cat\"")
+        assertEquals("a gray dog", processedMessage?.getStringField("result"))
+    }
+
+    @Test
+    fun testCurlyBracedLiteralFieldFails() {
+        assertConfigFails(
+            "set \$result replace ~cat~ 'dog' in {\$cat}",
+            "`replace ... in` needs a string: set \$result replace ~cat~ 'dog' in [test-config:1]"
+        )
+    }
+
+    @Test
+    fun testCurlyBracedQuotedField() {
+        val message = Message()
+        message["cat"] = "a gray cat"
+
+        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in '{\$cat}'")
+        assertEquals("a gray dog", processedMessage?.getStringField("result"))
+    }
+
+    @Test
+    fun testCurlyBracedDoubleQuotedField() {
+        val message = Message()
+        message["cat"] = "a gray cat"
+
+        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in \"{\$cat}\"")
+        assertEquals("a gray dog", processedMessage?.getStringField("result"))
+    }
+
+    @Test
+    fun testCurlyBracedFieldWithRemainder() {
+        val message = Message()
+        message["cat"] = "a gray cat"
+
+        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in '{\$cat}astrophe'")
+        assertEquals("a gray dogastrophe", processedMessage?.getStringField("result"))
+    }
+
     private fun dumpTokens(configText: String): String {
         val tokens = Token.getTokens(configText, "test-config")
         val sb = StringBuilder()

@@ -5,7 +5,7 @@ import java.util.regex.Pattern
 
 abstract class TemplateFormatter : Formatter {
     companion object {
-        private val regexp = Pattern.compile("\\$([a-z][a-z0-9_]*)", Pattern.CASE_INSENSITIVE)
+        private val regexp = Pattern.compile("(?>\\{\\$([a-z][a-z0-9_]*)}|\\$([a-z][a-z0-9_]*))", Pattern.CASE_INSENSITIVE)
 
         fun create(template: String): TemplateFormatter {
             // template does not contain any fields
@@ -15,7 +15,7 @@ abstract class TemplateFormatter : Formatter {
             // whole template is $fieldName
             val matcher = regexp.matcher(template)
             if (matcher.matches()) {
-                return SingleFieldFormatter(matcher.group(1))
+                return SingleFieldFormatter(matcher.group(1) ?: matcher.group(2))
             }
 
             return InterpolateStringFormatter(template)
@@ -38,7 +38,10 @@ abstract class TemplateFormatter : Formatter {
     }
 
     private class InterpolateStringFormatter(private val template: String) : TemplateFormatter() {
-        override fun formatMessage(message: Message): String
-            = regexp.matcher(template).replaceAll({ message.getStringField(it.group(1)) })
+        override fun formatMessage(message: Message): String {
+            return regexp.matcher(template).replaceAll({
+                message.getStringField(it.group(1) ?: it.group(2))
+            })
+        }
     }
 }

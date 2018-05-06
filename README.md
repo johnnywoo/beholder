@@ -98,6 +98,7 @@ Some arguments to certain commands do not allow field names; be sure to validate
 
     'date: $date payload: $payload'
 
+Simple syntax: `'$field'`. To prevent unwanted greediness: `'{$cat}astrophe'`.
 Field names consist of alphanumeric characters (case-sensitive) and underscores.
 Field names cannot start with numbers.
 
@@ -112,6 +113,9 @@ Regexp are written in the form of `~body~modifiers`. Modifiers are optional.
 Literal word is a string of non-whitespace characters that is not a quoted string or regexp.
 Literal words may contain field names, which are replaced with their values.
 There is no escaping in literal words.
+
+Note also that literal `{$field}` is invalid (it will be parsed as subcommand block),
+while `$field` and quoted `'{$field}` are valid.
 
 Example: `127.0.0.1:1234`.
 

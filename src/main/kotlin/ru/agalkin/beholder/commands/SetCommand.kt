@@ -21,6 +21,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             "time" -> TimeFormatter()
             "host" -> HostFormatter()
             "env" -> EnvFormatter(arguments.shiftFixedString("`set ... env` needs an environment variable name"))
+            "basename" -> BasenameFormatter(arguments.shiftStringTemplate("`set ... basename` needs a file path"))
             "json" -> JsonFormatter(nullIfEmpty(scanArgumentsAsFieldNames(arguments, "`set ... json` arguments must be field names")))
             "replace" -> {
                 val regexp = arguments.shiftRegexp("`replace` needs a regexp")

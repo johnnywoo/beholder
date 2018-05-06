@@ -68,3 +68,7 @@ fun readInputStreamAndDiscard(inputStream: InputStream, threadName: String) {
         }
     }
 }
+
+fun defaultString(string: String?, default: String)
+    = if (string != null && !string.isEmpty()) string else default
+

@@ -374,14 +374,16 @@ When given a built-in function, `set` can construct different values for message
 
 Functions:
 
-* `syslog`  — Generates a IETF syslog payload based on syslog-related fields;
-               see `parse syslog` for details.
-* `replace` — String replacement with regexp. See below.
-* `time`    — Current time, e.g. 01:23:45.
-* `host`    — Current hostname.
-* `env`     — Environment variable value: `set $path env PATH`.
-* `dump`    — Generates a dump payload with all fields of the message.
-* `json`    — Generates a JSON string with message fields. See below.
+* `syslog`   — Generates a IETF syslog payload based on syslog-related fields;
+                see `parse syslog` for details.
+* `replace`  — String replacement with regexp. See below.
+* `time`     — Current time, e.g. 01:23:45.
+* `host`     — Current hostname.
+* `env`      — Environment variable value: `set $path env PATH`.
+* `basename` — Last component of a filename: `set $file basename /path/file.ext`.
+                The file does not need to exist. Bad names, e.g. `..`, are replaced with `noname`.
+* `dump`     — Generates a dump payload with all fields of the message.
+* `json`     — Generates a JSON string with message fields. See below.
 * `prefix-with-length`  — Prefixes payload with its length in bytes
                (for syslog over TCP, see RFC5425 "4.3. Sending Data").
 

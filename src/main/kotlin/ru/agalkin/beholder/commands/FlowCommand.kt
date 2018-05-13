@@ -13,6 +13,7 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
             "parse"  -> ParseCommand(args)
             "set"    -> SetCommand(args)
             "keep"   -> KeepCommand(args)
+            "drop"   -> DropCommand(args)
             "to"     -> ToCommand(args)
             else     -> null
         }

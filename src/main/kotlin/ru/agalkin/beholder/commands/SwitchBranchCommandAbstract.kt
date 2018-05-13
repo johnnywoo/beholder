@@ -13,6 +13,7 @@ abstract class SwitchBranchCommandAbstract(arguments: Arguments) : CommandAbstra
             "parse"  -> ParseCommand(args)
             "set"    -> SetCommand(args)
             "keep"   -> KeepCommand(args)
+            "drop"   -> DropCommand(args)
             "to"     -> ToCommand(args)
             else     -> null
         }

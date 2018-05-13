@@ -16,6 +16,7 @@ Config syntax, commands, options, behaviour, everything is going to be changed w
    + [`to`](#to)
    + [`set`](#set)
    + [`keep`](#keep)
+   + [`drop`](#drop)
    + [`switch`](#switch)
    + [`parse`](#parse)
    + [Settings](#settings)
@@ -141,6 +142,7 @@ Example: `127.0.0.1:1234`.
 * `to`     — sends messages to destinations
 * `set`    — puts values into message fields
 * `keep`   — removes unnecessary message fields
+* `drop`   — removes the message altogether
 * `switch` — conditional processing
 * `parse`  — populates message fields according to some format
 * settings — global configuration options
@@ -154,7 +156,7 @@ Example: `127.0.0.1:1234`.
 
 Use this command to create separate flows of messages.
 
-Subcommands: `flow`, `from`, `to`, `set`, `keep`, `switch`, `parse`.
+Subcommands: `flow`, `from`, `to`, `set`, `keep`, `drop`, `switch`, `parse`.
 
 Some use cases of `flow`:
 
@@ -435,6 +437,29 @@ Resulting JSON string will not contain any literal newline characters.
 Only keeps certain fields in the message. All fields that are not specified in arguments are removed.
 
 
+### `drop`
+
+    drop
+
+Drops the message from processing. Useful inside `switch`:
+
+    switch $format {
+        case ~json~ {
+            parse json;
+            # message gets out of `switch` into messages.log
+        }
+        case ~syslog~ {
+            parse syslog;
+            # message gets out of `switch` into messages.log
+        }
+        case ~special-case~ {
+            to udp 1234;
+            drop; # message does not go to messages.log
+        }
+    }
+    to file messages.log;
+
+
 ### `switch`
 
     switch 'template with $fields' {
@@ -450,7 +475,7 @@ This command allows conditional processing of messages.
 
 Subcommands of `switch`: `case`, `default`.
 
-Subcommands of `case`/`default`: `flow`, `from`, `to`, `set`, `keep`, `switch`, `parse`.
+Subcommands of `case`/`default`: `flow`, `from`, `to`, `set`, `keep`, `drop`, `switch`, `parse`.
 
 `case` regexps are matched against the template provided as the argument to `switch`.
 First matching `case` wins: its subcommands receive the message.

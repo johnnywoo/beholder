@@ -3,6 +3,7 @@ package ru.agalkin.beholder.listeners
 import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
 import java.io.BufferedReader
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.InterruptedIOException
 import java.net.InetSocketAddress
@@ -84,11 +85,12 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
         override fun run() {
             while (!isListenerDeleted.get()) {
                 try {
-                    val connection = socket.accept()
-                    if (isSyslogFrame) {
-                        SyslogFrameConnectionThread(connection).start()
-                    } else {
-                        NewlineTerminatedConnectionThread(connection).start()
+                    socket.accept().use { connection ->
+                        if (isSyslogFrame) {
+                            SyslogFrameConnectionThread(connection).start()
+                        } else {
+                            NewlineTerminatedConnectionThread(connection).start()
+                        }
                     }
                 } catch (ignored: InterruptedIOException) {
                     // ждём кусками по 50 мс, чтобы проверять isListenerDeleted
@@ -126,7 +128,7 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
                     val input = InputStreamReader(inputStream)
                     while (true) {
                         val length = readLength(input)
-                        val data = readData(input, length)
+                        val data = readData(inputStream, length)
 
                         createMessage(data)
                     }
@@ -157,13 +159,12 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
             throw BeholderException("TCP syslog-frame: could not read length of frame, received '$sb'")
         }
 
-        private fun readData(input: InputStreamReader, length: Int): String {
-            val buffer = CharBuffer.allocate(length)
-            buffer.rewind()
-            if (input.read(buffer) != length) {
+        private fun readData(input: InputStream, length: Int): String {
+            val buffer = ByteArray(length)
+            if (input.readNBytes(buffer, 0, length) != length) {
                 throw BeholderException("TCP listener: could not read expected $length bytes of data")
             }
-            return buffer.toString()
+            return buffer.toString(Charsets.UTF_8)
         }
     }
 

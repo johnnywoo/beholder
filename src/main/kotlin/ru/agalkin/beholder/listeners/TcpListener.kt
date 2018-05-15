@@ -8,11 +8,12 @@ import java.io.InterruptedIOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
+import java.nio.CharBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-class TcpListener(val address: Address) {
+class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
     val isListenerDeleted = AtomicBoolean(false)
 
     val router = MessageRouter()
@@ -42,6 +43,20 @@ class TcpListener(val address: Address) {
 
     companion object {
         private val listeners = ConcurrentHashMap<Address, TcpListener>()
+        private val listenerModes = ConcurrentHashMap<Address, Boolean>()
+
+        fun setListenerMode(address: Address, isSyslogFrame: Boolean): Boolean {
+            synchronized(listenerModes) {
+                if (listenerModes.containsKey(address)) {
+                    if (listenerModes[address] != isSyslogFrame) {
+                        return false
+                    }
+                } else {
+                    listenerModes[address] = isSyslogFrame
+                }
+            }
+            return true
+        }
 
         fun getListener(address: Address): TcpListener {
             val listener = listeners[address]
@@ -49,7 +64,11 @@ class TcpListener(val address: Address) {
                 return listener
             }
             synchronized(listeners) {
-                val newListener = listeners[address] ?: TcpListener(address)
+                val isSyslogFrame = listenerModes[address]
+                if (isSyslogFrame == null) {
+                    throw BeholderException("TCP listener: invalid initialization order")
+                }
+                val newListener = listeners[address] ?: TcpListener(address, isSyslogFrame)
                 listeners[address] = newListener
                 return newListener
             }
@@ -66,7 +85,11 @@ class TcpListener(val address: Address) {
             while (!isListenerDeleted.get()) {
                 try {
                     val connection = socket.accept()
-                    ConnectionThread(connection).start()
+                    if (isSyslogFrame) {
+                        SyslogFrameConnectionThread(connection).start()
+                    } else {
+                        NewlineTerminatedConnectionThread(connection).start()
+                    }
                 } catch (ignored: InterruptedIOException) {
                     // ждём кусками по 50 мс, чтобы проверять isListenerDeleted
                 }
@@ -74,27 +97,17 @@ class TcpListener(val address: Address) {
         }
     }
 
-    inner class ConnectionThread(private val connection: Socket) : Thread() {
-        override fun run() {
-            connection.getInputStream().use { inputStream ->
-                val input = BufferedReader(InputStreamReader(inputStream))
-                while (true) {
-                    val line = input.readLine()
-                    if (line == null) {
-                        break
-                    }
+    abstract inner class ConnectionThreadAbstract(private val connection: Socket) : Thread() {
+        protected fun createMessage(data: String) {
+            val remoteSocketAddress = connection.remoteSocketAddress as? InetSocketAddress
 
-                    val remoteSocketAddress = connection.remoteSocketAddress as? InetSocketAddress
+            val message = Message()
 
-                    val message = Message()
+            message["payload"] = data
+            message["date"]    = curDateIso()
+            message["from"]    = "tcp://${remoteSocketAddress?.address}:${remoteSocketAddress?.port}"
 
-                    message["payload"] = line
-                    message["date"]    = curDateIso()
-                    message["from"]    = "tcp://${remoteSocketAddress?.address}:${remoteSocketAddress?.port}"
-
-                    queue.add(message)
-                }
-            }
+            queue.add(message)
         }
 
         // 2017-11-26T16:16:01+03:00
@@ -103,5 +116,74 @@ class TcpListener(val address: Address) {
 
         private fun curDateIso(): String
             = formatter.format(Date())
+
+    }
+
+    inner class SyslogFrameConnectionThread(private val connection: Socket) : ConnectionThreadAbstract(connection) {
+        override fun run() {
+            try {
+                connection.getInputStream().use { inputStream ->
+                    val input = InputStreamReader(inputStream)
+                    while (true) {
+                        val length = readLength(input)
+                        val data = readData(input, length)
+
+                        createMessage(data)
+                    }
+                }
+            } catch (e: Throwable) {
+                InternalLog.exception(e)
+            }
+        }
+
+        private fun readLength(input: InputStreamReader): Int {
+            val sb = StringBuilder()
+            val buffer = CharBuffer.allocate(1)
+            buffer.rewind()
+            while (input.read(buffer) > 0) {
+                val char = buffer[0]
+                buffer.rewind()
+
+                if (char == ' ') {
+                    return sb.toString().toInt()
+                }
+
+                if (char in '0'..'9') {
+                    sb.append(char)
+                } else {
+                    throw BeholderException("TCP syslog-frame: invalid char in length prefix '$char'")
+                }
+            }
+            throw BeholderException("TCP syslog-frame: could not read length of frame, received '$sb'")
+        }
+
+        private fun readData(input: InputStreamReader, length: Int): String {
+            val buffer = CharBuffer.allocate(length)
+            buffer.rewind()
+            if (input.read(buffer) != length) {
+                throw BeholderException("TCP listener: could not read expected $length bytes of data")
+            }
+            return buffer.toString()
+        }
+    }
+
+    inner class NewlineTerminatedConnectionThread(private val connection: Socket) : ConnectionThreadAbstract(connection) {
+        override fun run() {
+            try {
+                connection.getInputStream().use { inputStream ->
+                    val input = BufferedReader(InputStreamReader(inputStream))
+                    while (true) {
+                        val line = input.readLine()
+                        if (line == null) {
+                            break
+                        }
+
+                        createMessage(line)
+                    }
+                }
+            } catch (e: Throwable) {
+                InternalLog.exception(e)
+            }
+        }
     }
 }

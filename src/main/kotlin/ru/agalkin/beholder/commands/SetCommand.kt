@@ -16,7 +16,8 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         val arg = arguments.shiftAnyLiteralOrNull()
         formatter = when (arg) {
             "syslog" -> SyslogIetfFormatter()
-            "prefix-with-length" -> PrefixWithLengthFormatter()
+            "prefix-with-length" -> SyslogFrameFormatter()
+            "syslog-frame" -> SyslogFrameFormatter()
             "dump" -> DumpFormatter()
             "time" -> TimeFormatter()
             "host" -> HostFormatter()

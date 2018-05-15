@@ -238,7 +238,7 @@ Inside the `flow` messages are consecutively passed between subcommands.
 ### `from`
 
     from udp [<address>:]<port>;
-    from tcp [<address>:]<port>;
+    from tcp [<address>:]<port> [as syslog-frame];
     from timer [<n> seconds];
     from internal-log;
 
@@ -275,6 +275,11 @@ Fields produced by `from tcp`:
 * `$date`    — ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
 * `$from`    — URI of packet source (example: tcp://1.2.3.4:57733)
 * `$payload` — Text as received from the TCP connection
+
+Default reading mode for TCP is newline-terminated messages.
+`from tcp ... as syslog-frame` instead reads messages in syslog frame format,
+which is length-space-data (see RFC5425 "4.3. Sending Data").
+Example: `5 hello5 world` encodes two messages with payloads of 'hello' and 'world'.
 
 `from timer` emits a minimal message every second.
 It is useful for experimenting with beholder configurations.
@@ -404,7 +409,7 @@ Functions:
 * `severity-name` — String name of numeric syslog severity. `set $name severity-name $severity [lowercase]`.
 * `dump` — Generates a dump payload with all fields of the message.
 * `json` — Generates a JSON string with message fields. See below.
-* `prefix-with-length` — Prefixes payload with its length in bytes (for syslog over TCP, see RFC5425 "4.3. Sending Data").
+* `syslog-frame` — Prefixes payload with its length in bytes (for syslog over TCP, see RFC5425 "4.3. Sending Data").
 
 `set $field replace <regexp> <replacement> [in <subject>];`
 Takes subject string, replaces all occurences of regexp in it with the replacement,

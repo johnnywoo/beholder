@@ -78,6 +78,13 @@ abstract class Arguments {
         return null
     }
 
+    fun shiftLiteral(word: String, errorMessage: String) {
+        val value = shiftAnyLiteral(errorMessage)
+        if (value != word) {
+            throw CommandException(errorMessage)
+        }
+    }
+
     fun shiftLiteralOrNull(vararg words: String): String? {
         val token = peekNext()
         if (token is LiteralToken && token.getValue() in words) {

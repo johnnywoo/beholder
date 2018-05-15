@@ -21,10 +21,22 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
                     arguments.shiftFixedString("`from udp` needs at least a port number"),
                     "0.0.0.0"
                 ))
-                "tcp" -> TcpSource(Address.fromString(
-                    arguments.shiftFixedString("`from tcp` needs at least a port number"),
-                    "0.0.0.0"
-                ))
+                "tcp" -> {
+                    val address = Address.fromString(
+                        arguments.shiftFixedString("`from tcp` needs at least a port number"),
+                        "0.0.0.0"
+                    )
+
+                    val isSyslogFrame: Boolean
+                    if (arguments.shiftLiteralOrNull("as") != null) {
+                        arguments.shiftLiteral("syslog-frame", "Correct syntax is `from tcp ... as syslog-frame`")
+                        isSyslogFrame = true
+                    } else {
+                        isSyslogFrame = false
+                    }
+
+                    TcpSource(address, isSyslogFrame)
+                }
                 "timer" -> TimerSource(
                     arguments.shiftSuffixedIntOrNull(
                         setOf("second", "seconds"),
@@ -70,8 +82,13 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         }
     }
 
-    private inner class TcpSource(private val address: Address) : Source {
+    private inner class TcpSource(private val address: Address, isSyslogFrame: Boolean) : Source {
         private val receiver: (Message) -> Unit = { input(it) }
+        init {
+            if (!TcpListener.setListenerMode(address, isSyslogFrame)) {
+                throw CommandException("TCP listener for $address cannot be both newline-terminated and syslog-frame")
+            }
+        }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to TCP listener at $address")

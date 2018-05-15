@@ -13,7 +13,7 @@ import ru.agalkin.beholder.Message
  *  APPLICATION-DATA = 1*SYSLOG-FRAME
  *  SYSLOG-FRAME = MSG-LEN SP SYSLOG-MSG
  */
-class PrefixWithLengthFormatter : Formatter {
+class SyslogFrameFormatter : Formatter {
     override fun formatMessage(message: Message): String {
         val payload = message.getPayload()
         val bytes = payload.toByteArray()

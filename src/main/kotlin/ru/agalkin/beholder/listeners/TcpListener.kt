@@ -2,7 +2,6 @@ package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
-import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.InterruptedIOException
@@ -100,14 +99,15 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
     }
 
     abstract inner class ConnectionThreadAbstract(private val connection: Socket) : Thread() {
-        protected fun createMessage(data: String) {
+        protected fun createMessage(data: FieldValue) {
             val remoteSocketAddress = connection.remoteSocketAddress as? InetSocketAddress
 
             val message = Message()
 
-            message["payload"] = data
-            message["date"]    = curDateIso()
-            message["from"]    = "tcp://${remoteSocketAddress?.address}:${remoteSocketAddress?.port}"
+            message.setFieldValue("payload", data)
+
+            message["date"] = curDateIso()
+            message["from"] = "tcp://${remoteSocketAddress?.address}:${remoteSocketAddress?.port}"
 
             queue.add(message)
         }
@@ -130,7 +130,7 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
                         val length = readLength(input)
                         val data = readData(inputStream, length)
 
-                        createMessage(data)
+                        createMessage(FieldValue.fromByteArray(data, data.size))
                     }
                 }
             } catch (e: Throwable) {
@@ -159,12 +159,12 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
             throw BeholderException("TCP syslog-frame: could not read length of frame, received '$sb'")
         }
 
-        private fun readData(input: InputStream, length: Int): String {
+        private fun readData(input: InputStream, length: Int): ByteArray {
             val buffer = ByteArray(length)
             if (input.readNBytes(buffer, 0, length) != length) {
                 throw BeholderException("TCP listener: could not read expected $length bytes of data")
             }
-            return buffer.toString(Charsets.UTF_8)
+            return buffer
         }
     }
 
@@ -172,14 +172,12 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
         override fun run() {
             try {
                 connection.getInputStream().use { inputStream ->
-                    val input = BufferedReader(InputStreamReader(inputStream))
                     while (true) {
-                        val line = input.readLine()
-                        if (line == null) {
-                            break
+                        val data = readInputStreamTerminated(inputStream, '\n')
+                        if (data.isNotEmpty()) {
+                            // do not include the newline in payload
+                            createMessage(FieldValue.fromByteArray(data, data.size - 1))
                         }
-
-                        createMessage(line)
                     }
                 }
             } catch (e: Throwable) {

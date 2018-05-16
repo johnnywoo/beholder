@@ -1,9 +1,6 @@
 package ru.agalkin.beholder.listeners
 
-import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.MessageQueue
-import ru.agalkin.beholder.getIsoDateFormatter
+import ru.agalkin.beholder.*
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.SocketTimeoutException
@@ -34,9 +31,10 @@ class UdpListenerThread(
 
                 val message = Message()
 
-                message["payload"] = String(packet.data, 0, packet.length)
-                message["date"]    = curDateIso()
-                message["from"]    = "udp://${packet.address.hostAddress}:${packet.port}"
+                message.setFieldValue("payload", FieldValue.fromByteArray(packet.data, packet.length))
+
+                message["date"] = curDateIso()
+                message["from"] = "udp://${packet.address.hostAddress}:${packet.port}"
 
                 queue.add(message)
 

@@ -21,7 +21,7 @@ class RegexpInflater(private val regexp: Pattern, private val template: Template
     }
 
     override fun inflateMessageFields(message: Message): Boolean {
-        val matcher = regexp.matcher(template.formatMessage(message))
+        val matcher = regexp.matcher(template.formatMessage(message).toString())
         if (!matcher.find()) {
             return false
         }

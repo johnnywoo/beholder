@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.formatters
 
+import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.getIsoDateFormatter
 import java.net.InetAddress
@@ -12,7 +13,7 @@ class SyslogIetfFormatter : Formatter {
     // хост сам перезагрузится на SIGHUP, потому что мы пересоздадим все команды и их внутренности
     private val defaultHost = InetAddress.getLocalHost().hostName
 
-    override fun formatMessage(message: Message): String {
+    override fun formatMessage(message: Message): FieldValue {
         // <15>1 2017-03-03T09:26:44+00:00 sender-host program-name - - -
         val sb = StringBuilder()
 
@@ -41,7 +42,7 @@ class SyslogIetfFormatter : Formatter {
         // payload
         sb.append(message.getPayload())
 
-        return sb.toString()
+        return FieldValue.fromString(sb.toString())
     }
 
     private val dateFormat = getIsoDateFormatter()

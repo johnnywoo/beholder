@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.formatters
 
+import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Message
 
 /**
@@ -14,13 +15,10 @@ import ru.agalkin.beholder.Message
  *  SYSLOG-FRAME = MSG-LEN SP SYSLOG-MSG
  */
 class SyslogFrameFormatter : Formatter {
-    override fun formatMessage(message: Message): String {
-        val payload = message.getPayload()
-        val bytes = payload.toByteArray()
+    override fun formatMessage(message: Message): FieldValue {
+        val payload = message.getFieldValue("payload")
+        val byteLength = payload.getByteLength()
 
-        val sb = StringBuilder()
-        sb.append(bytes.size).append(' ').append(payload)
-
-        return sb.toString()
+        return payload.prepend("$byteLength ")
     }
 }

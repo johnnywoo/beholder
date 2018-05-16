@@ -1,16 +1,17 @@
 package ru.agalkin.beholder.formatters
 
 import com.google.gson.JsonObject
+import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Message
 
 class JsonFormatter(private val fields: List<String>?) : Formatter {
-    override fun formatMessage(message: Message): String {
-        val keys = fields ?: message.getFields().keys.toList()
+    override fun formatMessage(message: Message): FieldValue {
+        val keys = fields ?: message.getFieldNames()
 
         val jsonObject = JsonObject()
         for (key in keys) {
-            jsonObject.addProperty(key, message.getStringField(key, ""))
+            jsonObject.addProperty(key, message.getStringField(key))
         }
-        return jsonObject.toString()
+        return FieldValue.fromString(jsonObject.toString())
     }
 }

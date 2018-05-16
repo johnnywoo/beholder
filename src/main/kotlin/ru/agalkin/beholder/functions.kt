@@ -69,6 +69,29 @@ fun readInputStreamAndDiscard(inputStream: InputStream, threadName: String) {
     }
 }
 
+/**
+ * Reads bytes from input stream until a terminating char,
+ * returns all received bytes including the terminator.
+ *
+ * This is not very efficient!
+ */
+fun readInputStreamTerminated(input: InputStream, stopAt: Char): ByteArray {
+    val stopAtByte = stopAt.toByte()
+    val bytes = mutableListOf<Byte>()
+    while (true) {
+        val number = input.read()
+        if (number < 0) {
+            break
+        }
+        val byte = number.toByte()
+        bytes.add(byte)
+        if (byte == stopAtByte) {
+            break
+        }
+    }
+    return bytes.toByteArray()
+}
+
 fun defaultString(string: String?, default: String)
     = if (string != null && !string.isEmpty()) string else default
 

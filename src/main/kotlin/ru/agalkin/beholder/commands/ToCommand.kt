@@ -65,7 +65,7 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         private val filenameFormatter = filenameTemplate
 
         override fun write(message: Message) {
-            val sender = FileSender.getSender(filenameFormatter.formatMessage(message))
+            val sender = FileSender.getSender(filenameFormatter.formatMessage(message).toString())
             sender.writeMessagePayload(addNewlineIfNeeded(message.getPayload()))
         }
     }

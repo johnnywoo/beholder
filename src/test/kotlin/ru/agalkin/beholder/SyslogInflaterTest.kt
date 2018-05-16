@@ -20,7 +20,7 @@ class SyslogInflaterTest : TestAbstract() {
                 |¥host=vps
                 |¥program=nginx
                 """.trimMargin().replace('¥', '$'),
-            DumpFormatter().formatMessage(processedMessage!!).replace(Regex("^.*\n"), "")
+            DumpFormatter().formatMessage(processedMessage!!).toString().replace(Regex("^.*\n"), "")
         )
     }
 

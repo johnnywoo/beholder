@@ -37,7 +37,7 @@ class KeepTest : TestAbstract() {
 
         val processedMessage = processMessageWithCommand(message, "keep \$payload")
 
-        assertEquals("payload", processedMessage!!.getFields().keys.joinToString { it })
+        assertEquals("payload", processedMessage!!.getFieldNames().joinToString { it })
     }
 
     @Test
@@ -48,7 +48,7 @@ class KeepTest : TestAbstract() {
 
         val processedMessage = processMessageWithCommand(message, "keep \$payload \$whatever")
 
-        assertEquals("payload", processedMessage!!.getFields().keys.joinToString { it })
+        assertEquals("payload", processedMessage!!.getFieldNames().joinToString { it })
     }
 
     @Test
@@ -60,6 +60,6 @@ class KeepTest : TestAbstract() {
 
         val processedMessage = processMessageWithCommand(message, "keep \$payload \$kind")
 
-        assertEquals("kind,payload", processedMessage!!.getFields().keys.sorted().joinToString(",") { it })
+        assertEquals("kind,payload", processedMessage!!.getFieldNames().sorted().joinToString(",") { it })
     }
 }

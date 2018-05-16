@@ -61,7 +61,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     override fun input(message: Message) {
-        message[field] = formatter.formatMessage(message)
+        message.setFieldValue(field, formatter.formatMessage(message))
         output.sendMessageToSubscribers(message)
     }
 }

@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong
 private val createdMessagesCount = AtomicLong(0)
 
 class Message {
-    private val fields: MutableMap<String, String> = mutableMapOf()
+    private val fields: MutableMap<String, FieldValue> = mutableMapOf()
 
     val messageId = createdMessagesCount.getAndIncrement()
 
@@ -22,22 +22,29 @@ class Message {
         if (value.isEmpty()) {
             fields.remove(field)
         } else {
-            fields[field] = value
+            fields[field] = FieldValue.fromString(value)
         }
+    }
+
+    fun setFieldValue(field: String, value: FieldValue) {
+        fields[field] = value
     }
 
     fun remove(field: String) {
         fields.remove(field)
     }
 
-    fun getFields(): Map<String, String>
-        = fields
+    fun getFieldNames()
+        = fields.keys
 
     fun getPayload()
         = getStringField("payload")
 
     fun getStringField(field: String, default: String = "")
-        = fields[field] ?: default
+        = fields[field]?.toString() ?: default
+
+    fun getFieldValue(field: String)
+        = fields[field] ?: FieldValue.empty
 
     private var dateFormat: SimpleDateFormat? = null
 
@@ -47,12 +54,12 @@ class Message {
             format = getIsoDateFormatter()
             dateFormat = format
         }
-        val string = fields[field]
-        if (string == null) {
+        val fieldValue = fields[field]
+        if (fieldValue == null) {
             return null
         }
         try {
-            return format.parse(string)
+            return format.parse(fieldValue.toString())
         } catch (e: ParseException) {
             return null
         }
@@ -60,12 +67,12 @@ class Message {
 
     fun getIntField(field: String, default: Int): Int {
         try {
-            val string = fields[field]
-            if (string == null) {
+            val fieldValue = fields[field]
+            if (fieldValue == null) {
                 // пустой строки в fields не может быть, мы это проверяем на set()
                 return default
             }
-            return string.toInt()
+            return fieldValue.toString().toInt()
         } catch (e: NumberFormatException) {
             return default
         }

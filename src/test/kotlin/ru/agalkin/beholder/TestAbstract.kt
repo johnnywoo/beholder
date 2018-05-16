@@ -51,7 +51,7 @@ abstract class TestAbstract {
      }
 
     protected fun getMessageDump(message: Message)
-        = DumpFormatter().formatMessage(message).replace(Regex("^.*\n"), "")
+        = DumpFormatter().formatMessage(message).toString().replace(Regex("^.*\n"), "")
 
     protected fun assertConfigParses(fromText: String, toDefinition: String) {
         assertEquals(toDefinition, Config(fromText, "test-config").getDefinition())

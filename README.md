@@ -276,9 +276,10 @@ Fields produced by `from tcp`:
 * `$from`    — URI of packet source (example: tcp://1.2.3.4:57733)
 * `$payload` — Text as received from the TCP connection
 
-Default reading mode for TCP is newline-terminated messages.
+Default reading mode for TCP is newline-terminated messages (\r\n or \n).
 `from tcp ... as syslog-frame` instead reads messages in syslog frame format,
-which is length-space-data (see RFC5425 "4.3. Sending Data").
+which is length-space-data (see RFC5425 "4.3. Sending Data"). Syslog frame will ignore
+any characters not conforming to the length-space-data protocol.
 Example: `5 hello5 world` encodes two messages with payloads of 'hello' and 'world'.
 
 `from timer` emits a minimal message every second.

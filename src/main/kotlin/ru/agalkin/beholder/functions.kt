@@ -64,6 +64,7 @@ fun readInputStreamAndDiscard(inputStream: InputStream, threadName: String) {
                 InternalLog.info("Wrapping inputStream.read(devNull)")
             } catch (ignored: SocketException) {
                 InternalLog.info("inputStream.read(devNull) made exception ${ignored::class.simpleName} ${ignored.message}")
+                break
             }
         }
     }

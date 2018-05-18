@@ -3,12 +3,10 @@ package ru.agalkin.beholder.listeners
 import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
 import java.io.InputStream
-import java.io.InputStreamReader
 import java.io.InterruptedIOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
-import java.nio.CharBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -84,12 +82,11 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
         override fun run() {
             while (!isListenerDeleted.get()) {
                 try {
-                    socket.accept().use { connection ->
-                        if (isSyslogFrame) {
-                            SyslogFrameConnectionThread(connection).start()
-                        } else {
-                            NewlineTerminatedConnectionThread(connection).start()
-                        }
+                    val connection = socket.accept()
+                    if (isSyslogFrame) {
+                        SyslogFrameConnectionThread(connection).start()
+                    } else {
+                        NewlineTerminatedConnectionThread(connection).start()
                     }
                 } catch (ignored: InterruptedIOException) {
                     // ждём кусками по 50 мс, чтобы проверять isListenerDeleted
@@ -124,10 +121,17 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
     inner class SyslogFrameConnectionThread(private val connection: Socket) : ConnectionThreadAbstract(connection) {
         override fun run() {
             try {
-                connection.getInputStream().use { inputStream ->
-                    val input = InputStreamReader(inputStream)
+                connection.use {
+                    val inputStream = connection.getInputStream()
                     while (true) {
-                        val length = readLength(input)
+                        val length = readLength(inputStream)
+                        if (length < 0) {
+                            break
+                        }
+                        if (length == 0) {
+                            continue
+                        }
+
                         val data = readData(inputStream, length)
 
                         createMessage(FieldValue.fromByteArray(data, data.size))
@@ -138,25 +142,27 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
             }
         }
 
-        private fun readLength(input: InputStreamReader): Int {
-            val sb = StringBuilder()
-            val buffer = CharBuffer.allocate(1)
-            buffer.rewind()
-            while (input.read(buffer) > 0) {
-                val char = buffer[0]
-                buffer.rewind()
+        private fun readLength(input: InputStream): Int {
+            var sb = StringBuilder()
+            while (true) {
+                val number = input.read()
+                if (number < 0) {
+                    return -1
+                }
+                val char = number.toChar()
 
                 if (char == ' ') {
                     return sb.toString().toInt()
                 }
 
-                if (char in '0'..'9') {
-                    sb.append(char)
-                } else {
-                    throw BeholderException("TCP syslog-frame: invalid char in length prefix '$char'")
+                if (char !in '0'..'9') {
+                    // ignore invalid chars, start over
+                    sb = StringBuilder()
+                    continue
                 }
+
+                sb.append(char)
             }
-            throw BeholderException("TCP syslog-frame: could not read length of frame, received '$sb'")
         }
 
         private fun readData(input: InputStream, length: Int): ByteArray {
@@ -171,12 +177,20 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
     inner class NewlineTerminatedConnectionThread(private val connection: Socket) : ConnectionThreadAbstract(connection) {
         override fun run() {
             try {
-                connection.getInputStream().use { inputStream ->
+                connection.use {
+                    val inputStream = connection.getInputStream()
                     while (true) {
                         val data = readInputStreamTerminated(inputStream, '\n')
                         if (data.isNotEmpty()) {
                             // do not include the newline in payload
-                            createMessage(FieldValue.fromByteArray(data, data.size - 1))
+                            var newlineLength = 0
+                            if (data[data.size - 1].toChar() == '\n') {
+                                newlineLength++
+                                if (data.size >= 2 && data[data.size - 2].toChar() == '\r') {
+                                    newlineLength++
+                                }
+                            }
+                            createMessage(FieldValue.fromByteArray(data, data.size - newlineLength))
                         }
                     }
                 }

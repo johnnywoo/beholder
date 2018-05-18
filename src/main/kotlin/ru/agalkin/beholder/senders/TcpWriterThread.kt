@@ -104,7 +104,7 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
 
                 sleepWhilePaused()
 
-                outputStream.write(fieldValue.toByteArray())
+                outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
                 outputStream.flush()
 
                 undeliveredText = null

@@ -31,7 +31,8 @@ class UdpListenerThread(
 
                 val message = Message()
 
-                message.setFieldValue("payload", FieldValue.fromByteArray(packet.data, packet.length))
+                val byteArray = ByteArray(packet.length) { packet.data[it] }
+                message.setFieldValue("payload", FieldValue.fromByteArray(byteArray, packet.length))
 
                 message["date"] = curDateIso()
                 message["from"] = "udp://${packet.address.hostAddress}:${packet.port}"

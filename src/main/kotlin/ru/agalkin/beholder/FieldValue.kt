@@ -25,6 +25,16 @@ open class FieldValue(
         return 0
     }
 
+    fun toByteArray(): ByteArray {
+        if (stringValue != null) {
+            return stringValue.toByteArray()
+        }
+        if (byteArrayValue != null) {
+            return byteArrayValue
+        }
+        return byteArrayOf()
+    }
+
     override fun toString(): String {
         if (stringValue != null) {
             return stringValue

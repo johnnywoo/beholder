@@ -116,4 +116,24 @@ class SwitchTest : TestAbstract() {
 
         assertEquals("unknown", processedMessage!!.getStringField("animal"))
     }
+
+    @Test
+    fun testSwitchFlowCaseRouting() {
+        val message = Message()
+        message["animal"] = "initial"
+
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { case ~dog~ { set \$animal 'canine'; flow {set \$animal 'error'} } }")
+
+        assertEquals("canine", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchFlowDefaultRouting() {
+        val message = Message()
+        message["animal"] = "initial"
+
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { default { set \$animal 'unknown'; flow {set \$animal 'error'} } }")
+
+        assertEquals("unknown", processedMessage!!.getStringField("animal"))
+    }
 }

@@ -24,12 +24,10 @@ abstract class SwitchBranchCommandAbstract(arguments: Arguments) : CommandAbstra
         if (subcommands.isEmpty()) {
             // вложенных команд нет = просто копируем сообщения на выход
             output.sendMessageToSubscribers(message)
-            return
+        } else {
+            // вход case / default направляем в первую вложенную команду
+            subcommands[0].input(message)
         }
-
-        // вход case / default направляем в первую вложенную команду
-        val firstCommand = subcommands[0]
-        firstCommand.input(message)
     }
 
     override fun start() {

@@ -1,8 +1,8 @@
 package ru.agalkin.beholder.commands
 
-import ru.agalkin.beholder.BeholderException
 import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.config.expressions.*
+import ru.agalkin.beholder.config.expressions.Arguments
+import ru.agalkin.beholder.config.expressions.CommandAbstract
 
 open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
     override fun createSubcommand(args: Arguments): CommandAbstract?
@@ -43,8 +43,7 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
     override fun input(message: Message) {
         if (isOpenAtStart && !subcommands.isEmpty()) {
             // вход flow направляем в первую вложенную команду
-            val firstCommand = subcommands[0]
-            firstCommand.input(message)
+            subcommands[0].input(message.copy())
         }
 
         // также flow копирует все входящие сообщения на выход
@@ -52,12 +51,6 @@ open class FlowCommand(arguments: Arguments) : CommandAbstract(arguments) {
     }
 
     override fun start() {
-        if (isOpenAtStart && isOpenAtEnd) {
-            // если наш flow открыт с обеих сторон, роутер заклинит в бесконечном цикле
-            // мы так не хотим
-            throw BeholderException("Invalid flow configuration: isOpenAtStart and isOpenAtEnd cannot be both enabled")
-        }
-
         setupConveyor(isOpenAtEnd)
 
         super.start()

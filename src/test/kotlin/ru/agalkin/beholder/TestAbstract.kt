@@ -41,11 +41,9 @@ abstract class TestAbstract {
         val root = RootCommand.fromTokens(Token.getTokens(config, "test-config"))
         root.start()
 
-        val commandObj = root.subcommands.first()
-
         var processedMessage: Message? = null
-        commandObj.output.addSubscriber { processedMessage = it }
-        commandObj.input(message)
+        root.subcommands.last().output.addSubscriber { processedMessage = it }
+        root.subcommands[0].input(message)
 
          return processedMessage
      }

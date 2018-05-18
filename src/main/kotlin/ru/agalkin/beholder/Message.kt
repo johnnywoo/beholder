@@ -37,8 +37,11 @@ class Message {
     fun getFieldNames()
         = fields.keys
 
-    fun getPayload()
-        = getStringField("payload")
+    fun getPayloadString()
+        = getPayloadValue().toString()
+
+    fun getPayloadValue()
+        = getFieldValue("payload")
 
     fun getStringField(field: String, default: String = "")
         = fields[field]?.toString() ?: default

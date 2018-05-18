@@ -40,9 +40,7 @@ class SyslogIetfFormatter : Formatter {
         sb.append("- - ")
 
         // payload
-        sb.append(message.getPayload())
-
-        return FieldValue.fromString(sb.toString())
+        return message.getPayloadValue().prepend(sb.toString())
     }
 
     private val dateFormat = getIsoDateFormatter()

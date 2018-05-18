@@ -1,10 +1,7 @@
 package ru.agalkin.beholder.senders
 
-import ru.agalkin.beholder.ConfigOption
-import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.StringQueue
+import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.readInputStreamAndDiscard
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
@@ -15,7 +12,7 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
     val isWriterPaused = AtomicBoolean(false)
     val isWriterDestroyed = AtomicBoolean(false)
 
-    val queue = StringQueue(ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT)
+    val queue = DataQueue(ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT)
 
     val reconnectIntervalSeconds = AtomicInteger()
 
@@ -71,7 +68,7 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
         }
     }
 
-    private var undeliveredText: String? = null
+    private var undeliveredText: FieldValue? = null
 
     private fun connectAndLoop() {
         Socket().use { socket ->
@@ -89,8 +86,8 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
             while (true) {
                 sleepWhilePaused()
 
-                val text = undeliveredText ?: queue.shift(100) // blocking for 100 millis
-                if (text == null) {
+                val fieldValue = undeliveredText ?: queue.shift(100) // blocking for 100 millis
+                if (fieldValue == null) {
                     if (isWriterDestroyed.get()) {
                         // очередь закончилась и коннект больше не нужен
                         break // ends connectAndLoop()
@@ -103,11 +100,11 @@ class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$addres
                 // если в процессе отправки сообщения будет проблема (исключение),
                 // то в следующий раз надо не брать сообщение из очереди,
                 // а пытаться отправить то же самое второй раз
-                undeliveredText = text
+                undeliveredText = fieldValue
 
                 sleepWhilePaused()
 
-                outputStream.write(text.toByteArray())
+                outputStream.write(fieldValue.toByteArray())
                 outputStream.flush()
 
                 undeliveredText = null

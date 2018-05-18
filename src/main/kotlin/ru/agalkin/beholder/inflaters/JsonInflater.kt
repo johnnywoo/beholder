@@ -11,7 +11,7 @@ class JsonInflater : Inflater {
     override fun inflateMessageFields(message: Message): Boolean {
         val data: JsonObject?
         try {
-            data = gson.fromJson(message.getPayload(), JsonObject::class.java)
+            data = gson.fromJson(message.getPayloadString(), JsonObject::class.java)
         } catch (e: JsonSyntaxException) {
             return false
         }

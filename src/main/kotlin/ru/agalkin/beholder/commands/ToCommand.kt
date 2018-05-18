@@ -1,7 +1,6 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.addNewlineIfNeeded
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
@@ -18,12 +17,29 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     init {
         try {
             destination = when (arguments.shiftAnyLiteral("Destination type was not specified")) {
-                "stdout" -> StdoutDestination()
-                "file"   -> FileDestination(arguments.shiftStringTemplate("`to file` needs a filename"))
-                "udp"    -> UdpDestination(Address.fromString(arguments.shiftFixedString("`to udp` needs at least a port number"), "127.0.0.1"))
-                "tcp"    -> TcpDestination(Address.fromString(arguments.shiftFixedString("`to tcp` needs at least a port number"), "127.0.0.1"))
-                "shell"  -> ShellDestination(arguments.shiftFixedString("`to shell` needs a shell command"))
-                else     -> throw CommandException("Unsupported destination type")
+                "stdout" -> StdoutDestination(TemplateFormatter.payloadFormatter)
+
+                "file" -> FileDestination(
+                    arguments.shiftStringTemplate("`to file` needs a filename"),
+                    TemplateFormatter.payloadFormatter
+                )
+
+                "udp" -> UdpDestination(
+                    Address.fromString(arguments.shiftFixedString("`to udp` needs at least a port number"), "127.0.0.1"),
+                    TemplateFormatter.payloadFormatter
+                )
+
+                "tcp" -> TcpDestination(
+                    Address.fromString(arguments.shiftFixedString("`to tcp` needs at least a port number"), "127.0.0.1"),
+                    TemplateFormatter.payloadFormatter
+                )
+
+                "shell" -> ShellDestination(
+                    arguments.shiftFixedString("`to shell` needs a shell command"),
+                    TemplateFormatter.payloadFormatter
+                )
+
+                else -> throw CommandException("Unsupported destination type")
             }
         } catch (e: Address.AddressException) {
             throw CommandException(e).apply { addSuppressed(e) }
@@ -55,34 +71,36 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         fun stop() {}
     }
 
-    private class StdoutDestination : Destination {
+    private class StdoutDestination(private val template: TemplateFormatter) : Destination {
         override fun write(message: Message) {
-            print(addNewlineIfNeeded(message.getPayload()))
+            print(template.formatMessage(message).withNewlineAtEnd().toString())
         }
     }
 
-    private class FileDestination(filenameTemplate: TemplateFormatter) : Destination {
-        private val filenameFormatter = filenameTemplate
+    private class FileDestination(
+        private val filenameTemplate: TemplateFormatter,
+        private val dataTemplate: TemplateFormatter
+    ) : Destination {
 
         override fun write(message: Message) {
-            val sender = FileSender.getSender(filenameFormatter.formatMessage(message).toString())
-            sender.writeMessagePayload(addNewlineIfNeeded(message.getPayload()))
+            val sender = FileSender.getSender(filenameTemplate.formatMessage(message).toString())
+            sender.writeMessagePayload(dataTemplate.formatMessage(message).withNewlineAtEnd())
         }
     }
 
-    private class UdpDestination(address: Address) : Destination {
+    private class UdpDestination(address: Address, private val template: TemplateFormatter) : Destination {
         private val sender = UdpSender.getSender(address)
 
         override fun write(message: Message) {
-            sender.writeMessagePayload(message.getPayload())
+            sender.writeMessagePayload(template.formatMessage(message))
         }
     }
 
-    private class TcpDestination(address: Address) : Destination {
+    private class TcpDestination(address: Address, private val template: TemplateFormatter) : Destination {
         private val sender = TcpSender.getSender(address)
 
         override fun write(message: Message) {
-            sender.writeMessagePayload(addNewlineIfNeeded(message.getPayload()))
+            sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())
         }
 
         override fun start() {
@@ -94,11 +112,11 @@ class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         }
     }
 
-    private class ShellDestination(shellCommand: String) : Destination {
+    private class ShellDestination(shellCommand: String, private val template: TemplateFormatter) : Destination {
         private val sender = ShellSender.createSender(shellCommand)
 
         override fun write(message: Message) {
-            sender.writeMessagePayload(addNewlineIfNeeded(message.getPayload()))
+            sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())
         }
 
         override fun stop() {

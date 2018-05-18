@@ -5,7 +5,11 @@ import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.formatters.TemplateFormatter
 import java.util.regex.Pattern
 
-class RegexpInflater(private val regexp: Pattern, private val template: TemplateFormatter = TemplateFormatter.payloadFormatter) : Inflater {
+class RegexpInflater(
+    private val regexp: Pattern,
+    private val template: TemplateFormatter = TemplateFormatter.payloadFormatter
+) : Inflater {
+
     private val groupNames: Set<String>
 
     init {

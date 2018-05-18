@@ -16,7 +16,7 @@ import ru.agalkin.beholder.Message
  */
 class SyslogFrameFormatter : Formatter {
     override fun formatMessage(message: Message): FieldValue {
-        val payload = message.getFieldValue("payload")
+        val payload = message.getPayloadValue()
         val byteLength = payload.getByteLength()
 
         return payload.prepend("$byteLength ")

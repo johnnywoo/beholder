@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 class ShellWriterThread(private val shellCommand: String) : Thread("shell-writer-${getCommandDescription(shellCommand)}") {
-    val queue = StringQueue(ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT)
+    val queue = DataQueue(ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT)
 
     val isWriterDestroyed = AtomicBoolean(false)
 
@@ -52,7 +52,7 @@ class ShellWriterThread(private val shellCommand: String) : Thread("shell-writer
         return process
     }
 
-    private var undeliveredText: String? = null
+    private var undeliveredText: FieldValue? = null
 
     private fun startProcessAndLoop() {
         val process = startProcess()
@@ -64,8 +64,8 @@ class ShellWriterThread(private val shellCommand: String) : Thread("shell-writer
 
         process.outputStream.use { outputStream ->
             while (true) {
-                val text = undeliveredText ?: queue.shift(100) // blocking for 100 millis
-                if (text == null) {
+                val fieldValue = undeliveredText ?: queue.shift(100) // blocking for 100 millis
+                if (fieldValue == null) {
                     // за 100 мс ничего не нашли
                     // проверим isWriterDestroyed и поедем ждать заново
                     if (isWriterDestroyed.get()) {
@@ -78,9 +78,9 @@ class ShellWriterThread(private val shellCommand: String) : Thread("shell-writer
                 // если в процессе отправки сообщения будет проблема (исключение),
                 // то в следующий раз надо не брать сообщение из очереди,
                 // а пытаться отправить то же самое второй раз
-                undeliveredText = text
+                undeliveredText = fieldValue
 
-                outputStream.write(text.toByteArray())
+                outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
                 outputStream.flush()
 
                 undeliveredText = null

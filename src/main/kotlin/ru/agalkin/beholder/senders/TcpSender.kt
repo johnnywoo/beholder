@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.config.Address
 import java.util.concurrent.ConcurrentHashMap
 
@@ -9,8 +10,8 @@ const val TO_TCP_CONNECT_TIMEOUT_MILLIS = 2000
 class TcpSender(address: Address) {
     private val writerThread = TcpWriterThread(address)
 
-    fun writeMessagePayload(text: String) {
-        writerThread.queue.add(text)
+    fun writeMessagePayload(fieldValue: FieldValue) {
+        writerThread.queue.add(fieldValue)
     }
 
     init {

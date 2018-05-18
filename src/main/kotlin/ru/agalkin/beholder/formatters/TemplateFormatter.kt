@@ -22,7 +22,7 @@ abstract class TemplateFormatter : Formatter {
             return InterpolateStringFormatter(template)
         }
 
-        val payloadFormatter = create("\$payload")
+        val payloadFormatter: TemplateFormatter = PayloadFormatter()
 
         fun hasTemplates(string: String)
             = regexp.matcher(string).find()
@@ -37,6 +37,11 @@ abstract class TemplateFormatter : Formatter {
     private class SingleFieldFormatter(private val field: String) : TemplateFormatter() {
         override fun formatMessage(message: Message)
             = message.getFieldValue(field)
+    }
+
+    private class PayloadFormatter : TemplateFormatter() {
+        override fun formatMessage(message: Message)
+            = message.getPayloadValue()
     }
 
     private class InterpolateStringFormatter(private val template: String) : TemplateFormatter() {

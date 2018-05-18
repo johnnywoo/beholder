@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.senders
 
+import ru.agalkin.beholder.FieldValue
 import java.util.concurrent.CopyOnWriteArraySet
 
 class ShellSender(shellCommand: String) {
@@ -8,8 +9,8 @@ class ShellSender(shellCommand: String) {
         writerThread.start()
     }
 
-    fun writeMessagePayload(text: String) {
-        writerThread.queue.add(text)
+    fun writeMessagePayload(fieldValue: FieldValue) {
+        writerThread.queue.add(fieldValue)
     }
 
     fun stop() {

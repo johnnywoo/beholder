@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.senders
 
+import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.config.Address
 import java.util.concurrent.ConcurrentHashMap
 
@@ -9,8 +10,8 @@ class UdpSender(address: Address) {
         writerThread.start()
     }
 
-    fun writeMessagePayload(text: String) {
-        writerThread.queue.add(text)
+    fun writeMessagePayload(fieldValue: FieldValue) {
+        writerThread.queue.add(fieldValue)
     }
 
     companion object {

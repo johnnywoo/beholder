@@ -31,6 +31,6 @@ class SyslogInflaterTest : TestAbstract() {
 
         val processedMessage = processMessageWithCommand(message, "parse syslog")
 
-        assertEquals("a\nb", processedMessage!!.getPayload())
+        assertEquals("a\nb", processedMessage!!.getPayloadString())
     }
 }

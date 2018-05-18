@@ -1,14 +1,15 @@
 package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.FieldValue
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 class FileSender(file: File) {
     private val fileThread = FileWriterThread(file)
 
-    fun writeMessagePayload(text: String) {
-        fileThread.queue.add(text)
+    fun writeMessagePayload(value: FieldValue) {
+        fileThread.queue.add(value)
     }
 
     init {

@@ -22,11 +22,11 @@ class FromTcpTest : TestAbstract() {
             return
         }
         assertEquals("date,from,payload", processedMessage.getFieldNames().sorted().joinToString(",") { it })
-        assertEquals(messageText, processedMessage.getPayload())
+        assertEquals(messageText, processedMessage.getPayloadString())
     }
 
     @Test
-    fun testFromTcpMultiple() {
+    fun testFromTcpTwoMessages() {
         val processedMessages = receiveMessagesWithConfig("from tcp 3820", 2) {
             val port = 3820
             Socket().use { socket ->
@@ -36,7 +36,7 @@ class FromTcpTest : TestAbstract() {
         }
 
         assertEquals(2, processedMessages.size)
-        assertEquals("cat", processedMessages[0].getPayload())
-        assertEquals("dog", processedMessages[1].getPayload())
+        assertEquals("cat", processedMessages[0].getPayloadString())
+        assertEquals("dog", processedMessages[1].getPayloadString())
     }
 }

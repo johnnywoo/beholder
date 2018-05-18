@@ -2,7 +2,7 @@ package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.ConfigOption
 import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.StringQueue
+import ru.agalkin.beholder.DataQueue
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -12,7 +12,7 @@ class FileWriterThread(private val file: File) : Thread("file-writer-${file.name
     val isWriterStopped = AtomicBoolean(false)
     val isReloadNeeded  = AtomicBoolean(false)
 
-    val queue = StringQueue(ConfigOption.TO_FILE_BUFFER_MESSAGES_COUNT)
+    val queue = DataQueue(ConfigOption.TO_FILE_BUFFER_MESSAGES_COUNT)
 
     private var bufferedWriter: BufferedWriter? = null
 
@@ -75,8 +75,8 @@ class FileWriterThread(private val file: File) : Thread("file-writer-${file.name
                 Thread.sleep(50)
             }
 
-            val text = queue.shift(100) // blocking for 100 millis
-            if (text == null) {
+            val fieldValue = queue.shift(100) // blocking for 100 millis
+            if (fieldValue == null) {
                 // за 100 мс ничего не нашли
                 // проверим все условия и поедем ждать заново
                 continue
@@ -92,7 +92,7 @@ class FileWriterThread(private val file: File) : Thread("file-writer-${file.name
                 }
 
                 val writer = getWriter()
-                writer?.write(text)
+                writer?.write(fieldValue.toString())
                 writer?.flush()
 
                 if (writer == null) {

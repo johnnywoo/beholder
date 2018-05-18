@@ -20,7 +20,7 @@ class FromUdpTest : TestAbstract() {
             return
         }
         assertEquals("date,from,payload", processedMessage.getFieldNames().sorted().joinToString(",") { it })
-        assertEquals(messageText, processedMessage.getPayload())
+        assertEquals(messageText, processedMessage.getPayloadString())
     }
 
     @Test
@@ -31,7 +31,7 @@ class FromUdpTest : TestAbstract() {
         }
 
         assertEquals(2, processedMessages.size)
-        assertEquals("cat, dog", processedMessages.joinToString(", ") { it.getPayload() })
+        assertEquals("cat, dog", processedMessages.joinToString(", ") { it.getPayloadString() })
     }
 
     @Test
@@ -46,7 +46,7 @@ class FromUdpTest : TestAbstract() {
             return
         }
         assertEquals("date,from,payload", processedMessage.getFieldNames().sorted().joinToString(",") { it })
-        assertEquals(messageText, processedMessage.getPayload())
+        assertEquals(messageText, processedMessage.getPayloadString())
     }
 
     @Test
@@ -92,7 +92,7 @@ class FromUdpTest : TestAbstract() {
         if (processedMessage == null) {
             return
         }
-        assertEquals("cat-dog", processedMessage.getPayload())
+        assertEquals("cat-dog", processedMessage.getPayloadString())
     }
 
     @Test
@@ -106,7 +106,7 @@ class FromUdpTest : TestAbstract() {
         if (processedMessage == null) {
             return
         }
-        assertEquals("a\u0000b-dog", processedMessage.getPayload())
+        assertEquals("a\u0000b-dog", processedMessage.getPayloadString())
     }
 
     @Test
@@ -120,7 +120,7 @@ class FromUdpTest : TestAbstract() {
         if (processedMessage == null) {
             return
         }
-        assertEquals("a�(b-dog", processedMessage.getPayload())
+        assertEquals("a�(b-dog", processedMessage.getPayloadString())
     }
 
     private fun sendToUdp(port: Int, message: String) {

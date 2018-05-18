@@ -48,6 +48,8 @@ open class FieldValue(
     fun prepend(prefix: String): FieldValue
         = ModifiedFieldValue(prefix, this)
 
+    fun withNewlineAtEnd()
+        = FieldValue.fromString(addNewlineIfNeeded(toString()))
 
 
     private class ModifiedFieldValue(

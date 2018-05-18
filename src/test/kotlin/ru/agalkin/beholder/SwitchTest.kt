@@ -20,6 +20,29 @@ class SwitchTest : TestAbstract() {
     }
 
     @Test
+    fun testSwitchFlow() {
+        assertConfigParses(
+            """
+                switch x {
+                    case ~x~ {
+                        flow {drop}
+                    }
+                }
+
+            """,
+            """
+            |switch x {
+            |    case ~x~ {
+            |        flow {
+            |            drop;
+            |        }
+            |    }
+            |}
+            |""".trimMargin()
+        )
+    }
+
+    @Test
     fun testSwitchWorks() {
         val message = Message()
 

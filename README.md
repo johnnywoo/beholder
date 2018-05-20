@@ -16,7 +16,7 @@ Config syntax, commands, options, behaviour, everything is going to be changed w
  * Config commands for message manipulation
    * [`set`](#set) — puts values into message fields
    * [`keep`](#keep) — removes unnecessary message fields
-   * [`drop`](#drop) — removes the message altogether
+   * [`drop`](#drop) — destroys messages
    * [`parse`](#parse) — populates message fields according to some format
  * Config control structures
    * [`flow`](#flow) — creates isolated flows of messages
@@ -158,10 +158,10 @@ Message sources and destinations:
 
 Message manipulation:
 
-* [`set`](#set)`set`    — puts values into message fields
-* [`keep`](#keep)`keep`   — removes unnecessary message fields
-* [`drop`](#drop)`drop`   — removes the message altogether
-* [`parse`](#parse)`parse`  — populates message fields according to some format
+* [`set`](#set) — puts values into message fields
+* [`keep`](#keep) — removes unnecessary message fields
+* [`drop`](#drop) — destroys messages
+* [`parse`](#parse) — populates message fields according to some format
 
 Control structures:
 
@@ -172,7 +172,7 @@ Control structures:
 * [Settings](#settings) — global configuration options
 
 
-### `from`
+### `from` — produces messages from various sources
 
     from udp [<address>:]<port>;
     from tcp [<address>:]<port> [as syslog-frame];
@@ -246,7 +246,7 @@ Fields produced by `from internal-log`:
 * `$payload`  — Log message text
 
 
-### `to`
+### `to` — sends messages to destinations
 
     to stdout;
     to file <file>;
@@ -307,7 +307,7 @@ incoming messages before passing them into the script. Test your scripts early!
     }
 
 
-### `set`
+### `set` — puts values into message fields
 
     set $field 'template with $fields from the message';
     set $field <function> [... function args];
@@ -373,14 +373,14 @@ Resulting JSON string will not contain any literal newline characters.
     # {"animal":"cat","description":"A cat.\nYou should know what a cat is."}
 
 
-### `keep`
+### `keep` — removes unnecessary message fields
 
     keep $field [$field2 ...]
 
 Only keeps certain fields in the message. All fields that are not specified in arguments are removed.
 
 
-### `drop`
+### `drop` — destroys messages
 
     drop
 
@@ -403,7 +403,7 @@ Drops the message from processing. Useful inside `switch`:
     to file messages.log;
 
 
-### `parse`
+### `parse` — populates message fields according to some format
 
     parse [keep-unparsed] syslog;
     parse [keep-unparsed] json;
@@ -454,11 +454,10 @@ Fields produced by `parse beholder-stats`:
 * `$payload`        — A summary of Beholder stats
 
 
-### `flow`
+### `flow` — creates isolated flows of messages
 
     flow {<subcommands>}
 
-Use this command to create separate flows of messages.
 You can think of `flow` as namespaces or visibility scopes.
 
 Subcommands: all commands are allowed.
@@ -488,7 +487,7 @@ Message routing for `flow`:
     to stdout; # receives messages only from port 1001
 
 
-### `tee` — runs commands on copied messages
+### `tee` — applies commands to copies of messages
 
     tee {<subcommands>}
 
@@ -528,7 +527,7 @@ Message routing for `tee`:
     to stdout; # this command receives messages only from port 1001
 
 
-### `join` — outputs messages produced by subcommands
+### `join` — produces messages from subcommands
 
     join {<subcommands>}
 
@@ -553,7 +552,7 @@ Message routing for `join`:
     to stdout; # receives messages from ports 1001 AND 1002
 
 
-### `switch` — conditional processing of messages
+### `switch` — conditional processing
 
     switch 'template with $fields' {
         case ~regexp~ {

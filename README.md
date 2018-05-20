@@ -5,8 +5,8 @@ Beholder is a log processor. Its purpose is to receive, process, transfer and ex
 WARNING: Beholder has no stable version yet.
 Config syntax, commands, options, behaviour, everything is going to be changed without any backwards compatibility.
 
- * [Building Beholder](#building-beholder)
  * [Usage](#usage)
+ * [Building Beholder](#building-beholder)
  * [Recipes](#recipes)
  * [Config structure](#config-structure)
  * [Config syntax](#config-syntax)

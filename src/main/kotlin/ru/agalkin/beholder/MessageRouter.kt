@@ -28,18 +28,22 @@ class MessageRouter {
         // если получатель один, копировать сообщение незачем, пусть меняет inplace
         // тогда мы не будем плодить 5 копий, когда сообщение проходит по очереди через 5 команд
         if (hasExactlyOneSubscriber.get()) {
-            sendUniqueMessagesToSubscribers { message }
+            send { message }
             return
         }
 
         // если получателей несколько, нужно рассылать копии сообщений,
         // чтобы изменения из одного обработчика не пересекались с изменениями в других
-        sendUniqueMessagesToSubscribers { message.copy() }
+        send { message.copy() }
     }
 
-    fun sendUniqueMessagesToSubscribers(producer: () -> Message) {
+    private inline fun send(producer: () -> Message) {
         for (subscriber in subscribers) {
             subscriber(producer())
         }
+    }
+
+    fun sendUniqueMessagesToSubscribers(producer: () -> Message) {
+        send(producer)
     }
 }

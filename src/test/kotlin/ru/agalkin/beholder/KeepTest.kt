@@ -1,7 +1,6 @@
 package ru.agalkin.beholder
 
 import org.junit.Test
-import kotlin.test.assertEquals
 
 class KeepTest : TestAbstract() {
     @Test
@@ -37,7 +36,7 @@ class KeepTest : TestAbstract() {
 
         val processedMessage = processMessageWithCommand(message, "keep \$payload")
 
-        assertEquals("payload", processedMessage!!.getFieldNames().joinToString { it })
+        assertFieldNames(processedMessage, "payload")
     }
 
     @Test
@@ -48,7 +47,7 @@ class KeepTest : TestAbstract() {
 
         val processedMessage = processMessageWithCommand(message, "keep \$payload \$whatever")
 
-        assertEquals("payload", processedMessage!!.getFieldNames().joinToString { it })
+        assertFieldNames(processedMessage, "payload")
     }
 
     @Test
@@ -60,6 +59,6 @@ class KeepTest : TestAbstract() {
 
         val processedMessage = processMessageWithCommand(message, "keep \$payload \$kind")
 
-        assertEquals("kind,payload", processedMessage!!.getFieldNames().sorted().joinToString(",") { it })
+        assertFieldNames(processedMessage, "kind", "payload")
     }
 }

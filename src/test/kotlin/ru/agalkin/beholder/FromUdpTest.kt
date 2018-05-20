@@ -19,7 +19,7 @@ class FromUdpTest : TestAbstract() {
         if (processedMessage == null) {
             return
         }
-        assertEquals("date,from,payload", processedMessage.getFieldNames().sorted().joinToString(",") { it })
+        assertFieldNames(processedMessage, "date", "from", "payload")
         assertEquals(messageText, processedMessage.getPayloadString())
     }
 
@@ -45,7 +45,7 @@ class FromUdpTest : TestAbstract() {
         if (processedMessage == null) {
             return
         }
-        assertEquals("date,from,payload", processedMessage.getFieldNames().sorted().joinToString(",") { it })
+        assertFieldNames(processedMessage, "date", "from", "payload")
         assertEquals(messageText, processedMessage.getPayloadString())
     }
 
@@ -60,7 +60,7 @@ class FromUdpTest : TestAbstract() {
         if (processedMessage == null) {
             return
         }
-        assertEquals("date,from,payload", processedMessage.getFieldNames().sorted().joinToString(",") { it })
+        assertFieldNames(processedMessage, "date", "from", "payload")
         assertByteArraysEqual(messageBytes, messageBytes.slice(0 until messageBytes.size).toByteArray())
         assertByteArraysEqual(messageBytes, getByteArrayField(processedMessage, "payload"))
     }
@@ -76,7 +76,7 @@ class FromUdpTest : TestAbstract() {
         if (processedMessage == null) {
             return
         }
-        assertEquals("date,from,payload", processedMessage.getFieldNames().sorted().joinToString(",") { it })
+        assertFieldNames(processedMessage, "date", "from", "payload")
         assertByteArraysEqual(messageBytes, messageBytes.slice(0 until messageBytes.size).toByteArray())
         assertByteArraysEqual(messageBytes, getByteArrayField(processedMessage, "payload"))
     }

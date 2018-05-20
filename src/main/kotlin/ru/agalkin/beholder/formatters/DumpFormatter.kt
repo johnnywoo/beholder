@@ -7,7 +7,7 @@ class DumpFormatter : Formatter {
     override fun formatMessage(message: Message): FieldValue {
         val sb = StringBuilder()
         sb.append('#').append(message.messageId)
-        for (field in message.getFieldNames()) {
+        for (field in message.getFieldNames().sorted()) {
             sb.append("\n$").append(field).append('=').append(message.getStringField(field))
         }
         return FieldValue.fromString(sb.toString())

@@ -14,12 +14,12 @@ class SyslogInflaterTest : TestAbstract() {
 
         assertEquals(
             """
-                |¥payload=127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] "GET /api HTTP/1.1" 200 47 "-" "curl/7.38.0"
-                |¥facility=23
-                |¥severity=6
-                |¥host=vps
-                |¥program=nginx
-                """.trimMargin().replace('¥', '$'),
+            |¥facility=23
+            |¥host=vps
+            |¥payload=127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] "GET /api HTTP/1.1" 200 47 "-" "curl/7.38.0"
+            |¥program=nginx
+            |¥severity=6
+            """.trimMargin().replace('¥', '$'),
             DumpFormatter().formatMessage(processedMessage!!).toString().replace(Regex("^.*\n"), "")
         )
     }

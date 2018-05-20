@@ -6,7 +6,7 @@ import ru.agalkin.beholder.Message
 
 class JsonFormatter(private val fields: List<String>?) : Formatter {
     override fun formatMessage(message: Message): FieldValue {
-        val keys = fields ?: message.getFieldNames()
+        val keys = fields ?: message.getFieldNames().sorted()
 
         val jsonObject = JsonObject()
         for (key in keys) {

@@ -13,8 +13,10 @@ class RegexpInflaterTest : TestAbstract() {
         val parsedMessage = processMessageWithCommand(message, "parse ~(?<animal>cat|dog)~")
 
         assertEquals(
-            "\$payload=We've got cats and dogs\n" +
-                "\$animal=cat",
+            """
+            |¥animal=cat
+            |¥payload=We've got cats and dogs
+            """.trimMargin().replace('¥', '$'),
             getMessageDump(parsedMessage!!)
         )
     }
@@ -65,8 +67,10 @@ class RegexpInflaterTest : TestAbstract() {
         val parsedMessage = processMessageWithCommand(message, "parse keep-unparsed ~(?<animal>whale)~")
 
         assertEquals(
-            "\$payload=We've got cats and dogs\n" +
-                "\$animal=headcrab",
+            """
+            |¥animal=headcrab
+            |¥payload=We've got cats and dogs
+            """.trimMargin().replace('¥', '$'),
             getMessageDump(parsedMessage!!)
         )
     }

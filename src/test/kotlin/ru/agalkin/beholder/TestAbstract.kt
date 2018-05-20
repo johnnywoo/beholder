@@ -13,6 +13,7 @@ import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
 import ru.agalkin.beholder.formatters.DumpFormatter
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -63,7 +64,7 @@ abstract class TestAbstract {
 
         senderBlock()
 
-        var timeSpentMillis = 0;
+        var timeSpentMillis = 0
         while (timeSpentMillis < 300) {
             if (processedMessages.size == count) {
                 break
@@ -79,6 +80,13 @@ abstract class TestAbstract {
 
     protected fun getMessageDump(message: Message)
         = DumpFormatter().formatMessage(message).toString().replace(Regex("^.*\n"), "")
+
+    protected fun assertFieldNames(message: Message?, vararg names: String) {
+        assertNotNull(message)
+        if (message != null) {
+            assertEquals(message.getFieldNames().sorted(), names.sorted())
+        }
+    }
 
     protected fun assertConfigParses(fromText: String, toDefinition: String) {
         assertEquals(toDefinition, Config(fromText, "test-config").getDefinition())

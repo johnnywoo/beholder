@@ -21,7 +21,7 @@ class FromTcpTest : TestAbstract() {
         if (processedMessage == null) {
             return
         }
-        assertEquals("date,from,payload", processedMessage.getFieldNames().sorted().joinToString(",") { it })
+        assertFieldNames(processedMessage, "date", "from", "payload")
         assertEquals(messageText, processedMessage.getPayloadString())
     }
 

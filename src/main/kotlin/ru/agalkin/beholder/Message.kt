@@ -4,19 +4,17 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.collections.HashMap
 
 private val createdMessagesCount = AtomicLong(0)
 
-class Message {
-    private val fields: MutableMap<String, FieldValue> = mutableMapOf()
+class Message(initialFields: Map<String, FieldValue>? = null) {
+    private var fields = if (initialFields == null) HashMap() else HashMap(initialFields)
 
     val messageId = createdMessagesCount.getAndIncrement()
 
-    fun copy(): Message {
-        val newMessage = Message()
-        newMessage.fields.putAll(fields)
-        return newMessage
-    }
+    fun copy()
+        = Message(fields)
 
     operator fun set(field: String, value: String) {
         if (value.isEmpty()) {

@@ -5,22 +5,22 @@ import kotlin.test.assertEquals
 
 class FlowTest : TestAbstract() {
     @Test
+    fun testTeeParses() {
+        assertConfigParses("tee {to stdout}", "tee {\n    to stdout;\n}\n")
+    }
+
+    @Test
+    fun testJoinParses() {
+        assertConfigParses("join {to stdout}", "join {\n    to stdout;\n}\n")
+    }
+
+    @Test
     fun testFlowParses() {
         assertConfigParses("flow {to stdout}", "flow {\n    to stdout;\n}\n")
     }
 
     @Test
-    fun testFlowOutParses() {
-        assertConfigParses("flow out {to stdout}", "flow out {\n    to stdout;\n}\n")
-    }
-
-    @Test
-    fun testFlowClosedParses() {
-        assertConfigParses("flow closed {to stdout}", "flow closed {\n    to stdout;\n}\n")
-    }
-
-    @Test
-    fun testFlowBadMode() {
+    fun testFlowArguments() {
         assertConfigFails("flow whatever {to stdout}", "Too many arguments for `flow`: flow whatever [test-config:1]")
     }
 
@@ -45,31 +45,31 @@ class FlowTest : TestAbstract() {
     }
 
     @Test
-    fun testFlowRoutingDefault() {
+    fun testTeeRouting() {
+        val message = Message()
+        message["path"] = "start"
+
+        val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; tee {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
+
+        assertEquals("start, before-flow, after-flow", processedMessage!!.getStringField("path"))
+    }
+
+    @Test
+    fun testJoinRouting() {
+        val message = Message()
+        message["path"] = "start"
+
+        val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; join {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
+
+        assertEquals("start, before-flow, after-flow", processedMessage!!.getStringField("path"))
+    }
+
+    @Test
+    fun testFlowRouting() {
         val message = Message()
         message["path"] = "start"
 
         val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; flow {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
-
-        assertEquals("start, before-flow, after-flow", processedMessage!!.getStringField("path"))
-    }
-
-    @Test
-    fun testFlowRoutingOut() {
-        val message = Message()
-        message["path"] = "start"
-
-        val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; flow out {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
-
-        assertEquals("start, before-flow, after-flow", processedMessage!!.getStringField("path"))
-    }
-
-    @Test
-    fun testFlowRoutingClosed() {
-        val message = Message()
-        message["path"] = "start"
-
-        val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; flow closed {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
 
         assertEquals("start, before-flow, after-flow", processedMessage!!.getStringField("path"))
     }

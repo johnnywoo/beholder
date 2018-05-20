@@ -10,16 +10,20 @@ Config syntax, commands, options, behaviour, everything is going to be changed w
  * [Recipes](#recipes)
  * [Config structure](#config-structure)
  * [Config syntax](#config-syntax)
- * [Config commands](#config-commands)
-   + [`flow`](#flow)
-   + [`from`](#from)
-   + [`to`](#to)
-   + [`set`](#set)
-   + [`keep`](#keep)
-   + [`drop`](#drop)
-   + [`switch`](#switch)
-   + [`parse`](#parse)
-   + [Settings](#settings)
+ * Config commands for sources and destinations
+   * [`from`](#from) — produces messages from various sources
+   * [`to`](#to) — sends messages to destinations
+ * Config commands for message manipulation
+   * [`set`](#set) — puts values into message fields
+   * [`keep`](#keep) — removes unnecessary message fields
+   * [`drop`](#drop) — removes the message altogether
+   * [`parse`](#parse) — populates message fields according to some format
+ * Config control structures
+   * [`flow`](#flow) — creates isolated flows of messages
+   * [`tee`](#tee) — applies commands to copies of messages
+   * [`join`](#join) — produces messages from subcommands
+   * [`switch`](#switch) — conditional processing
+ * [Settings](#settings) — global configuration options
 
 
 ## Usage
@@ -94,9 +98,11 @@ Commands can produce, consume and modify messages.
 Messages are collections of arbitrary fields.
 
     flow {  # this command has no args, only subcommands
-        flow out {  # this command has both args and subcommands
-            from udp 3820;  # this command has only arguments
-            parse syslog;
+        switch $field {  # this command has both args and subcommands
+            case ~cat~ {
+                from udp 3820;  # this command has only arguments
+                parse syslog;
+            }
         }
         to stdout;
     }
@@ -145,102 +151,25 @@ Example: `127.0.0.1:1234`.
 
 ### Config commands
 
-* `flow`   — defines flow of messages between commands
-* `from`   — produces messages from some source
-* `to`     — sends messages to destinations
-* `set`    — puts values into message fields
-* `keep`   — removes unnecessary message fields
-* `drop`   — removes the message altogether
-* `switch` — conditional processing
-* `parse`  — populates message fields according to some format
-* settings — global configuration options
+Message sources and destinations:
 
+* [`from`](#from) — produces messages from various sources
+* [`to`](#to) — sends messages to destinations
 
-### `flow`
+Message manipulation:
 
-    flow {<subcommands>}        -- copy incoming, discard results
-    flow out {<subcommands>}    -- produce results, ignore incoming
-    flow closed {<subcommands>} -- ignore everything
+* [`set`](#set)`set`    — puts values into message fields
+* [`keep`](#keep)`keep`   — removes unnecessary message fields
+* [`drop`](#drop)`drop`   — removes the message altogether
+* [`parse`](#parse)`parse`  — populates message fields according to some format
 
-Use this command to create separate flows of messages.
+Control structures:
 
-Subcommands: `flow`, `from`, `to`, `set`, `keep`, `drop`, `switch`, `parse`.
-
-Some use cases of `flow`:
-
-* Creating separate processing chains:
-
-      # WRONG
-      from udp 1001;
-      to tcp 1.2.3.4:1002;
-      from udp 1003;
-      to tcp 1.2.3.4:1004; # receives messages from both ports 1001 AND 1003!
-
-      # separate flows
-      flow {from udp 1001; to tcp 1.2.3.4:1002}
-      flow {from udp 1003; to tcp 1.2.3.4:1004}
-
-* Inserting a temporary dump in the middle of your config:
-
-      from udp 1001;
-      parse syslog;
-
-      # Here we want to look at the message between `parse` and `set`.
-      # If we just inserted dump commands here, they would modify the message,
-      # which we do not want. Instead, we can copy messages into a flow
-      # and modify the copies, which are then discarded.
-      flow {
-          set $payload dump;
-          to file dump.log;
-      }
-
-      set $payload json;
-      to tcp 1234;
-
-* Applying some commands to message from a specific source:
-
-      flow out { from udp 1001; parse syslog; }
-      flow out { from udp 1002; parse json; }
-      to file '$host.log';
-
-Message routing for `flow` in default mode:
-
-    from udp 1001;
-    flow {
-        # incoming messages are duplicated:
-        # one is emitted out, one is passed into first subcommand
-        from udp 1002;
-        to file some.log; # receives messages from ports 1001 AND 1002
-        # after last subcommand messages are discarded
-    }
-    to stdout; # this command receives messages only from port 1001
-
-Message routing for `flow out`:
-
-    from udp 1001;
-    flow out {
-        # incoming messages are only emitted out of the flow,
-        # subcommands do not receive them
-        from udp 1002;
-        to file some.log; # receives messages only from port 1002
-        # after last subcommand messages are emitted out of the flow
-    }
-    to stdout; # receives messages from ports 1001 AND 1002
-
-Message routing for `flow closed`:
-
-    from udp 1001;
-    flow closed {
-        # incoming messages are only emitted out of the flow,
-        # subcommands do not receive them
-        from udp 1002;
-        to file some.log; # receives messages only from port 1002
-        # after last subcommand messages are discarded
-    }
-    to stdout; # receives messages only from port 1001
-
-Incoming messages are always emitted out of the `flow`.
-Inside the `flow` messages are consecutively passed between subcommands.
+* [`flow`](#flow) — creates isolated flows of messages
+* [`tee`](#tee) — applies commands to copies of messages
+* [`join`](#join) — produces messages from subcommands
+* [`switch`](#switch) — conditional processing
+* [Settings](#settings) — global configuration options
 
 
 ### `from`
@@ -255,11 +184,11 @@ This command produces messages.
 If there are any incoming messages (not produced by current `from` command),
 `from` will copy them to its output.
 
-To receive messages in different formats from different sources, use `flow out`.
+To receive messages in different formats from different sources, use `join`.
 
     flow {
         from udp 1001;
-        flow out {
+        join {
             from udp 1002;
             parse syslog;
         }
@@ -389,8 +318,8 @@ When given a quoted string, `set` will substitute field names in the string
 with corresponding values from the message.
 
     flow {
-        flow out {from timer; set $color 'red'}
-        flow out {from timer; set $color 'green'}
+        join {from timer; set $color 'red'}
+        join {from timer; set $color 'green'}
         set $payload 'We got $color apples!';
         to stdout;
     }
@@ -474,46 +403,6 @@ Drops the message from processing. Useful inside `switch`:
     to file messages.log;
 
 
-### `switch`
-
-    switch 'template with $fields' {
-        case ~regexp~ {
-            <subcommands>
-        }
-        default {
-            <subcommands>
-        }
-    }
-
-This command allows conditional processing of messages.
-
-Subcommands of `switch`: `case`, `default`.
-
-Subcommands of `case`/`default`: `flow`, `from`, `to`, `set`, `keep`, `drop`, `switch`, `parse`.
-
-`case` regexps are matched against the template provided as the argument to `switch`.
-First matching `case` wins: its subcommands receive the message.
-If there was no match, an optional `default` block receives the message.
-There can be multiple `case` blocks, but only one `default`, and it must be the last block in `switch`.
-
-If a message does not match any `case` and there is no `default`, the message will be discarded.
-This way `switch` can work as an if-statement:
-
-    switch $host { case ~.~ {} }
-    to stdout; # Only prints messages with non-empty $host
-
-Although `from` subcommand is permitted inside `case`/`default`, its use there is discouraged.
-Messages emitted inside `case`/`default` ignore conditions and are emitted out of `switch`.
-
-If your regexp has named groups, those groups will be placed as fields into the message:
-
-    switch $program {
-        case ~^nginx-(?<kind>access|error)$~ {
-            # $kind now is either 'access' or 'error'
-        }
-    }
-
-
 ### `parse`
 
     parse [keep-unparsed] syslog;
@@ -563,6 +452,143 @@ Fields produced by `parse beholder-stats`:
 * `$heapMaxBytes`   — Maximal heap size
 * `$udpMaxBytesIn`  — Maximal size of received UDP packet since last collection of stats
 * `$payload`        — A summary of Beholder stats
+
+
+### `flow`
+
+    flow {<subcommands>}
+
+Use this command to create separate flows of messages.
+You can think of `flow` as namespaces or visibility scopes.
+
+Subcommands: all commands are allowed.
+
+`flow` should be used to create separate processing chains:
+
+    # WRONG
+    from udp 1001;
+    to tcp 1.2.3.4:1002;
+    from udp 1003;
+    to tcp 1.2.3.4:1004; # receives messages from both ports 1001 AND 1003!
+
+    # separate flows
+    flow {from udp 1001; to tcp 1.2.3.4:1002}
+    flow {from udp 1003; to tcp 1.2.3.4:1004}
+
+Message routing for `flow`:
+
+    from udp 1001;
+    flow {
+        # incoming messages are only emitted out of `flow`,
+        # subcommands do not receive them
+        from udp 1002;
+        to file some.log; # receives messages only from port 1002
+        # after last subcommand messages are dropped
+    }
+    to stdout; # receives messages only from port 1001
+
+
+### `tee` — runs commands on copied messages
+
+    tee {<subcommands>}
+
+This command allows you to run some commands on messages without disturbing the original flow.
+
+Subcommands: all commands are allowed.
+
+`tee` works by copying incoming messages. The original message is emitted out of `tee`
+as if nothing ever happened; the copy is passed through subcommands and then dropped.
+
+`tee` is useful for inserting a temporary dump in the middle of your config:
+
+    from udp 1001;
+    parse syslog;
+
+    # Here we want to look at the message between `parse` and `set`.
+    # If we just inserted dump commands here, they would modify the message,
+    # which we do not want. Instead, we can use `tee`.
+    tee {
+        set $payload dump; # only applied to the copy, not to original message
+        to file dump.log;
+    }
+
+    set $payload json;
+    to tcp 1234;
+
+Message routing for `tee`:
+
+    from udp 1001;
+    tee {
+        # incoming messages are duplicated:
+        # one is emitted out, one is passed into first subcommand
+        from udp 1002;
+        to file some.log; # receives messages from ports 1001 AND 1002
+        # after last subcommand messages are dropped
+    }
+    to stdout; # this command receives messages only from port 1001
+
+
+### `join` — outputs messages produced by subcommands
+
+    join {<subcommands>}
+
+Subcommands: all commands are allowed.
+
+`join` can be used to apply some commands to messages from a specific source:
+
+    join { from udp 1001; parse syslog; }
+    join { from udp 1002; parse json; }
+    to file '$host.log';
+
+Message routing for `join`:
+
+    from udp 1001;
+    join {
+        # incoming messages are only emitted out of `join`,
+        # subcommands do not receive them
+        from udp 1002;
+        to file some.log; # receives messages only from port 1002
+        # after last subcommand messages are emitted out of `join`
+    }
+    to stdout; # receives messages from ports 1001 AND 1002
+
+
+### `switch` — conditional processing of messages
+
+    switch 'template with $fields' {
+        case ~regexp~ {
+            <subcommands>
+        }
+        default {
+            <subcommands>
+        }
+    }
+
+Subcommands of `switch`: `case`, `default`.
+
+Subcommands of `case`/`default`: all commands are allowed.
+
+`case` regexps are matched against the template provided as the argument to `switch`.
+First matching `case` wins: its subcommands receive the message.
+If there was no match, an optional `default` block receives the message.
+There can be multiple `case` blocks, but only one `default`, and it must be the last block in `switch`.
+
+If a message does not match any `case` and there is no `default`, the message will be discarded.
+This way `switch` can work as an if-statement:
+
+    switch $host { case ~.~ {} }
+    to stdout; # Only prints messages with non-empty $host
+
+Although `from` subcommand is permitted inside `case`/`default`, its use there is discouraged.
+Messages emitted inside `case`/`default` ignore conditions and are emitted out of `switch`.
+
+If your regexp has named groups, those groups will be placed as fields into the message:
+
+    switch $program {
+        case ~^nginx-(?<kind>access|error)$~ {
+            # $kind now is either 'access' or 'error'
+        }
+    }
 
 
 ### Settings

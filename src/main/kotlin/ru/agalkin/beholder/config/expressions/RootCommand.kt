@@ -2,11 +2,16 @@ package ru.agalkin.beholder.config.expressions
 
 import ru.agalkin.beholder.ConfigOption
 import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.commands.FlowCommand
+import ru.agalkin.beholder.commands.ConveyorCommandAbstract
 import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
 
-class RootCommand : FlowCommand(RootArguments) {
+class RootCommand : ConveyorCommandAbstract(
+    RootArguments,
+    sendInputToOutput = false,
+    sendInputToSubcommands = false,
+    sendLastSubcommandToOutput = false
+) {
     val optionValues = hashMapOf<ConfigOption, Any>()
     init {
         for (option in ConfigOption.values()) {

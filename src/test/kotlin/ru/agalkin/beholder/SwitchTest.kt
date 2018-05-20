@@ -25,7 +25,7 @@ class SwitchTest : TestAbstract() {
             """
                 switch x {
                     case ~x~ {
-                        flow {drop}
+                        tee {drop}
                     }
                 }
 
@@ -33,7 +33,7 @@ class SwitchTest : TestAbstract() {
             """
             |switch x {
             |    case ~x~ {
-            |        flow {
+            |        tee {
             |            drop;
             |        }
             |    }
@@ -122,7 +122,7 @@ class SwitchTest : TestAbstract() {
         val message = Message()
         message["animal"] = "initial"
 
-        val processedMessage = processMessageWithConfig(message, "switch 'dog' { case ~dog~ { set \$animal 'canine'; flow {set \$animal 'error'} } }")
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { case ~dog~ { set \$animal 'canine'; tee {set \$animal 'error'} } }")
 
         assertEquals("canine", processedMessage!!.getStringField("animal"))
     }
@@ -132,7 +132,7 @@ class SwitchTest : TestAbstract() {
         val message = Message()
         message["animal"] = "initial"
 
-        val processedMessage = processMessageWithConfig(message, "switch 'dog' { default { set \$animal 'unknown'; flow {set \$animal 'error'} } }")
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { default { set \$animal 'unknown'; tee {set \$animal 'error'} } }")
 
         assertEquals("unknown", processedMessage!!.getStringField("animal"))
     }

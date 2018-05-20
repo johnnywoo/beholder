@@ -57,7 +57,7 @@ fun main(args: Array<String>) {
     var configSourceDescription: String? = null
 
     when {
-        // beholder --config="flow {from udp 3231; to stdout}"
+        // beholder --config="from udp 3231; to stdout"
         cli.configText != null -> {
             configText = cli.configText + "\n"
             configSourceDescription = "cli-arg"

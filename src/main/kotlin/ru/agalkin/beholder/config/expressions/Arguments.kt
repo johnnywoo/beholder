@@ -32,10 +32,11 @@ abstract class Arguments {
     fun hasMoreTokens()
         = peekNext() != null
 
-    fun end() {
+    fun end(): Arguments {
         if (hasMoreTokens()) {
             throw CommandException("Too many arguments for `${getCommandName()}`")
         }
+        return this
     }
 
     private fun shiftString(errorMessage: String): String {

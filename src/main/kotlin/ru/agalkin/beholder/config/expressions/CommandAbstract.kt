@@ -31,28 +31,6 @@ abstract class CommandAbstract(private val arguments: Arguments) {
 
     abstract fun input(message: Message)
 
-    protected fun setupConveyor(isOpenAtEnd: Boolean) {
-        if (subcommands.isEmpty()) {
-            return
-        }
-
-        // соединяем команды в конвейер
-        for ((prevCommand, nextCommand) in subcommands.zipWithNext()) {
-            // сообщение из первой команды пихаем во вторую, и т.д.
-            prevCommand.output.addSubscriber {
-                nextCommand.input(it)
-            }
-        }
-
-        if (isOpenAtEnd) {
-            // выход последней субкоманды направляем на выход из текущей команды
-            val lastCommand = subcommands.last()
-            lastCommand.output.addSubscriber {
-                output.sendMessageToSubscribers(it)
-            }
-        }
-    }
-
     val subcommands = ArrayList<CommandAbstract>()
 
     protected fun importSubcommands(tokens: ListIterator<Token>) {

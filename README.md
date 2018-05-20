@@ -21,9 +21,26 @@ Config syntax, commands, options, behaviour, everything is going to be changed w
    + [`parse`](#parse)
    + [Settings](#settings)
 
+## Usage
+
+For a quick start, use the ready-made docker container:
+
+    docker run --rm -ti johnnywoo/beholder:0.1.189 beholder --config 'from timer; to stdout'
+
+With that example config you should see Beholder print randomized messages every second.
+
+    usage: beholder
+     -c,--config <text>        Use config from the argument
+     -f,--config-file <file>   Use config from a file
+     -h,--help                 Show usage
+     -l,--log <file>           Internal log file
+     -q,--quiet                Do not print internal log into stdout
+     -t,--test                 Config test: syntax and minimal validation
+     -v,--version              Show version
+
 ## Building Beholder
 
-A ready-made Docker image is available at https://hub.docker.com/r/johnnywoo/beholder/
+A ready-made Docker image is available at https://hub.docker.com/r/johnnywoo/beholder
 
 To use the docker container, mount your config into it as `/etc/beholder/beholder.conf`.
 
@@ -39,17 +56,6 @@ To build a docker container with the jar:
     usage: beholder
     ...
 
-
-## Usage
-
-    usage: beholder
-     -c,--config <text>        Use config from the argument
-     -f,--config-file <file>   Use config from a file
-     -h,--help                 Show usage
-     -l,--log <file>           Internal log file
-     -q,--quiet                Do not print internal log into stdout
-     -t,--test                 Config test: syntax and minimal validation
-     -v,--version              Show version
 
 ## Recipes
 

@@ -19,6 +19,7 @@ echo "$version"
 
 if [ "x$1" = "x-f" ]; then
     echo "$version" > "${2:-./src/main/resources/version.txt}"
+    sed -i '' "s/johnnywoo\/beholder:[0-9][0-9.]*/johnnywoo\/beholder:$version/" ./README.md
 fi
 
 if [ "x$1" = "x-t" ]; then

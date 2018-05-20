@@ -18,7 +18,7 @@ class JsonInflaterTest : TestAbstract() {
             |¥field=value
             |¥payload={"field":"value"}
             """.trimMargin().replace('¥', '$'),
-            DumpFormatter().formatMessage(processedMessage!!).toString().replace(Regex("^.*\n"), "")
+            getMessageDump(processedMessage)
         )
     }
 
@@ -35,7 +35,7 @@ class JsonInflaterTest : TestAbstract() {
             |¥field2=value2
             |¥payload={"field":"value","field2":"value2"}
             """.trimMargin().replace('¥', '$'),
-            DumpFormatter().formatMessage(processedMessage!!).toString().replace(Regex("^.*\n"), "")
+            getMessageDump(processedMessage)
         )
     }
 
@@ -52,7 +52,7 @@ class JsonInflaterTest : TestAbstract() {
             |¥field2=0
             |¥payload={"field":123,"field2":0}
             """.trimMargin().replace('¥', '$'),
-            DumpFormatter().formatMessage(processedMessage!!).toString().replace(Regex("^.*\n"), "")
+            getMessageDump(processedMessage)
         )
     }
 
@@ -69,7 +69,7 @@ class JsonInflaterTest : TestAbstract() {
             |¥field2=false
             |¥payload={"field":true,"field2":false}
             """.trimMargin().replace('¥', '$'),
-            DumpFormatter().formatMessage(processedMessage!!).toString().replace(Regex("^.*\n"), "")
+            getMessageDump(processedMessage)
         )
     }
 
@@ -85,7 +85,7 @@ class JsonInflaterTest : TestAbstract() {
             """
             |¥payload={"field":null}
             """.trimMargin().replace('¥', '$'),
-            DumpFormatter().formatMessage(processedMessage!!).toString().replace(Regex("^.*\n"), "")
+            getMessageDump(processedMessage)
         )
     }
 

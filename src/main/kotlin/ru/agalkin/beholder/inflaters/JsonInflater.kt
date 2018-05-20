@@ -8,7 +8,7 @@ import ru.agalkin.beholder.Message
 class JsonInflater : Inflater {
     private val gson = Gson()
 
-    override fun inflateMessageFields(message: Message): Boolean {
+    override fun inflateMessageFields(message: Message, emit: (Message) -> Unit): Boolean {
         val data: JsonObject?
         try {
             data = gson.fromJson(message.getPayloadString(), JsonObject::class.java)
@@ -39,6 +39,7 @@ class JsonInflater : Inflater {
             message[field] = value.asJsonPrimitive.asString
         }
 
+        emit(message)
         return true
     }
 }

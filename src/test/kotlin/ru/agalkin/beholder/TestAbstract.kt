@@ -5,6 +5,7 @@ import ru.agalkin.beholder.commands.KeepCommand
 import ru.agalkin.beholder.commands.ParseCommand
 import ru.agalkin.beholder.commands.SetCommand
 import ru.agalkin.beholder.config.Config
+import ru.agalkin.beholder.config.expressions.CommandAbstract
 import ru.agalkin.beholder.config.expressions.CommandArguments
 import ru.agalkin.beholder.config.expressions.RootCommand
 import ru.agalkin.beholder.config.parser.ArgumentToken
@@ -50,11 +51,11 @@ abstract class TestAbstract {
         return processedMessage
     }
 
-    protected fun receiveMessageWithConfig(config: String, senderBlock: () -> Unit): Message? {
+    protected fun receiveMessageWithConfig(config: String, senderBlock: (CommandAbstract) -> Unit): Message? {
         return receiveMessagesWithConfig(config, 1, senderBlock).firstOrNull()
     }
 
-    protected fun receiveMessagesWithConfig(config: String, count: Int, senderBlock: () -> Unit): List<Message> {
+    protected fun receiveMessagesWithConfig(config: String, count: Int, senderBlock: (CommandAbstract) -> Unit): List<Message> {
         val root = RootCommand.fromTokens(Token.getTokens(config, "test-config"))
 
         val processedMessages = mutableListOf<Message>()
@@ -62,7 +63,7 @@ abstract class TestAbstract {
 
         root.start()
 
-        senderBlock()
+        senderBlock(root.subcommands.first())
 
         var timeSpentMillis = 0
         while (timeSpentMillis < 300) {
@@ -75,16 +76,31 @@ abstract class TestAbstract {
 
         root.stop()
 
+        assertEquals(count, processedMessages.size, "Expected number of messages does not match")
+
         return processedMessages
     }
 
-    protected fun getMessageDump(message: Message)
-        = DumpFormatter().formatMessage(message).toString().replace(Regex("^.*\n"), "")
+    protected fun getMessageDump(message: Message?)
+        = when (message) {
+            null -> "null"
+            else -> DumpFormatter().formatMessage(message).toString().replace(Regex("^.*\n"), "")
+        }
 
     protected fun assertFieldNames(message: Message?, vararg names: String) {
         assertNotNull(message)
         if (message != null) {
             assertEquals(message.getFieldNames().sorted(), names.sorted())
+        }
+    }
+
+    protected fun assertFieldValues(message: Message?, values: Map<String, String>) {
+        assertNotNull(message)
+        if (message != null) {
+            assertEquals(message.getFieldNames().sorted(), values.keys.sorted())
+            for ((key, value) in values) {
+                assertEquals(value, message.getStringField(key))
+            }
         }
     }
 

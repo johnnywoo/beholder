@@ -5,7 +5,7 @@ import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.listeners.UdpListener
 
 class BeholderStatsInflater : Inflater {
-    override fun inflateMessageFields(message: Message): Boolean {
+    override fun inflateMessageFields(message: Message, emit: (Message) -> Unit): Boolean {
         val runtime = Runtime.getRuntime()
 
         val heapSize   = runtime.totalMemory()
@@ -29,6 +29,7 @@ class BeholderStatsInflater : Inflater {
         message["fromUdpMaxBytes"] = fromUdpMaxBytes.toString()
         message["payload"]         = "heap ${getMemoryString(heapSize)} heap-used ${getMemoryString(heapUsed)} heap-max ${getMemoryString(heapMax)} from-udp-max-bytes $fromUdpMaxBytes uptime ${getUptimeString(uptimeSeconds)}"
 
+        emit(message)
         return true
     }
 

@@ -30,15 +30,14 @@ class SwitchCommand(arguments: Arguments) : CommandAbstract(arguments) {
         super.start()
     }
 
+    interface SwitchSubcommand {
+        fun inputIfMatches(message: Message): Boolean
+    }
+
     override fun input(message: Message) {
         // если входящее сообщение подходит под условие вложенной команды, направляем его в неё
         for (subcommand in subcommands) {
-            if (subcommand is SwitchCaseCommand && subcommand.regexpInflater.inflateMessageFields(message)) {
-                subcommand.input(message)
-                break
-            }
-            if (subcommand is SwitchDefaultCommand) {
-                subcommand.input(message)
+            if (subcommand is SwitchSubcommand && subcommand.inputIfMatches(message)) {
                 break
             }
         }

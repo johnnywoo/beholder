@@ -20,7 +20,7 @@ class SyslogInflater : Inflater {
         Pattern.COMMENTS
     )
 
-    override fun inflateMessageFields(message: Message): Boolean {
+    override fun inflateMessageFields(message: Message, emit: (Message) -> Unit): Boolean {
         // мы тут хотим разобрать формат старого сислога и сложить данные из него в теги
         // формат старого сислога:
         // <190>Nov 25 13:46:44 vps nginx: 127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] "GET /api HTTP/1.1" 200 47 "-" "curl/7.38.0"
@@ -28,7 +28,7 @@ class SyslogInflater : Inflater {
         val payload = message.getPayloadString()
         val matcher = syslogNginxRegex.matcher(payload)
         if (!matcher.find()) {
-            return parseIetfSyslog(message)
+            return parseIetfSyslog(message, emit)
         }
 
         val priority = matcher.group("priority")
@@ -55,6 +55,7 @@ class SyslogInflater : Inflater {
         val headerLength = matcher.end()
         message["payload"] = payload.substring(headerLength)
 
+        emit(message)
         return true
     }
 
@@ -74,7 +75,7 @@ class SyslogInflater : Inflater {
         Pattern.COMMENTS
     )
 
-    private fun parseIetfSyslog(message: Message): Boolean {
+    private fun parseIetfSyslog(message: Message, emit: (Message) -> Unit): Boolean {
         // попробуем формат IETF-сислога
         // пока что поддерживается не всё: structured data должна быть - или хотя бы не содержать пробелов
         val payload = message.getPayloadString()
@@ -100,23 +101,29 @@ class SyslogInflater : Inflater {
         }
 
         val host = matcher.group("host")
-        if (host != null) {
+        if (host != null && host != "-") {
             message["host"] = host
         }
 
-        val tag = matcher.group("program")
-        if (tag != null) {
-            message["program"] = tag
+        val program = matcher.group("program")
+        if (program != null && program != "-") {
+            message["program"] = program
         }
 
         val pid = matcher.group("pid")
-        if (pid != null) {
+        if (pid != null && pid != "-") {
             message["pid"] = pid
+        }
+
+        val messageId = matcher.group("messageId")
+        if (messageId != null && messageId != "-") {
+            message["messageId"] = messageId
         }
 
         val headerLength = matcher.end()
         message["payload"] = payload.substring(headerLength)
 
+        emit(message)
         return true
     }
 }

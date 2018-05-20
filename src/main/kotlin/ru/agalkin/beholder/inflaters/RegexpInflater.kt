@@ -24,11 +24,12 @@ class RegexpInflater(
         groupNames = names
     }
 
-    override fun inflateMessageFields(message: Message): Boolean {
+    override fun inflateMessageFields(message: Message, emit: (Message) -> Unit): Boolean {
         val matcher = regexp.matcher(template.formatMessage(message).toString())
         if (!matcher.find()) {
             return false
         }
+
         for (name in groupNames) {
             val value = matcher.group(name)
             if (value != null) {
@@ -36,6 +37,7 @@ class RegexpInflater(
             }
         }
 
+        emit(message)
         return true
     }
 }

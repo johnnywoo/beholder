@@ -19,6 +19,7 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
                 "syslog" -> SyslogInflater()
                 "json" -> JsonInflater()
                 "beholder-stats" -> BeholderStatsInflater()
+                "each-field-as-message" -> EachFieldAsMessageInflater("key", "value")
                 else -> throw CommandException("Cannot understand arguments of `parse` command")
             }
         }
@@ -27,7 +28,10 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     }
 
     override fun input(message: Message) {
-        if (inflater.inflateMessageFields(message) || shouldKeepUnparsed) {
+        val success = inflater.inflateMessageFields(message) {
+            output.sendMessageToSubscribers(it)
+        }
+        if (shouldKeepUnparsed && !success) {
             output.sendMessageToSubscribers(message)
         }
     }

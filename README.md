@@ -408,30 +408,41 @@ Drops the message from processing. Useful inside `switch`:
     parse [keep-unparsed] syslog;
     parse [keep-unparsed] json;
     parse [keep-unparsed] ~regexp-with-named-groups~;
+    parse each-field-as-message;
     parse beholder-stats;
 
 This command sets fields on messages according to chosen format.
-If a message cannot be parsed, it will be dropped by default.
+If a message cannot be parsed, by default it will be dropped.
 If `keep-unparsed` option is specified, unparsed messages will be kept unchanged.
 
-Format `syslog`: the only syslog variant currently supported is
-a BSD-style syslog format as produced by nginx.
+Format `syslog`: syslog variants currently supported are
+BSD-style syslog format as produced by nginx (with or without hostname),
+and IETF-style syslog without the structured-data section.
 
-Incoming messages look like this:
+Incoming messages look like either of these:
 
-    <190>Nov 25 13:46:44 host nginx: <actual log message>
+    <190>Nov 25 13:46:44 host nginx: payload
+    <190>Nov 25 13:46:44 nginx: payload
+    <15>1 2018-04-27T17:49:03+03:00 hostname program 73938 - - payload
 
 Fields produced by `parse syslog`:
 
-* `$facility` — numeric syslog facility
-* `$severity` — numeric syslog severity
-* `$host`     — source host from the message
-* `$program`  — program name (nginx calls this "tag")
-* `$payload`  — actual log message (this would've been written to a file by nginx)
+* `$date`      — date in ISO format, only from ietf-syslog
+* `$facility`  — numeric syslog facility
+* `$severity`  — numeric syslog severity
+* `$host`      — source host from the message
+* `$pid`       — process id
+* `$messageId` — message id from ietf-syslog
+* `$program`   — program name (nginx calls this "tag")
+* `$payload`   — actual log message (this would've been written to a file by nginx)
 
 Format `json`: parses $payload as a JSON object and sets its properties as message fields.
 The JSON object may only contain numbers, strings, booleans and nulls (no nested objects or arrays).
 Boolean values are converted to strings 'true' and 'false'.
+
+Format `each-field-as-message`: every field of the message becomes a separate new message.
+Original message is dropped. Instead, new messages are produced with fields `$key` and `$value`.
+Fields for new messages are taken in unpredictable order.
 
 Format `~regexp-with-named-groups~`: if the regexp matches, named groups from it
 become message fields. Group names should not be prefixed with $.

@@ -21,9 +21,10 @@ Config syntax, commands, options, behaviour, everything is going to be changed w
    + [`parse`](#parse)
    + [Settings](#settings)
 
+
 ## Usage
 
-For a quick start, use the ready-made docker container:
+For a quick start, use Docker:
 
     docker run --rm -ti johnnywoo/beholder:0.1.189 beholder --config 'from timer; to stdout'
 
@@ -38,18 +39,19 @@ With that example config you should see Beholder print randomized messages every
      -t,--test                 Config test: syntax and minimal validation
      -v,--version              Show version
 
+
 ## Building Beholder
 
 A ready-made Docker image is available at https://hub.docker.com/r/johnnywoo/beholder
 
-To use the docker container, mount your config into it as `/etc/beholder/beholder.conf`.
+To use the Docker container, mount your config into it as `/etc/beholder/beholder.conf`.
 
-To build the jar file with all dependencies:
+To build the jar file with all dependencies from source:
 
     $ ./gradlew jar
     $ ls build/libs/beholder*.jar
 
-To build a docker container with the jar:
+To build a Docker container with the jar:
 
     $ docker build -t beholder .
     $ docker run -ti beholder beholder

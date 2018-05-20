@@ -11,18 +11,18 @@ Config syntax, commands, options, behaviour, everything is going to be changed w
  * [Config structure](#config-structure)
  * [Config syntax](#config-syntax)
  * Config commands for sources and destinations
-   * [`from`](#from) — produces messages from various sources
-   * [`to`](#to) — sends messages to destinations
+   * [`from`](#from--produces-messages-from-various-sources) — produces messages from various sources
+   * [`to`](#to--sends-messages-to-destinations) — sends messages to destinations
  * Config commands for message manipulation
-   * [`set`](#set) — puts values into message fields
-   * [`keep`](#keep) — removes unnecessary message fields
-   * [`drop`](#drop) — destroys messages
-   * [`parse`](#parse) — populates message fields according to some format
+   * [`set`](#set--puts-values-into-message-fields) — puts values into message fields
+   * [`keep`](#keep--removes-unnecessary-message-fields) — removes unnecessary message fields
+   * [`drop`](#drop--destroys-messages) — destroys messages
+   * [`parse`](#parse--populates-message-fields-according-to-some-format) — populates message fields according to some format
  * Config control structures
-   * [`flow`](#flow) — creates isolated flows of messages
-   * [`tee`](#tee) — applies commands to copies of messages
-   * [`join`](#join) — produces messages from subcommands
-   * [`switch`](#switch) — conditional processing
+   * [`flow`](#flow--creates-isolated-flows-of-messages) — creates isolated flows of messages
+   * [`tee`](#tee--applies-commands-to-copies-of-messages) — applies commands to copies of messages
+   * [`join`](#join--produces-messages-from-subcommands) — produces messages from subcommands
+   * [`switch`](#switch--conditional-processing) — conditional processing
  * [Settings](#settings) — global configuration options
 
 
@@ -153,23 +153,23 @@ Example: `127.0.0.1:1234`.
 
 Message sources and destinations:
 
-* [`from`](#from) — produces messages from various sources
-* [`to`](#to) — sends messages to destinations
+* `from` — produces messages from various sources
+* `to` — sends messages to destinations
 
 Message manipulation:
 
-* [`set`](#set) — puts values into message fields
-* [`keep`](#keep) — removes unnecessary message fields
-* [`drop`](#drop) — destroys messages
-* [`parse`](#parse) — populates message fields according to some format
+* `set` — puts values into message fields
+* `keep` — removes unnecessary message fields
+* `drop` — destroys messages
+* `parse` — populates message fields according to some format
 
 Control structures:
 
-* [`flow`](#flow) — creates isolated flows of messages
-* [`tee`](#tee) — applies commands to copies of messages
-* [`join`](#join) — produces messages from subcommands
-* [`switch`](#switch) — conditional processing
-* [Settings](#settings) — global configuration options
+* `flow` — creates isolated flows of messages
+* `tee` — applies commands to copies of messages
+* `join` — produces messages from subcommands
+* `switch` — conditional processing
+* Settings — global configuration options
 
 
 ### `from` — produces messages from various sources

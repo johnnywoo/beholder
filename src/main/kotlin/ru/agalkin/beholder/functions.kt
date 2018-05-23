@@ -5,6 +5,7 @@ import java.io.InputStreamReader
 import java.net.SocketException
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 fun getIsoDateFormatter()
@@ -96,3 +97,21 @@ fun readInputStreamTerminated(input: InputStream, stopAt: Char): ByteArray {
 fun defaultString(string: String?, default: String)
     = if (string != null && !string.isEmpty()) string else default
 
+fun getSystemHostname(): String? {
+    try {
+        val builder = ProcessBuilder("hostname")
+        builder.redirectOutput(ProcessBuilder.Redirect.PIPE)
+        builder.redirectError(ProcessBuilder.Redirect.INHERIT)
+
+        val process = builder.start()
+        process.waitFor(10, TimeUnit.SECONDS)
+        val hostname = process.inputStream.bufferedReader().readText().trim()
+        if (hostname.isEmpty()) {
+            return null
+        }
+        return hostname
+    } catch (e: Throwable) {
+        InternalLog.exception(e)
+        return null
+    }
+}

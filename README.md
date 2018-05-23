@@ -340,7 +340,8 @@ Functions:
 * `syslog` — Generates a IETF syslog payload based on syslog-related fields; see `parse syslog` for details.
 * `replace` — String replacement with regexp. See below.
 * `time` — Current time, e.g. 01:23:45.
-* `host` — Current hostname.
+* `host` — Current hostname. Warning: if you're running Beholder in a Docker container,
+    you should provide correct hostname into it, e.g. `net=host` or `docker run --hostname`.
 * `env` — Environment variable value: `set $path env PATH`.
 * `basename` — Last component of a filename: `set $file basename /path/file.ext`.
     The file does not need to exist. Bad names like `..` are replaced with `noname`.

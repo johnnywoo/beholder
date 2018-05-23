@@ -2,6 +2,7 @@ package ru.agalkin.beholder.formatters
 
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Message
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 abstract class TemplateFormatter : Formatter {
@@ -48,7 +49,9 @@ abstract class TemplateFormatter : Formatter {
         override fun formatMessage(message: Message): FieldValue {
             return FieldValue.fromString(
                 regexp.matcher(template).replaceAll({
-                    message.getStringField(it.group(1) ?: it.group(2))
+                    Matcher.quoteReplacement(
+                        message.getStringField(it.group(1) ?: it.group(2))
+                    )
                 })
             )
         }

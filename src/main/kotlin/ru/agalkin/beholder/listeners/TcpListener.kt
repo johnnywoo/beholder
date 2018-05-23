@@ -104,7 +104,7 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
             message.setFieldValue("payload", data)
 
             message["date"] = curDateIso()
-            message["from"] = "tcp://${remoteSocketAddress?.address}:${remoteSocketAddress?.port}"
+            message["from"] = "tcp://${remoteSocketAddress?.hostString}:${remoteSocketAddress?.port}"
 
             queue.add(message)
         }

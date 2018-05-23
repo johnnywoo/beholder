@@ -45,4 +45,12 @@ COPY --from=builder /var/sources/build/libs /root
 COPY docker/beholder /sbin/
 COPY docker/beholder.conf /etc/beholder/
 
-CMD java -server -Xms12m -jar /root/beholder*.jar --config-file=/etc/beholder/beholder.conf --log=/var/log/beholder/beholder.log
+CMD [ \
+    "/usr/bin/java", \
+    "-server", \
+    "-Xms12m", \
+    "-jar", \
+    "/root/beholder-0.1.jar", \
+    "--config-file=/etc/beholder/beholder.conf", \
+    "--log=/var/log/beholder/beholder.log" \
+]

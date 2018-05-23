@@ -51,6 +51,5 @@ CMD [ \
     "-Xms12m", \
     "-jar", \
     "/root/beholder-0.1.jar", \
-    "--config-file=/etc/beholder/beholder.conf", \
-    "--log=/var/log/beholder/beholder.log" \
+    "--config-file=/etc/beholder/beholder.conf" \
 ]

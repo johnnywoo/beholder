@@ -95,7 +95,7 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
         }
     }
 
-    abstract inner class ConnectionThreadAbstract(private val connection: Socket) : Thread() {
+    abstract inner class ConnectionThreadAbstract(private val connection: Socket, name: String) : Thread(name) {
         protected fun createMessage(data: FieldValue) {
             val remoteSocketAddress = connection.remoteSocketAddress as? InetSocketAddress
 
@@ -118,7 +118,7 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
 
     }
 
-    inner class SyslogFrameConnectionThread(private val connection: Socket) : ConnectionThreadAbstract(connection) {
+    inner class SyslogFrameConnectionThread(private val connection: Socket) : ConnectionThreadAbstract(connection, "tcp-sf-connection-${connection.inetAddress.hostAddress}") {
         override fun run() {
             try {
                 connection.use {
@@ -174,13 +174,17 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
         }
     }
 
-    inner class NewlineTerminatedConnectionThread(private val connection: Socket) : ConnectionThreadAbstract(connection) {
+    inner class NewlineTerminatedConnectionThread(private val connection: Socket) : ConnectionThreadAbstract(connection, "tcp-nl-connection-${connection.inetAddress.hostAddress}") {
         override fun run() {
             try {
                 connection.use {
                     val inputStream = connection.getInputStream()
-                    while (true) {
+                    while (!connection.isClosed) {
                         val data = readInputStreamTerminated(inputStream, '\n')
+                        if (data == null) {
+                            // end of stream
+                            break
+                        }
                         if (data.isNotEmpty()) {
                             // do not include the newline in payload
                             var newlineLength = 0
@@ -197,6 +201,32 @@ class TcpListener(val address: Address, private val isSyslogFrame: Boolean) {
             } catch (e: Throwable) {
                 InternalLog.exception(e)
             }
+        }
+
+        /**
+         * Reads bytes from input stream until a terminating char,
+         * returns all received bytes including the terminator.
+         *
+         * This is not very efficient!
+         */
+        private fun readInputStreamTerminated(input: InputStream, stopAt: Char): ByteArray? {
+            val stopAtByte = stopAt.toByte()
+            val bytes = mutableListOf<Byte>()
+            while (true) {
+                val number = input.read()
+                if (number < 0) {
+                    if (bytes.isEmpty()) {
+                        return null
+                    }
+                    return bytes.toByteArray()
+                }
+                val byte = number.toByte()
+                bytes.add(byte)
+                if (byte == stopAtByte) {
+                    break
+                }
+            }
+            return bytes.toByteArray()
         }
     }
 }

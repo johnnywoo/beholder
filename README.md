@@ -458,6 +458,7 @@ Use this with `from timer` to create a health log.
 
 Fields produced by `parse beholder-stats`:
 
+* `$configReloads`         — Number of successful config reloads
 * `$fromTcpMaxBytes`       — Maximum length of a message received over TCP
 * `$fromTcpMessages`       — Number of messages received over TCP
 * `$fromTcpNewConnections` — Number of accepted TCP connections

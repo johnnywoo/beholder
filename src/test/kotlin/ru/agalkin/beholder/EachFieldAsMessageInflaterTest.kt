@@ -32,7 +32,14 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             { it.input(Message()) }
         )
 
-        assertFieldNames(received[0], "fromUdpMaxBytes", "heapBytes", "heapMaxBytes", "heapUsedBytes", "uptimeSeconds", "payload")
+        assertFieldNames(
+            received[0],
+            "fromTcpMaxBytes", "fromTcpMessages", "fromTcpNewConnections", "fromTcpTotalBytes",
+            "fromUdpMaxBytes", "fromUdpMessages", "fromUdpTotalBytes",
+            "heapBytes", "heapMaxBytes", "heapUsedBytes",
+            "queueMaxSize", "queueOverflows", "uptimeSeconds", "messagesReceived", "configReloads",
+            "payload"
+        )
     }
 
     @Test
@@ -44,7 +51,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
                 switch ¥value { case ~^[0-9]+¥~ {} }
                 set ¥payload 'beholder,tag=tagval ¥key=¥value';
             """.replace('¥', '$'),
-            5,
+            15,
             {
                 val message = Message()
                 message["date"]    = "2017-11-26T16:16:01+03:00"
@@ -58,10 +65,20 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             .sorted()
 
         assertEquals(listOf(
+            "beholder,tag=tagval configReloads=N",
+            "beholder,tag=tagval fromTcpMaxBytes=N",
+            "beholder,tag=tagval fromTcpMessages=N",
+            "beholder,tag=tagval fromTcpNewConnections=N",
+            "beholder,tag=tagval fromTcpTotalBytes=N",
             "beholder,tag=tagval fromUdpMaxBytes=N",
+            "beholder,tag=tagval fromUdpMessages=N",
+            "beholder,tag=tagval fromUdpTotalBytes=N",
             "beholder,tag=tagval heapBytes=N",
             "beholder,tag=tagval heapMaxBytes=N",
             "beholder,tag=tagval heapUsedBytes=N",
+            "beholder,tag=tagval messagesReceived=N",
+            "beholder,tag=tagval queueMaxSize=N",
+            "beholder,tag=tagval queueOverflows=N",
             "beholder,tag=tagval uptimeSeconds=N"
         ), lineProtocolPackets)
     }

@@ -1,8 +1,8 @@
 package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.ConfigOption
-import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.DataQueue
+import ru.agalkin.beholder.InternalLog
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter

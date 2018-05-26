@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.*
+import ru.agalkin.beholder.stats.Stats
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.SocketTimeoutException
@@ -39,7 +40,7 @@ class UdpListenerThread(
 
                 queue.add(message)
 
-                UdpListener.updateMaxReceivedPacketSize(packet.length)
+                Stats.reportUdpReceived(packet.length.toLong())
             }
         }
 

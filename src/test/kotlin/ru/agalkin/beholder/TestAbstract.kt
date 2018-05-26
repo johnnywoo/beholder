@@ -90,7 +90,7 @@ abstract class TestAbstract {
     protected fun assertFieldNames(message: Message?, vararg names: String) {
         assertNotNull(message)
         if (message != null) {
-            assertEquals(message.getFieldNames().sorted(), names.sorted())
+            assertEquals(names.sorted(), message.getFieldNames().sorted())
         }
     }
 

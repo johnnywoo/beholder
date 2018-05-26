@@ -1,8 +1,8 @@
 package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.ConfigOption
-import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.DataQueue
+import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
 import java.net.DatagramPacket
 import java.net.DatagramSocket

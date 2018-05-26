@@ -450,21 +450,33 @@ become message fields. Group names should not be prefixed with $.
 
     parse ~(?<logKind>access|error)~;
 
-This will produce field $logKind with either 'access' or 'error' as value,
-if either word occurs in $payload. If both words are present, earliest match is used.
+This will produce field `$logKind` with either 'access' or 'error' as value,
+if either word occurs in `$payload`. If both words are present, earliest match is used.
 
 Format `beholder-stats`: fills the message with internal Beholder stats.
 Use this with `from timer` to create a health log.
 
 Fields produced by `parse beholder-stats`:
 
-* `$uptimeSeconds`  — Uptime in seconds
-* `$heapBytes`      — Current heap size in bytes (memory usage)
-* `$heapUsedBytes`  — Used memory in the heap
-* `$heapMaxBytes`   — Maximal heap size
-* `$udpMaxBytesIn`  — Maximal size of received UDP packet since last collection of stats
-* `$payload`        — A summary of Beholder stats
+* `$fromTcpMaxBytes`       — Maximum length of a message received over TCP
+* `$fromTcpMessages`       — Number of messages received over TCP
+* `$fromTcpNewConnections` — Number of accepted TCP connections
+* `$fromTcpTotalBytes`     — Total number of bytes received over TCP
+* `$fromUdpMaxBytes`       — Maximum length of a packet received over UDP
+* `$fromUdpMessages`       — Number of messages received over UDP
+* `$fromUdpTotalBytes`     — Summed length of all packets received over UDP
+* `$heapBytes`             — Current heap size in bytes (memory usage)
+* `$heapMaxBytes`          — Maximal heap size
+* `$heapUsedBytes`         — Used memory in the heap
+* `$messagesReceived`      — Count of received messages
+* `$queueMaxSize`          — Maximum size of a queue
+* `$queueOverflows`        — Number of messages dropped due to a queue overflow
+* `$uptimeSeconds`         — Uptime in seconds
+* `$payload`               — A summary of all these stats
 
+All counter stats are rotated: numbers are reset to 0 every time `parse beholder-stats` happens.
+If you have multiple `parse beholder-stats` commands in your config,
+they will have their own counters so they don't reset each other.
 
 ### `flow` — creates isolated flows of messages
 

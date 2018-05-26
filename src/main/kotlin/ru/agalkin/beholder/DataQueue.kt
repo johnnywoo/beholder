@@ -1,5 +1,6 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.stats.Stats
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -23,8 +24,10 @@ class DataQueue(capacityOption: ConfigOption) {
     fun add(chunk: FieldValue) {
         while (queue.size >= maxMessages.get()) {
             queue.take()
+            Stats.reportQueueOverflow()
         }
         queue.offer(chunk)
+        Stats.reportQueueSize(queue.size.toLong())
     }
 
     fun shift(timeoutMillis: Long): FieldValue? {

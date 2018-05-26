@@ -53,25 +53,5 @@ class UdpListener(val address: Address) {
                 return newListener
             }
         }
-
-        @Volatile private var maxReceivedPacketSize = 0
-
-        fun getAndResetMaxReceivedPacketSize(): Int {
-            val udpMaxBytesIn = maxReceivedPacketSize
-            synchronized(this) {
-                maxReceivedPacketSize = 0
-            }
-            return udpMaxBytesIn
-        }
-
-        fun updateMaxReceivedPacketSize(size: Int) {
-            if (maxReceivedPacketSize < size) {
-                synchronized(this) {
-                    if (maxReceivedPacketSize < size) {
-                        maxReceivedPacketSize = size
-                    }
-                }
-            }
-        }
     }
 }

@@ -27,6 +27,13 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         arguments.end()
     }
 
+    override fun stop() {
+        if (inflater is BeholderStatsInflater) {
+            inflater.stop()
+        }
+        super.stop()
+    }
+
     override fun input(message: Message) {
         val success = inflater.inflateMessageFields(message) {
             output.sendMessageToSubscribers(it)

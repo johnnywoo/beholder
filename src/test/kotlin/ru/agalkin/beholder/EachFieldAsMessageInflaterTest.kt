@@ -37,7 +37,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             "fromTcpMaxBytes", "fromTcpMessages", "fromTcpNewConnections", "fromTcpTotalBytes",
             "fromUdpMaxBytes", "fromUdpMessages", "fromUdpTotalBytes",
             "heapBytes", "heapMaxBytes", "heapUsedBytes",
-            "queueMaxSize", "queueOverflows", "uptimeSeconds", "messagesReceived", "configReloads",
+            "queueMaxSize", "queueOverflows", "uptimeSeconds", "messagesReceived", "configReloads", "unparsedDropped",
             "payload"
         )
     }
@@ -51,7 +51,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
                 switch ¥value { case ~^[0-9]+¥~ {} }
                 set ¥payload 'beholder,tag=tagval ¥key=¥value';
             """.replace('¥', '$'),
-            15,
+            16,
             {
                 val message = Message()
                 message["date"]    = "2017-11-26T16:16:01+03:00"
@@ -79,6 +79,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             "beholder,tag=tagval messagesReceived=N",
             "beholder,tag=tagval queueMaxSize=N",
             "beholder,tag=tagval queueOverflows=N",
+            "beholder,tag=tagval unparsedDropped=N",
             "beholder,tag=tagval uptimeSeconds=N"
         ), lineProtocolPackets)
     }

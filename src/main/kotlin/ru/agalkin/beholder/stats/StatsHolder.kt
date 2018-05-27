@@ -16,11 +16,11 @@ class StatsHolder {
 
         "fromTcpNewConnections" to AtomicLong(),
 
-        // global counters
         "messagesReceived" to AtomicLong(),
         "queueOverflows" to AtomicLong(),
         "queueMaxSize" to AtomicLong(),
-        "configReloads" to AtomicLong()
+        "configReloads" to AtomicLong(),
+        "unparsedDropped" to AtomicLong()
     )
 
     fun reportUdpReceived(size: Long) {
@@ -51,6 +51,10 @@ class StatsHolder {
 
     fun reportConfigReload() {
         stats["configReloads"]?.incrementAndGet()
+    }
+
+    fun reportUnparsedDropped() {
+        stats["unparsedDropped"]?.incrementAndGet()
     }
 
     private fun getStatValuesAndReset(): Map<String, Long> {

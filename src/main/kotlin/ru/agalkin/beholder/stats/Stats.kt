@@ -46,6 +46,12 @@ object Stats {
         }
     }
 
+    fun reportUnparsedDropped() {
+        for (holder in holders) {
+            holder.reportUnparsedDropped()
+        }
+    }
+
     init {
         Beholder.reloadListeners.add(object : Beholder.ReloadListener {
             override fun before(app: Beholder) {

@@ -472,6 +472,7 @@ Fields produced by `parse beholder-stats`:
 * `$messagesReceived`      — Count of received messages
 * `$queueMaxSize`          — Maximum size of a queue
 * `$queueOverflows`        — Number of messages dropped due to a queue overflow
+* `$unparsedDropped`       — Number of messages dropped due to parse errors
 * `$uptimeSeconds`         — Uptime in seconds
 * `$payload`               — A summary of all these stats
 

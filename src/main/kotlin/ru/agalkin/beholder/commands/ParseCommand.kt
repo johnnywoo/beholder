@@ -5,6 +5,7 @@ import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.inflaters.*
+import ru.agalkin.beholder.stats.Stats
 
 class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
     private val inflater: Inflater
@@ -38,8 +39,12 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
         val success = inflater.inflateMessageFields(message) {
             output.sendMessageToSubscribers(it)
         }
-        if (shouldKeepUnparsed && !success) {
-            output.sendMessageToSubscribers(message)
+        if (!success) {
+            if (shouldKeepUnparsed) {
+                output.sendMessageToSubscribers(message)
+            } else {
+                Stats.reportUnparsedDropped()
+            }
         }
     }
 }

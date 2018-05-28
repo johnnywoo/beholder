@@ -104,11 +104,11 @@ fun main(args: Array<String>) {
         exitProcess(0)
     }
 
-    app.start()
-
     // we need very little memory compared to most Java programs
-    // let's shrink the initial heap
-    Runtime.getRuntime().gc()
+    // let's shrink the heap
+    GCTimer.start()
+
+    app.start()
 
     Signal.handle(Signal("HUP")) {
         InternalLog.info("Got SIGHUP")

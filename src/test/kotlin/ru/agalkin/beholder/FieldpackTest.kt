@@ -2,20 +2,139 @@ package ru.agalkin.beholder
 
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.fail
 
 class FieldpackTest : TestAbstract() {
+    private val fieldpack = Fieldpack()
+
+    @Test
+    fun testFieldpackUnpackTrivial() {
+        val message = Message(mapOf(
+            "payload" to FieldValue.fromString("cat")
+        ))
+
+        val buffer = ByteArray(10000)
+        var length = 0
+
+        // packing and writing
+        fieldpack.writeMessages(listOf(message)) { source, readLength ->
+            for (i in 0 until readLength) {
+                buffer[length++] = source[i]
+            }
+        }
+
+        assertByteArraysEqual(byteArrayOf(
+            // * NUM N = number of field names
+            1,
+            // * N x ( NSTR field name )
+            7, *bytes("payload"),
+            // * NUM M = number of messages
+            1,
+            // * M x N x ( NSTR value )
+            3, *bytes("cat")
+        ), buffer.copyOfRange(0, length))
+
+        // unpacking
+        var index = 0
+        val unpackedMessages = fieldpack.readMessages { readLength ->
+            val chunk = Fieldpack.Chunk(buffer, index, readLength)
+            index += readLength
+            if (index > length) {
+                fail("readMessages tried to read $index bytes, packed length $length")
+            }
+            chunk
+        }
+
+        assertEquals(1, unpackedMessages.size)
+        assertFieldNames(unpackedMessages[0], "payload")
+        assertEquals("cat", unpackedMessages[0].getPayloadString())
+    }
+
+    private fun bytes(s: String)
+        = s.toByteArray()
+
+    @Test
+    fun testFieldpackUnpackTwoMessages() {
+        val messages = listOf(
+            Message(mapOf(
+                "sound" to FieldValue.fromString("meow"),
+                "claws" to FieldValue.fromString("retracted")
+            )),
+            Message(mapOf(
+                "sound" to FieldValue.fromString("gruff"),
+                "tail" to FieldValue.fromString("wiggling")
+            ))
+        )
+
+        val buffer = ByteArray(10000)
+        var length = 0
+
+        // packing and writing
+        fieldpack.writeMessages(messages) { source, readLength ->
+            for (i in 0 until readLength) {
+                buffer[length++] = source[i]
+            }
+        }
+
+        assertByteArraysEqual(byteArrayOf(
+            // * NUM N = number of field names
+            3,
+            // * N x ( NSTR field name )
+            5, *bytes("claws"),
+            5, *bytes("sound"),
+            4, *bytes("tail"),
+            // * NUM M = number of messages
+            2,
+            // * M x N x ( NSTR value )
+            9, *bytes("retracted"),
+            4, *bytes("meow"),
+            0, // no "tail" in first message
+            0, // no "claws" in second message
+            5, *bytes("gruff"),
+            8, *bytes("wiggling")
+        ), buffer.copyOfRange(0, length))
+
+        // unpacking
+        var index = 0
+        val unpackedMessages = fieldpack.readMessages { readLength ->
+            val chunk = Fieldpack.Chunk(buffer, index, readLength)
+            index += readLength
+            if (index > length) {
+                fail("readMessages tried to read $index bytes, packed length $length")
+            }
+            chunk
+        }
+
+        assertEquals(2, unpackedMessages.size)
+
+        assertFieldNames(unpackedMessages[0], "claws", "sound")
+        assertEquals("meow", unpackedMessages[0].getStringField("sound"))
+        assertEquals("retracted", unpackedMessages[0].getStringField("claws"))
+
+        assertFieldNames(unpackedMessages[1], "tail", "sound")
+        assertEquals("gruff", unpackedMessages[1].getStringField("sound"))
+        assertEquals("wiggling", unpackedMessages[1].getStringField("tail"))
+    }
+
     @Test
     fun testNumPackUnpack() {
         // some small numbers
-        for (n in 0..10000L) {
+        for (n in 0..33000L) {
             val byteArray = ByteArray(10)
-            val length = Fieldpack.writeNum(n, byteArray)
+            val length = fieldpack.writeNum(n) { source, readLength ->
+                for (i in 0 until readLength) {
+                    byteArray[i] = source[i]
+                }
+            }
             var i = 0
-            val unpackedN = Fieldpack.readNum {
-                if (i >= length) {
+            val unpackedN = fieldpack.readNum { toRead ->
+                val chunk = Fieldpack.Chunk(byteArray, i, toRead)
+
+                i += toRead
+                if (i > length) {
                     throw BeholderException("Too many reads: $i original=$n packed=" + byteArray.joinToString(",") { (it.toInt() and 0xff).toString() })
                 }
-                byteArray[i++]
+                chunk
             }
             assertEquals(n, unpackedN, "Invalid unpack: unpacked=$unpackedN original=$n packed=" + byteArray.joinToString(",") { (it.toInt() and 0xff).toString() })
         }
@@ -23,25 +142,16 @@ class FieldpackTest : TestAbstract() {
 
     @Test
     fun testNumPackBytes() {
-        assertBytes(uByteArray(0), 0)
-        assertBytes(uByteArray(1), 1)
-        assertBytes(uByteArray(248), 248)
-        assertBytes(uByteArray(249), 249)
-
-        assertBytes(uByteArray(250,   0), 250)
-        assertBytes(uByteArray(250,   1), 251)
-        assertBytes(uByteArray(250, 254), 504)
-        assertBytes(uByteArray(250, 255), 505)
-
-        assertBytes(uByteArray(251,   0,   0), 506)
-        assertBytes(uByteArray(251,   1,   0), 507)
-        assertBytes(uByteArray(251, 254, 255), 66_040)
-        assertBytes(uByteArray(251, 255, 255), 66_041)
-
-        assertBytes(uByteArray(252,   0,   0,   0), 66_042)
-        assertBytes(uByteArray(252,   1,   0,   0), 66_043)
-        assertBytes(uByteArray(252, 254, 255, 255), 16_843_256)
-        assertBytes(uByteArray(252, 255, 255, 255), 16_843_257)
+        assertBytes(uByteArray(0b0000_0000), 0)
+        assertBytes(uByteArray(0b0000_0001), 1)
+        assertBytes(uByteArray(0b0111_1111), 127)
+        assertBytes(uByteArray(0b1000_0000, 0b0000_0001), 128)
+        assertBytes(uByteArray(0b1000_0001, 0b0000_0001), 129)
+        assertBytes(uByteArray(0b1111_1111, 0b0000_0001), 255)
+        assertBytes(uByteArray(0b1000_0000, 0b0000_0010), 256)
+        assertBytes(uByteArray(0b1010_1100, 0b0000_0010), 300)
+        assertBytes(uByteArray(0b1111_1111, 0b0111_1111), 16383)
+        assertBytes(uByteArray(0b1000_0000, 0b1000_0000, 0b0000_0001), 16384)
     }
 
     private fun assertBytes(expected: ByteArray, n: Long) {
@@ -63,9 +173,13 @@ class FieldpackTest : TestAbstract() {
     }
 
     private fun createNumSequence(n: Long): ByteArray {
-        val length = Fieldpack.writeNum(n)
+        val length = fieldpack.writeNum(n, {_,_->})
         val byteArray = ByteArray(length)
-        Fieldpack.writeNum(n, byteArray)
+        fieldpack.writeNum(n) { source, readLenth ->
+            for (i in 0 until readLenth) {
+                byteArray[i] = source[i]
+            }
+        }
         return byteArray
     }
 }

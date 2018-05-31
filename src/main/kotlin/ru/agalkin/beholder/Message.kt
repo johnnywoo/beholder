@@ -36,7 +36,7 @@ class Message(initialFields: Map<String, FieldValue>? = null) {
         fields.remove(field)
     }
 
-    fun getFieldNames()
+    fun getFieldNames(): Set<String>
         = fields.keys
 
     fun getPayloadString()

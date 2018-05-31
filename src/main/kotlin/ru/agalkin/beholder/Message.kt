@@ -25,14 +25,18 @@ class Message(initialFields: Map<String, FieldValue>? = null) {
     }
 
     fun setFieldValue(field: String, value: FieldValue) {
-        fields[field] = value
+        if (value.getByteLength() == 0) {
+            fields.remove(field)
+        } else {
+            fields[field] = value
+        }
     }
 
     fun remove(field: String) {
         fields.remove(field)
     }
 
-    fun getFieldNames()
+    fun getFieldNames(): Set<String>
         = fields.keys
 
     fun getPayloadString()

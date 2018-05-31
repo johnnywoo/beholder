@@ -28,6 +28,7 @@ class SetCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
                 arguments.shiftLiteralOrNull("lowercase") != null
             )
             "json" -> JsonFormatter(nullIfEmpty(scanArgumentsAsFieldNames(arguments, "`set ... json` arguments must be field names")))
+            "fieldpack" -> FieldpackFormatter(nullIfEmpty(scanArgumentsAsFieldNames(arguments, "`set ... fieldpack` arguments must be field names")))
             "replace" -> {
                 val regexp = arguments.shiftRegexp("`replace` needs a regexp")
                 val replacementTemplate = arguments.shiftStringTemplate("`replace` needs a replacement string")

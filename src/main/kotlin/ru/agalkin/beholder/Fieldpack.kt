@@ -94,8 +94,12 @@ class Fieldpack {
                 }
             }
         }
+        return writeMessages(messages, fieldNames, write)
+    }
+
+    fun writeMessages(messages: List<Message>, fields: List<String>, write: Writer): Int {
         // sorting makes output fully reproducible and does not really cost much
-        fieldNames.sort()
+        val fieldNames = fields.sorted()
 
         var packedLength = 0
 

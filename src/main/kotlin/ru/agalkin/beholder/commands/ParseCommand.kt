@@ -19,6 +19,7 @@ class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
             inflater = when (arguments.shiftAnyLiteral("We need some format to `parse`")) {
                 "syslog" -> SyslogInflater()
                 "json" -> JsonInflater()
+                "fieldpack" -> FieldpackInflater()
                 "beholder-stats" -> BeholderStatsInflater()
                 "each-field-as-message" -> EachFieldAsMessageInflater("key", "value")
                 else -> throw CommandException("Cannot understand arguments of `parse` command")

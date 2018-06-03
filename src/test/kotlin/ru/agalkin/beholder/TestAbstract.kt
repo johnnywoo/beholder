@@ -75,7 +75,6 @@ abstract class TestAbstract {
         }
 
         root.stop()
-
         assertEquals(count, processedMessages.size, "Expected number of messages does not match")
 
         return processedMessages

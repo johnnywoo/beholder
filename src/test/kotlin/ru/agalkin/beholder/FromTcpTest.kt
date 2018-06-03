@@ -8,6 +8,8 @@ import kotlin.test.assertNotNull
 class FromTcpTest : TestAbstract() {
     @Test
     fun testFromTcpSimple() {
+        SelectorThread.erase()
+
         val messageText = "message"
         val processedMessage = receiveMessageWithConfig("from tcp 3820") {
             val port = 3820
@@ -27,6 +29,8 @@ class FromTcpTest : TestAbstract() {
 
     @Test
     fun testFromTcpTwoMessages() {
+        SelectorThread.erase()
+
         val processedMessages = receiveMessagesWithConfig("from tcp 3820", 2) {
             val port = 3820
             Socket().use { socket ->

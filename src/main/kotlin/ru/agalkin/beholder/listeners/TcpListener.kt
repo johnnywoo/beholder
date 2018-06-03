@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 class TcpListener(val address: Address, isSyslogFrame: Boolean) {
-    val isListenerDeleted = AtomicBoolean(false)
+    private val isListenerDeleted = AtomicBoolean(false)
 
     val router = MessageRouter()
 
@@ -14,23 +14,32 @@ class TcpListener(val address: Address, isSyslogFrame: Boolean) {
 
     private val emitterThread = QueueEmitterThread(isListenerDeleted, router, queue, "from-tcp-$address-emitter")
 
+    private val receiver = when (isSyslogFrame) {
+        true -> SyslogFrameTcpReceiver(queue)
+        else -> NewlineTerminatedTcpReceiver(queue)
+    }
+
     init {
+        emitterThread.start()
+
+        SelectorThread.addTcpListener(address) {
+            receiver.receiveMessage(it)
+        }
+
         Beholder.reloadListeners.add(object : Beholder.ReloadListener {
             override fun before(app: Beholder) {
             }
 
             override fun after(app: Beholder) {
                 if (!router.hasSubscribers()) {
-                   // после перезагрузки конфига оказалось, что листенер никому больше не нужен
+                    // после перезагрузки конфига оказалось, что листенер никому больше не нужен
+                    SelectorThread.removeTcpListener(address)
                     isListenerDeleted.set(true)
                     Beholder.reloadListeners.remove(this)
                     listeners.remove(address)
                 }
             }
         })
-
-        emitterThread.start()
-        TcpListenerThread(isListenerDeleted, isSyslogFrame, queue, address).start()
     }
 
     companion object {

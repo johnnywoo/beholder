@@ -2,6 +2,7 @@ package ru.agalkin.beholder.config
 
 import ru.agalkin.beholder.BeholderException
 import java.net.InetAddress
+import java.net.InetSocketAddress
 
 data class Address(private val host: String, val port: Int) {
     companion object {
@@ -36,6 +37,9 @@ data class Address(private val host: String, val port: Int) {
 
     fun getInetAddress(): InetAddress
         = InetAddress.getByName(host)
+
+    fun toSocketAddress()
+        = InetSocketAddress(host, port)
 
     class AddressException(message: String) : BeholderException(message)
 }

@@ -8,6 +8,10 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
+fun d(message: String) {
+    println("[" + Thread.currentThread().name + "] " + message)
+}
+
 fun getIsoDateFormatter()
     = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
 

@@ -5,17 +5,16 @@ import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.MessageQueue
 import ru.agalkin.beholder.getIsoDateFormatter
 import java.net.InetSocketAddress
-import java.net.Socket
+import java.nio.channels.SocketChannel
 import java.util.*
 
-abstract class TcpConnectionThreadAbstract(
-    private val connection: Socket,
-    private val queue: MessageQueue,
-    name: String
-) : Thread(name) {
+abstract class TcpMessageReceiverAbstract(
+    private val queue: MessageQueue
+) {
+    abstract fun receiveMessage(socketChannel: SocketChannel)
 
-    protected fun createMessage(data: FieldValue) {
-        val remoteSocketAddress = connection.remoteSocketAddress as? InetSocketAddress
+    protected fun createMessage(data: FieldValue, channel: SocketChannel) {
+        val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
 
         val message = Message()
 
@@ -33,5 +32,4 @@ abstract class TcpConnectionThreadAbstract(
 
     private fun curDateIso(): String
         = formatter.format(Date())
-
 }

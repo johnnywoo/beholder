@@ -1,5 +1,7 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.listeners
 
+import ru.agalkin.beholder.Executor
+import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.stats.Stats
 import java.nio.channels.SelectionKey
@@ -76,8 +78,6 @@ object SelectorThread : Thread("selector") {
 
             val selectedKeys = selector.selectedKeys()
             for (key in selectedKeys) {
-                selectedKeys.remove(key)
-
                 val channel = key.channel()
                 if (channel == null) {
                     InternalLog.err("Null channel from selector")
@@ -124,6 +124,7 @@ object SelectorThread : Thread("selector") {
                     }
                 }
             }
+            selectedKeys.clear()
         }
     }
 

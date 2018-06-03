@@ -1,7 +1,10 @@
 package ru.agalkin.beholder
 
 import org.junit.Test
-import java.net.*
+import ru.agalkin.beholder.listeners.SelectorThread
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Socket
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 

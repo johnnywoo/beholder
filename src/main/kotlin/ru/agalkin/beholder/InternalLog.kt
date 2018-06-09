@@ -7,75 +7,74 @@ import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
-class InternalLog {
-    companion object {
-        private var allowRegularOutput = true
-        private var allowErrorOutput = true
+object InternalLog {
+    private var allowRegularOutput = true
+    private var allowErrorOutput   = true
 
-        fun stopWritingToStdout() {
-            allowRegularOutput = false
+    fun stopWritingToStdout() {
+        allowRegularOutput = false
+    }
+
+    fun stopWritingToStderr() {
+        allowErrorOutput = false
+    }
+
+    private var logFile: File? = null
+
+    fun copyToFile(filename: String) {
+        val file = File(filename)
+        if (!file.isFile) {
+            file.createNewFile()
+        }
+        logFile = file
+    }
+
+    fun info(text: String?)
+        = dispatchMessage(text, Severity.INFO)
+
+    fun err(text: String?)
+        = dispatchMessage(text, Severity.ERROR)
+
+    fun exception(e: Throwable) {
+        val writer = StringWriter()
+        e.printStackTrace(PrintWriter(writer))
+        dispatchMessage(
+            writer.buffer.toString(),
+            Severity.ERROR
+        )
+    }
+
+    private fun dispatchMessage(text: String?, severity: Severity) {
+        if (text == null) {
+            return
         }
 
-        fun stopWritingToStderr() {
-            allowErrorOutput = false
+        val date    = Date()
+        val isoDate = getIsoDate(date)
+
+        val destination = when (Severity.WARNING.isMoreUrgentThan(severity)) {
+            true  -> if (allowRegularOutput) System.out else null
+            false -> if (allowErrorOutput) System.err else null
         }
+        destination?.println(
+            SimpleDateFormat("HH:mm:ss").format(date)
+                + " " + text
+        )
 
-        private var logFile: File? = null
+        logFile?.appendText(
+            isoDate
+                + " " + severity.name
+                + " " + addNewlineIfNeeded(text)
+        )
 
-        fun copyToFile(filename: String) {
-            val file = File(filename)
-            if (!file.isFile) {
-                file.createNewFile()
-            }
-            logFile = file
-        }
+        val message = Message()
 
-        fun info(text: String?)
-            = dispatchMessage(text, Severity.INFO)
+        message["date"]     = isoDate
+        message["from"]     = "beholder://internal-log"
+        message["payload"]  = text
+        message["program"]  = BEHOLDER_SYSLOG_PROGRAM
+        message["severity"] = severity.getNumberAsString()
 
-        fun err(text: String?)
-            = dispatchMessage(text, Severity.ERROR)
-
-        fun exception(e: Throwable) {
-            val writer = StringWriter()
-            e.printStackTrace(PrintWriter(writer))
-            dispatchMessage(
-                writer.buffer.toString(),
-                Severity.ERROR
-            )
-        }
-
-        private fun dispatchMessage(text: String?, severity: Severity) {
-            if (text == null) {
-                return
-            }
-
-            val date = Date()
-
-            val destination = when (Severity.WARNING.isMoreUrgentThan(severity)) {
-                true  -> if (allowRegularOutput) System.out else null
-                false -> if (allowErrorOutput) System.err else null
-            }
-            destination?.println(
-                SimpleDateFormat("HH:mm:ss").format(date)
-                    + " " + text
-            )
-
-            logFile?.appendText(
-                (getIsoDate(date))
-                    + " " + severity.name
-                    + " " + addNewlineIfNeeded(text)
-            )
-
-            val message = Message()
-
-            message["date"]     = getIsoDate()
-            message["from"]     = "beholder://internal-log"
-            message["payload"]  = text
-            message["program"]  = BEHOLDER_SYSLOG_PROGRAM
-            message["severity"] = severity.getNumberAsString()
-
-            InternalLogListener.add(message)
-        }
+        InternalLogListener.add(message)
     }
 }

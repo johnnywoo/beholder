@@ -96,7 +96,7 @@ class IntegrationTest : TestAbstract() {
         val messageText = """{"agent_type":"udp-syslog","date":"2018-05-03T15:32:56+03:00","from":"udp://1.1.1.1:33333","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}"""
 
         val processedMessage = receiveMessageWithConfig(collectorConfig) {
-            sendToTcp(COLLECTOR_TCP_PORT, (messageText + "\n").toByteArray())
+            sendToTcp(COLLECTOR_TCP_PORT, messageText + "\n")
         }
 
         assertNotNull(processedMessage)

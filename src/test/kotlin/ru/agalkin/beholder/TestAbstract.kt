@@ -100,6 +100,9 @@ abstract class TestAbstract {
         )
     }
 
+    protected fun sendToTcp(port: Int, messageText: String)
+        = sendToTcp(port, messageText.toByteArray())
+
     protected fun sendToTcp(port: Int, messageBytes: ByteArray) {
         Socket().use { socket ->
             socket.connect(InetSocketAddress(InetAddress.getLocalHost(), port))

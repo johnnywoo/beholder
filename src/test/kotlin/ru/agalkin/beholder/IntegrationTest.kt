@@ -37,8 +37,8 @@ class IntegrationTest : TestAbstract() {
 
         # Agent simply wraps everything into JSON and sends it to the collector.
         set ¥host 'fake-host';
-        set ¥date '';
-        set ¥from '';
+        set ¥date replace ~[0-9]~ N;
+        set ¥from replace ~[0-9]+~ X;
         set ¥payload json;
     """.replace('¥', '$')
 
@@ -86,14 +86,14 @@ class IntegrationTest : TestAbstract() {
             return
         }
         assertEquals(
-            """{"agent_type":"udp-syslog","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}""",
+            """{"agent_type":"udp-syslog","date":"NNNN-NN-NNTNN:NN:NN+NN:NN","from":"udp://X.X.X.X:X","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}""",
             processedMessage.getPayloadString()
         )
     }
 
     @Test
     fun testCollectorCyrillic() {
-        val messageText = """{"agent_type":"udp-syslog","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}"""
+        val messageText = """{"agent_type":"udp-syslog","date":"2018-05-03T15:32:56+03:00","from":"udp://1.1.1.1:33333","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}"""
 
         val processedMessage = receiveMessageWithConfig(collectorConfig) {
             sendToTcp(COLLECTOR_TCP_PORT, (messageText + "\n").toByteArray(Charsets.UTF_8))

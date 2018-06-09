@@ -8,7 +8,7 @@ import ru.agalkin.beholder.config.Address
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-const val FROM_UDP_MAX_MESSAGE_CHARS = 60 * 1024
+const val FROM_UDP_MAX_MESSAGE_BYTES = 65507
 
 class UdpListener(val address: Address) {
     val isListenerDeleted = AtomicBoolean(false)

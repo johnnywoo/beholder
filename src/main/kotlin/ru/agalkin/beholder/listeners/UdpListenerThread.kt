@@ -11,7 +11,7 @@ class UdpListenerThread(
     private val udpListener: UdpListener,
     private val queue: MessageQueue
 ) : Thread("from-udp-${udpListener.address}-listener") {
-    private val buffer = ByteArray(FROM_UDP_MAX_MESSAGE_CHARS)
+    private val buffer = ByteArray(FROM_UDP_MAX_MESSAGE_BYTES)
 
     override fun run() {
         InternalLog.info("Thread $name got started")

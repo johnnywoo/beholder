@@ -80,7 +80,7 @@ class FromUdpTest : TestAbstract() {
 
     @Test
     fun testFromCyrillicSymbols() {
-        val messageBytes = "кошка".toByteArray(Charsets.UTF_8)
+        val messageBytes = "кошка".toByteArray()
         val processedMessage = receiveMessageWithConfig("from udp 3820") {
             sendToUdp(3820, messageBytes)
         }

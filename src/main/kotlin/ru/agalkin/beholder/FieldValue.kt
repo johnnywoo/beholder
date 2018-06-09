@@ -17,7 +17,7 @@ open class FieldValue(
 
     open fun getByteLength(): Int {
         if (stringValue != null) {
-            return stringValue.toByteArray(Charsets.UTF_8).size
+            return stringValue.toByteArray().size
         }
         if (byteArrayValue != null) {
             return byteArrayLength
@@ -27,7 +27,7 @@ open class FieldValue(
 
     fun toByteArray(): ByteArray {
         if (stringValue != null) {
-            return stringValue.toByteArray(Charsets.UTF_8)
+            return stringValue.toByteArray()
         }
         if (byteArrayValue != null) {
             return byteArrayValue

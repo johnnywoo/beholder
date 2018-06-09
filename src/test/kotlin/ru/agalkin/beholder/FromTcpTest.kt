@@ -12,7 +12,7 @@ class FromTcpTest : TestAbstract() {
 
         val messageText = "message"
         val processedMessage = receiveMessageWithConfig("from tcp 3820") {
-            sendToTcp(3820, (messageText + "\n").toByteArray(Charsets.UTF_8))
+            sendToTcp(3820, (messageText + "\n").toByteArray())
         }
 
         assertNotNull(processedMessage)
@@ -28,7 +28,7 @@ class FromTcpTest : TestAbstract() {
         SelectorThread.erase()
 
         val processedMessages = receiveMessagesWithConfig("from tcp 3820", 2) {
-            sendToTcp(3820, "cat\ndog\n".toByteArray(Charsets.UTF_8))
+            sendToTcp(3820, "cat\ndog\n".toByteArray())
         }
 
         assertEquals(2, processedMessages.size)

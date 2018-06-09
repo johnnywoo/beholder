@@ -40,7 +40,7 @@ open class FieldValue(
             return stringValue
         }
         if (byteArrayValue != null) {
-            return String(byteArrayValue, 0, byteArrayLength, Charsets.UTF_8)
+            return String(byteArrayValue, 0, byteArrayLength)
         }
         return ""
     }

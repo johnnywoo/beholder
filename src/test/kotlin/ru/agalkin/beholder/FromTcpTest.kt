@@ -2,9 +2,6 @@ package ru.agalkin.beholder
 
 import org.junit.Test
 import ru.agalkin.beholder.listeners.SelectorThread
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.Socket
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -15,11 +12,7 @@ class FromTcpTest : TestAbstract() {
 
         val messageText = "message"
         val processedMessage = receiveMessageWithConfig("from tcp 3820") {
-            val port = 3820
-            Socket().use { socket ->
-                socket.connect(InetSocketAddress(InetAddress.getLocalHost(), port))
-                socket.getOutputStream().write((messageText + "\n").toByteArray())
-            }
+            sendToTcp(3820, (messageText + "\n").toByteArray(Charsets.UTF_8))
         }
 
         assertNotNull(processedMessage)
@@ -35,11 +28,7 @@ class FromTcpTest : TestAbstract() {
         SelectorThread.erase()
 
         val processedMessages = receiveMessagesWithConfig("from tcp 3820", 2) {
-            val port = 3820
-            Socket().use { socket ->
-                socket.connect(InetSocketAddress(InetAddress.getLocalHost(), port))
-                socket.getOutputStream().write("cat\ndog\n".toByteArray())
-            }
+            sendToTcp(3820, "cat\ndog\n".toByteArray(Charsets.UTF_8))
         }
 
         assertEquals(2, processedMessages.size)

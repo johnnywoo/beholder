@@ -136,8 +136,8 @@ abstract class TestAbstract {
     companion object {
         @JvmStatic @BeforeClass
         fun beforeAllTests() {
-            InternalLog.stopWritingToStdout()
-            InternalLog.stopWritingToStderr()
+            InternalLog.setStdout(null)
+            InternalLog.setStderr(null)
         }
     }
 }

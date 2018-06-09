@@ -2,21 +2,22 @@ package ru.agalkin.beholder
 
 import ru.agalkin.beholder.listeners.InternalLogListener
 import java.io.File
+import java.io.PrintStream
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
 object InternalLog {
-    private var allowRegularOutput = true
-    private var allowErrorOutput   = true
+    private var stdout: PrintStream? = System.out
+    private var stderr: PrintStream? = System.err
 
-    fun stopWritingToStdout() {
-        allowRegularOutput = false
+    fun setStdout(printStream: PrintStream?) {
+        stdout = printStream
     }
 
-    fun stopWritingToStderr() {
-        allowErrorOutput = false
+    fun setStderr(printStream: PrintStream?) {
+        stderr = printStream
     }
 
     private var logFile: File? = null
@@ -53,8 +54,8 @@ object InternalLog {
         val isoDate = getIsoDate(date)
 
         val destination = when (Severity.WARNING.isMoreUrgentThan(severity)) {
-            true  -> if (allowRegularOutput) System.out else null
-            false -> if (allowErrorOutput) System.err else null
+            true  -> stdout
+            false -> stderr
         }
         destination?.println(
             SimpleDateFormat("HH:mm:ss").format(date)

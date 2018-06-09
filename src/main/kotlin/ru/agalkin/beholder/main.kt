@@ -35,7 +35,7 @@ fun main(args: Array<String>) {
     }
 
     if (cli.isQuiet) {
-        InternalLog.stopWritingToStdout()
+        InternalLog.setStdout(null)
     }
 
     val logFile = cli.logFile

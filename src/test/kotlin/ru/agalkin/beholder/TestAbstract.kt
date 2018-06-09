@@ -13,6 +13,8 @@ import ru.agalkin.beholder.config.parser.LiteralToken
 import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
 import ru.agalkin.beholder.formatters.DumpFormatter
+import ru.agalkin.beholder.listeners.TcpListener
+import java.net.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -56,28 +58,53 @@ abstract class TestAbstract {
     }
 
     protected fun receiveMessagesWithConfig(config: String, count: Int, senderBlock: (CommandAbstract) -> Unit): List<Message> {
-        val root = RootCommand.fromTokens(Token.getTokens(config, "test-config"))
+        TcpListener.destroyAllListeners()
 
-        val processedMessages = mutableListOf<Message>()
-        root.subcommands.last().output.addSubscriber { processedMessages.add(it) }
+        try {
+            val root = RootCommand.fromTokens(Token.getTokens(config, "test-config"))
 
-        root.start()
+            val processedMessages = mutableListOf<Message>()
+            root.subcommands.last().output.addSubscriber { processedMessages.add(it) }
 
-        senderBlock(root.subcommands.first())
+            root.start()
+            Thread.sleep(100)
 
-        var timeSpentMillis = 0
-        while (timeSpentMillis < 300) {
-            if (processedMessages.size == count) {
-                break
+            senderBlock(root.subcommands.first())
+
+            var timeSpentMillis = 0
+            while (timeSpentMillis < 300) {
+                if (processedMessages.size == count) {
+                    break
+                }
+                Thread.sleep(50)
+                timeSpentMillis += 50
             }
-            Thread.sleep(50)
-            timeSpentMillis += 50
+
+            root.stop()
+            Beholder.reloadListeners
+            assertEquals(count, processedMessages.size, "Expected number of messages does not match")
+
+            return processedMessages
+        } finally {
+            TcpListener.destroyAllListeners()
         }
+    }
 
-        root.stop()
-        assertEquals(count, processedMessages.size, "Expected number of messages does not match")
+    protected fun sendToUdp(port: Int, message: String) {
+        sendToUdp(port, message.toByteArray())
+    }
 
-        return processedMessages
+    protected fun sendToUdp(port: Int, message: ByteArray) {
+        DatagramSocket().send(
+            DatagramPacket(message, message.size, InetAddress.getLocalHost(), port)
+        )
+    }
+
+    protected fun sendToTcp(port: Int, messageBytes: ByteArray) {
+        Socket().use { socket ->
+            socket.connect(InetSocketAddress(InetAddress.getLocalHost(), port))
+            socket.getOutputStream().write(messageBytes)
+        }
     }
 
     protected fun getMessageDump(message: Message?)

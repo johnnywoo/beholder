@@ -1,9 +1,6 @@
 package ru.agalkin.beholder
 
 import org.junit.Test
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -82,6 +79,23 @@ class FromUdpTest : TestAbstract() {
     }
 
     @Test
+    fun testFromCyrillicSymbols() {
+        val messageBytes = "кошка".toByteArray(Charsets.UTF_8)
+        val processedMessage = receiveMessageWithConfig("from udp 3820") {
+            sendToUdp(3820, messageBytes)
+        }
+
+        assertNotNull(processedMessage)
+        if (processedMessage == null) {
+            return
+        }
+        assertFieldNames(processedMessage, "date", "from", "payload")
+        assertEquals("кошка", processedMessage.getPayloadString())
+        assertByteArraysEqual(messageBytes, messageBytes.slice(0 until messageBytes.size).toByteArray())
+        assertByteArraysEqual(messageBytes, getByteArrayField(processedMessage, "payload"))
+    }
+
+    @Test
     fun testStringOperations() {
         val messageText = "cat"
         val processedMessage = receiveMessageWithConfig("from udp 3820; set \$payload '\$payload-dog'") {
@@ -121,15 +135,5 @@ class FromUdpTest : TestAbstract() {
             return
         }
         assertEquals("a�(b-dog", processedMessage.getPayloadString())
-    }
-
-    private fun sendToUdp(port: Int, message: String) {
-        sendToUdp(port, message.toByteArray())
-    }
-
-    private fun sendToUdp(port: Int, message: ByteArray) {
-        DatagramSocket().send(
-            DatagramPacket(message, message.size, InetAddress.getLocalHost(), port)
-        )
     }
 }

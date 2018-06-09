@@ -84,6 +84,10 @@ object SelectorThread : Thread("selector") {
                     continue
                 }
 
+                if (!key.isValid) {
+                    continue
+                }
+
                 if (key.isAcceptable) {
                     // new connection
                     if (channel !is ServerSocketChannel) {

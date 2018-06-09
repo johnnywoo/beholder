@@ -19,6 +19,12 @@ class TcpListener(val address: Address, isSyslogFrame: Boolean) {
         else -> NewlineTerminatedTcpReceiver(queue)
     }
 
+    fun destroy() {
+        SelectorThread.removeTcpListener(address)
+        isListenerDeleted.set(true)
+        listeners.remove(address)
+    }
+
     init {
         emitterThread.start()
 
@@ -33,10 +39,8 @@ class TcpListener(val address: Address, isSyslogFrame: Boolean) {
             override fun after(app: Beholder) {
                 if (!router.hasSubscribers()) {
                     // после перезагрузки конфига оказалось, что листенер никому больше не нужен
-                    SelectorThread.removeTcpListener(address)
-                    isListenerDeleted.set(true)
                     Beholder.reloadListeners.remove(this)
-                    listeners.remove(address)
+                    destroy()
                 }
             }
         })
@@ -72,6 +76,12 @@ class TcpListener(val address: Address, isSyslogFrame: Boolean) {
                 val newListener = listeners[address] ?: TcpListener(address, isSyslogFrame)
                 listeners[address] = newListener
                 return newListener
+            }
+        }
+
+        fun destroyAllListeners() {
+            for (listener in listeners.values) {
+                listener.destroy()
             }
         }
     }

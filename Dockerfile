@@ -57,6 +57,7 @@ ENV LC_ALL=en_US.UTF-8
 
 COPY --from=builder /var/sources/build/libs /root
 COPY docker/beholder /sbin/
+COPY docker/install-devtools.sh /sbin/
 COPY docker/beholder.conf /etc/beholder/
 
 CMD [ \

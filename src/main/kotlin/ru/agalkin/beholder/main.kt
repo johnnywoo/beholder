@@ -1,5 +1,6 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.parser.ParseException
 import sun.misc.Signal
 import java.io.File
@@ -52,21 +53,19 @@ fun main(args: Array<String>) {
         }
     })
 
-    var configFile: String? = null
-    var configText: String? = null
-    var configSourceDescription: String? = null
+    val configMaker: () -> Config
 
     when {
         // beholder --config="from udp 3231; to stdout"
         cli.configText != null -> {
-            configText = cli.configText + "\n"
-            configSourceDescription = "cli-arg"
             InternalLog.info("Using config from CLI arguments")
+            configMaker = { Config.fromStringWithLog(cli.configText + "\n", "cli-arg") }
         }
 
         // beholder --config-file=/etc/beholder/beholder.conf
         cli.configFile != null -> {
             val filename = cli.configFile
+            filename!!
 
             val file = File(filename)
             if (!file.isFile || !file.canRead()) {
@@ -74,25 +73,24 @@ fun main(args: Array<String>) {
                 exitProcess(1)
             }
 
-            configFile = filename
-
             InternalLog.info("Using config from file: $filename")
+
+            configMaker = { Config.fromFile(filename) }
         }
 
         // no file and no config text:
         // use bundled config from resources
         // this is intended primarily for development purposes
         else -> {
-            configText = readTextFromResource("default-config.conf")
-            configSourceDescription = "config-from-jar"
-
             InternalLog.info("Using bundled config from jar resources")
+
+            configMaker = { Config.fromStringWithLog(readTextFromResource("default-config.conf"), "config-from-jar") }
         }
     }
 
     val app: Beholder
     try {
-        app = Beholder(configFile, configText, configSourceDescription)
+        app = Beholder(configMaker)
     } catch (e: ParseException) {
         InternalLog.err("=== Error: invalid config ===")
         InternalLog.err(e.message)

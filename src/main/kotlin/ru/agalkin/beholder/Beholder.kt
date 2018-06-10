@@ -7,9 +7,9 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 const val BEHOLDER_SYSLOG_PROGRAM = "beholder"
 
-class Beholder(private val configFile: String?, private val configText: String?, private val configSourceDescription: String?) {
+class Beholder(private val configMaker: () -> Config) {
     // тут не ловим никаких ошибок, чтобы при старте с кривым конфигом сразу упасть
-    var config: Config = readConfig()
+    var config: Config = configMaker()
 
     fun start() {
         config.start()
@@ -21,7 +21,7 @@ class Beholder(private val configFile: String?, private val configText: String?,
     fun reload() {
         val newConfig: Config
         try {
-            newConfig = readConfig()
+            newConfig = configMaker()
         } catch (e: ParseException) {
             InternalLog.err("=== Error: invalid config ===")
             InternalLog.err(e.message)
@@ -36,18 +36,6 @@ class Beholder(private val configFile: String?, private val configText: String?,
         config.start()
 
         notifyAfter(this)
-    }
-
-    private fun readConfig(): Config {
-        if (configText != null) {
-            return Config.fromStringWithLog(configText, configSourceDescription ?: "unknown")
-        }
-
-        if (configFile != null) {
-            return Config.fromFile(configFile)
-        }
-
-        throw BeholderException("Cannot start beholder without config")
     }
 
     companion object {

@@ -2,6 +2,7 @@ package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
+import ru.agalkin.beholder.config.ConfigOption
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 

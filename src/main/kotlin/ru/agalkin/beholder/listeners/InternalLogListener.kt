@@ -1,6 +1,6 @@
 package ru.agalkin.beholder.listeners
 
-import ru.agalkin.beholder.ConfigOption
+import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.MessageQueue
 import ru.agalkin.beholder.MessageRouter

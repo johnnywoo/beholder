@@ -1,5 +1,6 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.stats.Stats
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit

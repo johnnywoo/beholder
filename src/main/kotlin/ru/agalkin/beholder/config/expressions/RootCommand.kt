@@ -1,6 +1,6 @@
 package ru.agalkin.beholder.config.expressions
 
-import ru.agalkin.beholder.ConfigOption
+import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.commands.ConveyorCommandAbstract
 import ru.agalkin.beholder.config.parser.ParseException

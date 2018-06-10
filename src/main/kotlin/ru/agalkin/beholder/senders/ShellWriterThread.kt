@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.*
+import ru.agalkin.beholder.config.ConfigOption
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong

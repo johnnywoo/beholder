@@ -2,6 +2,7 @@ package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
+import ru.agalkin.beholder.config.ConfigOption
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean

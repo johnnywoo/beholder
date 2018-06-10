@@ -1,5 +1,6 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.config.ConfigOption
 import java.util.*
 
 object GCTimer {

@@ -11,9 +11,9 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
 
     val router = MessageRouter()
 
-    private val queue = MessageQueue(ConfigOption.FROM_TCP_BUFFER_MESSAGES_COUNT)
+    private val queue = MessageQueue(app, ConfigOption.FROM_TCP_BUFFER_MESSAGES_COUNT)
 
-    private val emitterThread = QueueEmitterThread(isListenerDeleted, router, queue, "from-tcp-$address-emitter")
+    private val emitterThread = QueueEmitterThread(app, isListenerDeleted, router, queue, "from-tcp-$address-emitter")
 
     private val receiver = when (isSyslogFrame) {
         true -> SyslogFrameTcpReceiver(queue)
@@ -33,14 +33,11 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
             receiver.receiveMessage(it)
         }
 
-        Beholder.reloadListeners.add(object : Beholder.ReloadListener {
-            override fun before(app: Beholder) {
-            }
-
-            override fun after(app: Beholder) {
+        app.afterReloadCallbacks.add(object : () -> Unit {
+            override fun invoke() {
                 if (!router.hasSubscribers()) {
                     // после перезагрузки конфига оказалось, что листенер никому больше не нужен
-                    Beholder.reloadListeners.remove(this)
+                    app.afterReloadCallbacks.remove(this)
                     destroy()
                 }
             }

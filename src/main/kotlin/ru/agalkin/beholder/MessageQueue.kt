@@ -6,20 +6,15 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-class MessageQueue(capacityOption: ConfigOption) {
+class MessageQueue(app: Beholder, capacityOption: ConfigOption) {
     private val queue = LinkedBlockingQueue<Message>()
 
     private val maxMessages = AtomicInteger(1000)
 
-    private val reloadListener = object : Beholder.ReloadListener {
-        override fun before(app: Beholder) {}
-
-        override fun after(app: Beholder) {
+    init {
+        app.afterReloadCallbacks.add {
             maxMessages.set(app.config.getIntOption(capacityOption))
         }
-    }
-    init {
-        Beholder.reloadListeners.add(reloadListener)
     }
 
     fun add(message: Message) {
@@ -37,6 +32,5 @@ class MessageQueue(capacityOption: ConfigOption) {
 
     fun destroy() {
         queue.clear()
-        Beholder.reloadListeners.remove(reloadListener)
     }
 }

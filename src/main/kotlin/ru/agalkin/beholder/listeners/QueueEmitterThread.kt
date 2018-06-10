@@ -4,6 +4,7 @@ import ru.agalkin.beholder.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 class QueueEmitterThread(
+    private val app: Beholder,
     private val shouldStop: AtomicBoolean,
     private val router: MessageRouter,
     private val queue: MessageQueue,
@@ -12,20 +13,14 @@ class QueueEmitterThread(
 
     private val isPaused = AtomicBoolean(false)
 
-    private val reloadListener = object : Beholder.ReloadListener {
-        override fun before(app: Beholder) {
-            // перед тем, как заменять конфиг приложения,
-            // мы хотим поставить приём сообщений на паузу
-            isPaused.set(true)
-        }
-
-        override fun after(app: Beholder) {
-            isPaused.set(false)
-        }
-    }
+    // перед тем, как заменять конфиг приложения,
+    // мы хотим поставить приём сообщений на паузу
+    private val beforeReload = { isPaused.set(true) }
+    private val afterReload  = { isPaused.set(false) }
 
     init {
-        Beholder.reloadListeners.add(reloadListener)
+        app.beforeReloadCallbacks.add(beforeReload)
+        app.afterReloadCallbacks.add(afterReload)
     }
 
     override fun run() {
@@ -55,7 +50,8 @@ class QueueEmitterThread(
 
         queue.destroy()
 
-        Beholder.reloadListeners.remove(reloadListener)
+        app.beforeReloadCallbacks.remove(beforeReload)
+        app.afterReloadCallbacks.remove(afterReload)
 
         InternalLog.info("Thread $name got deleted")
     }

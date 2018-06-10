@@ -6,19 +6,38 @@ import ru.agalkin.beholder.listeners.InternalLogListener
 import ru.agalkin.beholder.listeners.SelectorThread
 import ru.agalkin.beholder.listeners.TcpListener
 import ru.agalkin.beholder.listeners.UdpListener
+import ru.agalkin.beholder.senders.FileSender
+import ru.agalkin.beholder.senders.ShellSender
+import ru.agalkin.beholder.senders.TcpSender
+import ru.agalkin.beholder.senders.UdpSender
+import ru.agalkin.beholder.stats.Stats
 import java.io.Closeable
-import java.util.*
 import java.util.concurrent.CopyOnWriteArraySet
 
 const val BEHOLDER_SYSLOG_PROGRAM = "beholder"
 
 class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
+    val beforeReloadCallbacks = CopyOnWriteArraySet<() -> Unit>()
+    val afterReloadCallbacks = CopyOnWriteArraySet<() -> Unit>()
+
     val selectorThread = SelectorThread()
     val tcpListeners = TcpListener.Factory(this)
     val udpListeners = UdpListener.Factory(this)
-    val internalLogListener = InternalLogListener()
+    val internalLogListener = InternalLogListener(this)
+
+    val fileSenders = FileSender.Factory(this)
+    val shellSenders = ShellSender.Factory(this)
+    val tcpSenders = TcpSender.Factory(this)
+    val udpSenders = UdpSender.Factory(this)
+
+    private val gcTimer = GCTimer(this)
+
     init {
         selectorThread.start()
+
+        // we need very little memory compared to most Java programs
+        // let's shrink the heap
+        gcTimer.start()
     }
 
     // тут не ловим никаких ошибок, чтобы при старте с кривым конфигом сразу упасть
@@ -26,23 +45,29 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
 
     fun start() {
         config.start()
-        uptimeDate = Date()
 
-        notifyAfter(this)
+        notifyAfter()
     }
 
     override fun close() {
-        notifyBefore(this)
+        notifyBefore()
 
         config.stop()
 
         selectorThread.erase()
         internalLogListener.destroy()
 
-        val tcpDestroyed = tcpListeners.destroyAllListeners()
-        val udpDestroyed = udpListeners.destroyAllListeners()
+        var needsWaiting = 0
 
-        if (tcpDestroyed + udpDestroyed > 0) {
+        needsWaiting += tcpListeners.destroyAllListeners()
+        needsWaiting += udpListeners.destroyAllListeners()
+
+        needsWaiting += fileSenders.destroyAllSenders()
+        needsWaiting += shellSenders.destroyAllSenders()
+        needsWaiting += tcpSenders.destroyAllSenders()
+        needsWaiting += udpSenders.destroyAllSenders()
+
+        if (needsWaiting > 0) {
             // Give all blocking threads time to stop
             Thread.sleep(200)
         }
@@ -59,35 +84,26 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
             return
         }
 
-        notifyBefore(this)
+        notifyBefore()
 
         config.stop()
         config = newConfig
         config.start()
 
-        notifyAfter(this)
+        notifyAfter()
+
+        Stats.reportReload()
     }
 
-    companion object {
-        val reloadListeners = CopyOnWriteArraySet<ReloadListener>()
-
-        var uptimeDate: Date? = null
-
-        private fun notifyBefore(app: Beholder) {
-            for (receiver in reloadListeners) {
-                receiver.before(app)
-            }
-        }
-
-        private fun notifyAfter(app: Beholder) {
-            for (receiver in reloadListeners) {
-                receiver.after(app)
-            }
+    private fun notifyBefore() {
+        for (receiver in beforeReloadCallbacks) {
+            receiver()
         }
     }
 
-    interface ReloadListener {
-        fun before(app: Beholder)
-        fun after(app: Beholder)
+    private fun notifyAfter() {
+        for (receiver in afterReloadCallbacks) {
+            receiver()
+        }
     }
 }

@@ -5,28 +5,31 @@ import ru.agalkin.beholder.FieldValue
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
-class FileSender(file: File) {
-    private val fileThread = FileWriterThread(file)
+class FileSender(app: Beholder, file: File) {
+    private val fileThread = FileWriterThread(app, file)
 
     fun writeMessagePayload(value: FieldValue) {
         fileThread.queue.add(value)
     }
 
     init {
-        Beholder.reloadListeners.add(object : Beholder.ReloadListener {
-            override fun before(app: Beholder) {
-                fileThread.isWriterStopped.set(true)
-                fileThread.isReloadNeeded.set(true)
-            }
+        app.beforeReloadCallbacks.add {
+            fileThread.isWriterStopped.set(true)
+            fileThread.isReloadNeeded.set(true)
+        }
 
-            override fun after(app: Beholder)
-                = fileThread.isWriterStopped.set(false)
-        })
+        app.afterReloadCallbacks.add {
+            fileThread.isWriterStopped.set(false)
+        }
 
         fileThread.start()
     }
 
-    companion object {
+    fun destroy() {
+        fileThread.isWriterStopped.set(true)
+    }
+
+    class Factory(private val app: Beholder) {
         private val senders = ConcurrentHashMap<String, FileSender>()
 
         fun getSender(filename: String): FileSender {
@@ -36,10 +39,18 @@ class FileSender(file: File) {
                 return sender
             }
             synchronized(senders) {
-                val newSender = senders[canonicalPath] ?: FileSender(File(canonicalPath))
+                val newSender = senders[canonicalPath] ?: FileSender(app, File(canonicalPath))
                 senders[canonicalPath] = newSender
                 return newSender
             }
+        }
+
+        fun destroyAllSenders(): Int {
+            val n = senders.size
+            for (sender in senders.values) {
+                sender.destroy()
+            }
+            return n
         }
     }
 }

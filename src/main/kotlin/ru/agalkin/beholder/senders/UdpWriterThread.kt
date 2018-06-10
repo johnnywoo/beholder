@@ -1,14 +1,18 @@
 package ru.agalkin.beholder.senders
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.DataQueue
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
 import java.net.DatagramPacket
 import java.net.DatagramSocket
+import java.util.concurrent.atomic.AtomicBoolean
 
-class UdpWriterThread(private val address: Address) : Thread("udp-writer-$address") {
-    val queue = DataQueue(ConfigOption.TO_UDP_BUFFER_MESSAGES_COUNT)
+class UdpWriterThread(app: Beholder, private val address: Address) : Thread("udp-writer-$address") {
+    val queue = DataQueue(app, ConfigOption.TO_UDP_BUFFER_MESSAGES_COUNT)
+
+    val isRunning = AtomicBoolean(true)
 
     override fun run() {
         InternalLog.info("Thread $name got started")
@@ -16,8 +20,8 @@ class UdpWriterThread(private val address: Address) : Thread("udp-writer-$addres
         var socket = DatagramSocket()
         val inetAddress = address.getInetAddress()
 
-        while (true) {
-            val fieldValue = queue.shift(1000) // blocking
+        while (isRunning.get()) {
+            val fieldValue = queue.shift(100) // blocking
             if (fieldValue == null) {
                 // почему-то ничего не нашли, надо ждать заново
                 continue

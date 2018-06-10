@@ -7,10 +7,6 @@ import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.formatters.TemplateFormatter
-import ru.agalkin.beholder.senders.FileSender
-import ru.agalkin.beholder.senders.ShellSender
-import ru.agalkin.beholder.senders.TcpSender
-import ru.agalkin.beholder.senders.UdpSender
 
 class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val destination: Destination
@@ -78,27 +74,27 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
         }
     }
 
-    private class FileDestination(
+    private inner class FileDestination(
         private val filenameTemplate: TemplateFormatter,
         private val dataTemplate: TemplateFormatter
     ) : Destination {
 
         override fun write(message: Message) {
-            val sender = FileSender.getSender(filenameTemplate.formatMessage(message).toString())
+            val sender = app.fileSenders.getSender(filenameTemplate.formatMessage(message).toString())
             sender.writeMessagePayload(dataTemplate.formatMessage(message).withNewlineAtEnd())
         }
     }
 
-    private class UdpDestination(address: Address, private val template: TemplateFormatter) : Destination {
-        private val sender = UdpSender.getSender(address)
+    private inner class UdpDestination(address: Address, private val template: TemplateFormatter) : Destination {
+        private val sender = app.udpSenders.getSender(address)
 
         override fun write(message: Message) {
             sender.writeMessagePayload(template.formatMessage(message))
         }
     }
 
-    private class TcpDestination(address: Address, private val template: TemplateFormatter) : Destination {
-        private val sender = TcpSender.getSender(address)
+    private inner class TcpDestination(address: Address, private val template: TemplateFormatter) : Destination {
+        private val sender = app.tcpSenders.getSender(address)
 
         override fun write(message: Message) {
             sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())
@@ -113,8 +109,8 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
         }
     }
 
-    private class ShellDestination(shellCommand: String, private val template: TemplateFormatter) : Destination {
-        private val sender = ShellSender.createSender(shellCommand)
+    private inner class ShellDestination(shellCommand: String, private val template: TemplateFormatter) : Destination {
+        private val sender = app.shellSenders.createSender(shellCommand)
 
         override fun write(message: Message) {
             sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())

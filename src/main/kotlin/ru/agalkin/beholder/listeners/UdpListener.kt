@@ -15,9 +15,9 @@ class UdpListener(private val app: Beholder, val address: Address) {
 
     val router = MessageRouter()
 
-    private val queue = MessageQueue(ConfigOption.FROM_UDP_BUFFER_MESSAGES_COUNT)
+    private val queue = MessageQueue(app, ConfigOption.FROM_UDP_BUFFER_MESSAGES_COUNT)
 
-    private val emitterThread  = QueueEmitterThread(isListenerDeleted, router, queue, "from-udp-$address-emitter")
+    private val emitterThread  = QueueEmitterThread(app, isListenerDeleted, router, queue, "from-udp-$address-emitter")
     private val listenerThread = UdpListenerThread(this, queue)
 
     fun destroy() {
@@ -26,15 +26,12 @@ class UdpListener(private val app: Beholder, val address: Address) {
     }
 
     init {
-        Beholder.reloadListeners.add(object : Beholder.ReloadListener {
-            override fun before(app: Beholder) {
-            }
-
-            override fun after(app: Beholder) {
+        app.afterReloadCallbacks.add(object : () -> Unit {
+            override fun invoke() {
                 if (!router.hasSubscribers()) {
                     // после перезагрузки конфига оказалось, что листенер никому больше не нужен
+                    app.afterReloadCallbacks.remove(this)
                     destroy()
-                    Beholder.reloadListeners.remove(this)
                 }
             }
         })

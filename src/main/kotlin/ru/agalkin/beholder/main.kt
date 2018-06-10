@@ -2,6 +2,7 @@ package ru.agalkin.beholder
 
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.parser.ParseException
+import ru.agalkin.beholder.stats.StatsHolder
 import sun.misc.Signal
 import java.io.File
 import kotlin.system.exitProcess
@@ -88,6 +89,8 @@ fun main(args: Array<String>) {
         }
     }
 
+    StatsHolder.start()
+
     val app: Beholder
     try {
         app = Beholder(configMaker)
@@ -101,10 +104,6 @@ fun main(args: Array<String>) {
         // всё что нужно было, мы уже сделали (проверили конфиг)
         exitProcess(0)
     }
-
-    // we need very little memory compared to most Java programs
-    // let's shrink the heap
-    GCTimer.start()
 
     app.start()
 

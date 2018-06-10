@@ -1,6 +1,6 @@
 package ru.agalkin.beholder.stats
 
-import ru.agalkin.beholder.Beholder
+import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.max
 
@@ -66,11 +66,7 @@ class StatsHolder {
 
         val heapUsed = heapSize - heapUnused
 
-        val uptimeDate = Beholder.uptimeDate
-        val uptimeSeconds = when (uptimeDate) {
-            null -> 0
-            else -> (System.currentTimeMillis() - uptimeDate.time) / 1000
-        }
+        val uptimeSeconds = (System.currentTimeMillis() - uptimeDate.time) / 1000
 
         val statValues = mutableMapOf(
             "uptimeSeconds" to uptimeSeconds,
@@ -149,5 +145,13 @@ class StatsHolder {
             }
         }
         return bytesNum.toString()
+    }
+
+    companion object {
+        private val uptimeDate = Date()
+
+        fun start() {
+            // noop, but it will initialize the uptime date
+        }
     }
 }

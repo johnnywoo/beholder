@@ -1,6 +1,5 @@
 package ru.agalkin.beholder.stats
 
-import ru.agalkin.beholder.Beholder
 import java.util.concurrent.CopyOnWriteArraySet
 
 object Stats {
@@ -52,15 +51,9 @@ object Stats {
         }
     }
 
-    init {
-        Beholder.reloadListeners.add(object : Beholder.ReloadListener {
-            override fun before(app: Beholder) {
-                for (holder in holders) {
-                    holder.reportConfigReload()
-                }
-            }
-
-            override fun after(app: Beholder) {}
-        })
+    fun reportReload() {
+        for (holder in holders) {
+            holder.reportConfigReload()
+        }
     }
 }

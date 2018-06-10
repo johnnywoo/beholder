@@ -9,11 +9,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 
-class TcpWriterThread(private val address: Address) : Thread("tcp-writer-$address") {
+class TcpWriterThread(app: Beholder, private val address: Address) : Thread("tcp-writer-$address") {
     val isWriterPaused = AtomicBoolean(false)
     val isWriterDestroyed = AtomicBoolean(false)
 
-    val queue = DataQueue(ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT)
+    val queue = DataQueue(app, ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT)
 
     val reconnectIntervalSeconds = AtomicInteger()
 

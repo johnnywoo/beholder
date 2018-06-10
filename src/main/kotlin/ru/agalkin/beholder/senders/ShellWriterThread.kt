@@ -6,8 +6,8 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
-class ShellWriterThread(private val shellCommand: String) : Thread("shell-writer-${getCommandDescription(shellCommand)}") {
-    val queue = DataQueue(ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT)
+class ShellWriterThread(app: Beholder, private val shellCommand: String) : Thread("shell-writer-${getCommandDescription(shellCommand)}") {
+    val queue = DataQueue(app, ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT)
 
     val isWriterDestroyed = AtomicBoolean(false)
 

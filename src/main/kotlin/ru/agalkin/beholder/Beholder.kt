@@ -20,23 +20,24 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val beforeReloadCallbacks = CopyOnWriteArraySet<() -> Unit>()
     val afterReloadCallbacks = CopyOnWriteArraySet<() -> Unit>()
 
-    val selectorThread = SelectorThread()
-    val tcpListeners = TcpListener.Factory(this)
-    val udpListeners = UdpListener.Factory(this)
-    val internalLogListener = InternalLogListener(this)
+    val selectorThread by lazy {
+        val st = SelectorThread()
+        st.start()
+        st
+    }
+    val tcpListeners by lazy { TcpListener.Factory(this) }
+    val udpListeners by lazy { UdpListener.Factory(this) }
+    val internalLogListener by lazy { InternalLogListener(this) }
 
-    val fileSenders = FileSender.Factory(this)
-    val shellSenders = ShellSender.Factory(this)
-    val tcpSenders = TcpSender.Factory(this)
-    val udpSenders = UdpSender.Factory(this)
+    val fileSenders by lazy { FileSender.Factory(this) }
+    val shellSenders by lazy { ShellSender.Factory(this) }
+    val tcpSenders by lazy { TcpSender.Factory(this) }
+    val udpSenders by lazy { UdpSender.Factory(this) }
 
+    // we need very little memory compared to most Java programs
+    // let's shrink the heap
     private val gcTimer = GCTimer(this)
-
     init {
-        selectorThread.start()
-
-        // we need very little memory compared to most Java programs
-        // let's shrink the heap
         gcTimer.start()
     }
 

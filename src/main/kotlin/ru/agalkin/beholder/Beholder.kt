@@ -18,7 +18,7 @@ const val BEHOLDER_SYSLOG_PROGRAM = "beholder"
 
 class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val beforeReloadCallbacks = CopyOnWriteArraySet<() -> Unit>()
-    val afterReloadCallbacks = CopyOnWriteArraySet<() -> Unit>()
+    val afterReloadCallbacks  = CopyOnWriteArraySet<() -> Unit>()
 
     val selectorThread by lazy {
         val st = SelectorThread()
@@ -29,10 +29,10 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val udpListeners by lazy { UdpListener.Factory(this) }
     val internalLogListener by lazy { InternalLogListener(this) }
 
-    val fileSenders by lazy { FileSender.Factory(this) }
+    val fileSenders  by lazy { FileSender.Factory(this) }
     val shellSenders by lazy { ShellSender.Factory(this) }
-    val tcpSenders by lazy { TcpSender.Factory(this) }
-    val udpSenders by lazy { UdpSender.Factory(this) }
+    val tcpSenders   by lazy { TcpSender.Factory(this) }
+    val udpSenders   by lazy { UdpSender.Factory(this) }
 
     // we need very little memory compared to most Java programs
     // let's shrink the heap
@@ -50,6 +50,10 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
         notifyAfter()
     }
 
+    /**
+     * This method should only be used for tests!
+     * Actual production Beholder app never closes.
+     */
     override fun close() {
         notifyBefore()
 
@@ -57,6 +61,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
 
         selectorThread.erase()
         internalLogListener.destroy()
+        gcTimer.destroy()
 
         var needsWaiting = 0
 
@@ -69,7 +74,8 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
         needsWaiting += udpSenders.destroyAllSenders()
 
         if (needsWaiting > 0) {
-            // Give all blocking threads time to stop
+            // Give all blocking threads time to stop.
+            // They should not block for more than 100 ms at a time.
             Thread.sleep(200)
         }
     }

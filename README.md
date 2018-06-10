@@ -348,6 +348,7 @@ Functions:
 * `severity-name` — String name of numeric syslog severity. `set $name severity-name $severity [lowercase]`.
 * `dump` — Generates a dump payload with all fields of the message.
 * `json` — Generates a JSON string with message fields. See below.
+* `fieldpack` — Generates a Fieldpack binary packet with the message. Experimental.
 * `syslog-frame` — Prefixes payload with its length in bytes (for syslog over TCP, see RFC5425 "4.3. Sending Data").
 
 `set $field replace <regexp> <replacement> [in <subject>];`
@@ -408,6 +409,7 @@ Drops the message from processing. Useful inside `switch`:
 
     parse [keep-unparsed] syslog;
     parse [keep-unparsed] json;
+    parse [keep-unparsed] fieldpack;
     parse [keep-unparsed] ~regexp-with-named-groups~;
     parse each-field-as-message;
     parse beholder-stats;
@@ -437,9 +439,12 @@ Fields produced by `parse syslog`:
 * `$program`   — program name (nginx calls this "tag")
 * `$payload`   — actual log message (this would've been written to a file by nginx)
 
-Format `json`: parses $payload as a JSON object and sets its properties as message fields.
+Format `json`: parses `$payload` as a JSON object and sets its properties as message fields.
 The JSON object may only contain numbers, strings, booleans and nulls (no nested objects or arrays).
 Boolean values are converted to strings 'true' and 'false'.
+
+Format `fieldpack`: parses `$payload` as a Fieldpack packet which may contain multiple messages.
+Experimental.
 
 Format `each-field-as-message`: every field of the message becomes a separate new message.
 Original message is dropped. Instead, new messages are produced with fields `$key` and `$value`.

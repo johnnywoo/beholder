@@ -1,49 +1,30 @@
 package ru.agalkin.beholder
 
-open class FieldValue(
-    private val stringValue: String? = null,
-    private val byteArrayValue: ByteArray? = null,
-    private val byteArrayLength: Int = 0
-) {
+abstract class FieldValue {
     companion object {
-        fun fromString(string: String)
-            = FieldValue(stringValue = string)
+        val empty: FieldValue = StringFieldValue("")
 
-        fun fromByteArray(byteArray: ByteArray, length: Int)
-            = FieldValue(byteArrayValue = byteArray, byteArrayLength = length)
+        fun fromString(string: String): FieldValue {
+            if (string.isEmpty()) {
+                return empty
+            }
+            return StringFieldValue(string)
+        }
 
-        val empty = fromString("")
+        fun fromByteArray(byteArray: ByteArray, length: Int): FieldValue {
+            if (length == 0) {
+                return empty
+            }
+            return ByteArrayFieldValue(byteArray, length)
+        }
     }
 
-    open fun getByteLength(): Int {
-        if (stringValue != null) {
-            return stringValue.toByteArray().size
-        }
-        if (byteArrayValue != null) {
-            return byteArrayLength
-        }
-        return 0
-    }
+    abstract fun getByteLength(): Int
 
-    fun toByteArray(): ByteArray {
-        if (stringValue != null) {
-            return stringValue.toByteArray()
-        }
-        if (byteArrayValue != null) {
-            return byteArrayValue
-        }
-        return byteArrayOf()
-    }
+    // todo remove this, make some kind of write() method
+    abstract fun toByteArray(): ByteArray
 
-    override fun toString(): String {
-        if (stringValue != null) {
-            return stringValue
-        }
-        if (byteArrayValue != null) {
-            return String(byteArrayValue, 0, byteArrayLength)
-        }
-        return ""
-    }
+    abstract override fun toString(): String
 
     fun prepend(prefix: String): FieldValue
         = ModifiedFieldValue(prefix, this)
@@ -52,6 +33,32 @@ open class FieldValue(
         = FieldValue.fromString(addNewlineIfNeeded(toString()))
 
 
+    private class StringFieldValue(private val string: String) : FieldValue() {
+        override fun getByteLength()
+            = string.toByteArray().size
+
+        override fun toByteArray()
+            = string.toByteArray()
+
+        override fun toString()
+            = string
+    }
+
+    private class ByteArrayFieldValue(
+        private val byteArray: ByteArray,
+        private val byteArrayLength: Int = 0
+    ) : FieldValue() {
+
+        override fun getByteLength()
+            = byteArrayLength
+
+        override fun toByteArray()
+            = byteArray
+
+        override fun toString()
+            = String(byteArray, 0, byteArrayLength)
+    }
+
     private class ModifiedFieldValue(
         private val prefix: String,
         private val fieldValue: FieldValue
@@ -59,6 +66,9 @@ open class FieldValue(
 
         override fun toString()
             = prefix + fieldValue.toString()
+
+        override fun toByteArray()
+            = toString().toByteArray()
 
         override fun getByteLength()
             = prefix.toByteArray().size + fieldValue.getByteLength()

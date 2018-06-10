@@ -45,6 +45,8 @@ object InternalLog {
         )
     }
 
+    val listeners = mutableSetOf<InternalLogListener>()
+
     private fun dispatchMessage(text: String?, severity: Severity) {
         if (text == null) {
             return
@@ -76,6 +78,8 @@ object InternalLog {
         message["program"]  = BEHOLDER_SYSLOG_PROGRAM
         message["severity"] = severity.getNumberAsString()
 
-        InternalLogListener.add(message)
+        for (listener in listeners) {
+            listener.add(message)
+        }
     }
 }

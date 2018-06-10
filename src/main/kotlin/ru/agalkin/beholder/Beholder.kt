@@ -2,6 +2,7 @@ package ru.agalkin.beholder
 
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.parser.ParseException
+import ru.agalkin.beholder.listeners.InternalLogListener
 import ru.agalkin.beholder.listeners.SelectorThread
 import ru.agalkin.beholder.listeners.TcpListener
 import ru.agalkin.beholder.listeners.UdpListener
@@ -15,6 +16,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val selectorThread = SelectorThread()
     val tcpListeners = TcpListener.Factory(this)
     val udpListeners = UdpListener.Factory(this)
+    val internalLogListener = InternalLogListener()
     init {
         selectorThread.start()
     }
@@ -31,8 +33,12 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
 
     override fun close() {
         notifyBefore(this)
+
         config.stop()
+
         selectorThread.erase()
+        internalLogListener.destroy()
+
         val tcpDestroyed = tcpListeners.destroyAllListeners()
         val udpDestroyed = udpListeners.destroyAllListeners()
 

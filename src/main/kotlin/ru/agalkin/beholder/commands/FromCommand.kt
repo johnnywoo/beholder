@@ -7,9 +7,7 @@ import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
-import ru.agalkin.beholder.listeners.InternalLogListener
 import ru.agalkin.beholder.listeners.TimerListener
-import ru.agalkin.beholder.listeners.UdpListener
 
 class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val source: Source
@@ -127,12 +125,12 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to internal log")
-            InternalLogListener.getMessageRouter().addSubscriber(receiver)
+            app.internalLogListener.router.addSubscriber(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from internal log")
-            InternalLogListener.getMessageRouter().removeSubscriber(receiver)
+            app.internalLogListener.router.removeSubscriber(receiver)
         }
     }
 }

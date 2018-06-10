@@ -44,7 +44,6 @@ class Config(configText: String, configSourceDescription: String) {
     fun stop()
         = root.stop()
 
-    fun getIntOption(name: ConfigOption): Int {
-        return root.optionValues[name] as Int
-    }
+    fun getIntOption(name: ConfigOption)
+        = root.optionValues[name] as Int
 }

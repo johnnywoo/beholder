@@ -9,11 +9,16 @@ import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
-object SelectorThread : Thread("selector") {
+private val number = AtomicInteger()
+
+class SelectorThread : Thread("selector${number.incrementAndGet()}") {
+    private val isRunning = AtomicBoolean(true)
+
     init {
         isDaemon = true
-        start()
     }
 
     private val selector = Selector.open()
@@ -36,6 +41,7 @@ object SelectorThread : Thread("selector") {
                 key.cancel()
                 key.channel().close()
             }
+            isRunning.set(false)
         }
     }
 
@@ -65,7 +71,7 @@ object SelectorThread : Thread("selector") {
     }
 
     override fun run() {
-        while (true) {
+        while (isRunning.get()) {
             selector.select()
 
             while (true) {

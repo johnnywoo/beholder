@@ -1,6 +1,8 @@
 package ru.agalkin.beholder.config.expressions
 
-abstract class LeafCommandAbstract(arguments: Arguments) : CommandAbstract(arguments) {
+import ru.agalkin.beholder.Beholder
+
+abstract class LeafCommandAbstract(app: Beholder, arguments: Arguments) : CommandAbstract(app, arguments) {
     final override fun createSubcommand(args: Arguments): CommandAbstract?
         = null
 }

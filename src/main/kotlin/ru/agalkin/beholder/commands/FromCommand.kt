@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.commands
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
@@ -7,11 +8,10 @@ import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.listeners.InternalLogListener
-import ru.agalkin.beholder.listeners.TcpListener
 import ru.agalkin.beholder.listeners.TimerListener
 import ru.agalkin.beholder.listeners.UdpListener
 
-class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
+class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val source: Source
 
     init {
@@ -73,31 +73,31 @@ class FromCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to UDP listener at $address")
-            UdpListener.getListener(address).router.addSubscriber(receiver)
+            app.udpListeners.getListener(address).router.addSubscriber(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
-            UdpListener.getListener(address).router.removeSubscriber(receiver)
+            app.udpListeners.getListener(address).router.removeSubscriber(receiver)
         }
     }
 
     private inner class TcpSource(private val address: Address, isSyslogFrame: Boolean) : Source {
         private val receiver: (Message) -> Unit = { input(it) }
         init {
-            if (!TcpListener.setListenerMode(address, isSyslogFrame)) {
+            if (!app.tcpListeners.setListenerMode(address, isSyslogFrame)) {
                 throw CommandException("TCP listener for $address cannot be both newline-terminated and syslog-frame")
             }
         }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to TCP listener at $address")
-            TcpListener.getListener(address).router.addSubscriber(receiver)
+            app.tcpListeners.getListener(address).router.addSubscriber(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from TCP listener at $address")
-            TcpListener.getListener(address).router.removeSubscriber(receiver)
+            app.tcpListeners.getListener(address).router.removeSubscriber(receiver)
         }
     }
 

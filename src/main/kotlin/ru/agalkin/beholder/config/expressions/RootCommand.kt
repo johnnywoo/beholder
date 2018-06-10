@@ -1,12 +1,14 @@
 package ru.agalkin.beholder.config.expressions
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.commands.ConveyorCommandAbstract
 import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
 
-class RootCommand : ConveyorCommandAbstract(
+class RootCommand(app: Beholder) : ConveyorCommandAbstract(
+    app,
     RootArguments,
     sendInputToOutput = false,
     sendInputToSubcommands = false,
@@ -21,14 +23,14 @@ class RootCommand : ConveyorCommandAbstract(
 
     override fun createSubcommand(args: Arguments): CommandAbstract? {
         if (args.getCommandName() in ConfigOption.values().map { it.name.toLowerCase() }) {
-            return ConfigOptionCommand(args)
+            return ConfigOptionCommand(app, args)
         }
         return super.createSubcommand(args)
     }
 
     companion object {
-        fun fromTokens(tokens: List<Token>): RootCommand {
-            val root = RootCommand()
+        fun fromTokens(app: Beholder, tokens: List<Token>): RootCommand {
+            val root = RootCommand(app)
             val tokenIterator = tokens.listIterator()
             root.importSubcommands(tokenIterator)
             if (tokenIterator.hasNext()) {
@@ -39,7 +41,7 @@ class RootCommand : ConveyorCommandAbstract(
         }
     }
 
-    private inner class ConfigOptionCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
+    private inner class ConfigOptionCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
         init {
             val option = ConfigOption.valueOf(arguments.getCommandName().toUpperCase())
             when (option.type) {

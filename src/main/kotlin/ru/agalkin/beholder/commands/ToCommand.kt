@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.commands
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
@@ -11,7 +12,7 @@ import ru.agalkin.beholder.senders.ShellSender
 import ru.agalkin.beholder.senders.TcpSender
 import ru.agalkin.beholder.senders.UdpSender
 
-class ToCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
+class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val destination: Destination
 
     init {

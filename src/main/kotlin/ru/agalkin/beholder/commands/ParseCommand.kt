@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.commands
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
@@ -7,7 +8,7 @@ import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.inflaters.*
 import ru.agalkin.beholder.stats.Stats
 
-class ParseCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
+class ParseCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val inflater: Inflater
     private val shouldKeepUnparsed = arguments.shiftLiteralOrNull("keep-unparsed") != null
 

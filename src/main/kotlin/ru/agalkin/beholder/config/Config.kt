@@ -1,26 +1,27 @@
 package ru.agalkin.beholder.config
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.expressions.RootCommand
 import ru.agalkin.beholder.config.parser.Token
 import java.io.File
 
-class Config(configText: String, configSourceDescription: String) {
+class Config(app: Beholder, configText: String, configSourceDescription: String) {
     companion object {
-        fun fromFile(filename: String): Config {
+        fun fromFile(app: Beholder, filename: String): Config {
             InternalLog.info("Reading config from $filename")
-            return Config.fromStringWithLog(File(filename).readText(), filename)
+            return Config.fromStringWithLog(app, File(filename).readText(), filename)
         }
 
-        fun fromStringWithLog(configText: String, sourceDescription: String): Config {
+        fun fromStringWithLog(app: Beholder, configText: String, sourceDescription: String): Config {
             InternalLog.info("=== Config text ===\n$configText=== End config text ===")
-            val config = Config(configText, sourceDescription)
+            val config = Config(app, configText, sourceDescription)
             InternalLog.info("=== Parsed config ===\n${config.getDefinition()}=== End parsed config ===")
             return config
         }
     }
 
-    private val root: RootCommand
+    val root: RootCommand
 
     fun getDefinition()
         = root.getChildrenDefinition()
@@ -34,7 +35,7 @@ class Config(configText: String, configSourceDescription: String) {
         // вариант 1: command arg arg;
         // вариант 2: command arg { block }
         // штука сразу делает конкретные экземпляры команд, в которых уже есть бизнес-логика
-        root = RootCommand.fromTokens(tokens)
+        root = RootCommand.fromTokens(app, tokens)
     }
 
     fun start()

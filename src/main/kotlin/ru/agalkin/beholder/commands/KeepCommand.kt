@@ -1,10 +1,11 @@
 package ru.agalkin.beholder.commands
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 
-class KeepCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
+class KeepCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val fieldsToKeep: Set<String>
 
     init {

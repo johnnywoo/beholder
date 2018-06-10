@@ -1,10 +1,11 @@
 package ru.agalkin.beholder.commands
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 
-class DropCommand(arguments: Arguments) : LeafCommandAbstract(arguments) {
+class DropCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     init {
         arguments.end()
     }

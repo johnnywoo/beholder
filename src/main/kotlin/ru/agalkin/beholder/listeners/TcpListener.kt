@@ -6,7 +6,7 @@ import ru.agalkin.beholder.config.ConfigOption
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-class TcpListener(val address: Address, isSyslogFrame: Boolean) {
+class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolean) {
     private val isListenerDeleted = AtomicBoolean(false)
 
     val router = MessageRouter()
@@ -21,15 +21,15 @@ class TcpListener(val address: Address, isSyslogFrame: Boolean) {
     }
 
     fun destroy() {
-        SelectorThread.removeTcpListener(address)
+        app.selectorThread.removeTcpListener(address)
         isListenerDeleted.set(true)
-        listeners.remove(address)
+        app.tcpListeners.listeners.remove(address)
     }
 
     init {
         emitterThread.start()
 
-        SelectorThread.addTcpListener(address) {
+        app.selectorThread.addTcpListener(address) {
             receiver.receiveMessage(it)
         }
 
@@ -47,8 +47,8 @@ class TcpListener(val address: Address, isSyslogFrame: Boolean) {
         })
     }
 
-    companion object {
-        private val listeners = ConcurrentHashMap<Address, TcpListener>()
+    class Factory(private val app: Beholder) {
+        val listeners = ConcurrentHashMap<Address, TcpListener>()
         private val listenerModes = ConcurrentHashMap<Address, Boolean>()
 
         fun setListenerMode(address: Address, isSyslogFrame: Boolean): Boolean {
@@ -74,16 +74,18 @@ class TcpListener(val address: Address, isSyslogFrame: Boolean) {
                 if (isSyslogFrame == null) {
                     throw BeholderException("TCP listener: invalid initialization order")
                 }
-                val newListener = listeners[address] ?: TcpListener(address, isSyslogFrame)
+                val newListener = listeners[address] ?: TcpListener(app, address, isSyslogFrame)
                 listeners[address] = newListener
                 return newListener
             }
         }
 
-        fun destroyAllListeners() {
+        fun destroyAllListeners(): Int {
+            val n = listeners.size
             for (listener in listeners.values) {
                 listener.destroy()
             }
+            return n
         }
     }
 }

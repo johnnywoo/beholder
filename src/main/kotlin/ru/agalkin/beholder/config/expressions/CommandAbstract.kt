@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.config.expressions
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.MessageRouter
 import ru.agalkin.beholder.config.parser.*
@@ -12,7 +13,7 @@ import ru.agalkin.beholder.listToString
  * или
  * command arg arg { child; child }
  */
-abstract class CommandAbstract(private val arguments: Arguments) {
+abstract class CommandAbstract(protected val app: Beholder, private val arguments: Arguments) {
     protected abstract fun createSubcommand(args: Arguments) : CommandAbstract?
 
     open fun start() {

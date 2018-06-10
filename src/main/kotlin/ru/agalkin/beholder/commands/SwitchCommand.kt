@@ -1,11 +1,12 @@
 package ru.agalkin.beholder.commands
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandAbstract
 import ru.agalkin.beholder.config.expressions.CommandException
 
-class SwitchCommand(arguments: Arguments) : CommandAbstract(arguments) {
+class SwitchCommand(app: Beholder, arguments: Arguments) : CommandAbstract(app, arguments) {
     private val template = arguments.shiftStringTemplate("`switch` needs an argument")
     init {
         arguments.end()
@@ -13,8 +14,8 @@ class SwitchCommand(arguments: Arguments) : CommandAbstract(arguments) {
 
     override fun createSubcommand(args: Arguments): CommandAbstract?
         = when (args.getCommandName()) {
-            "case"    -> if (!hasDefaultBlock()) SwitchCaseCommand(args, template) else throw CommandException("`switch` cannot have `case` subcommand after `default`")
-            "default" -> if (!hasDefaultBlock()) SwitchDefaultCommand(args) else throw CommandException("`switch` cannot have multiple `default` subcommands")
+            "case"    -> if (!hasDefaultBlock()) SwitchCaseCommand(app, args, template) else throw CommandException("`switch` cannot have `case` subcommand after `default`")
+            "default" -> if (!hasDefaultBlock()) SwitchDefaultCommand(app, args) else throw CommandException("`switch` cannot have multiple `default` subcommands")
             else      -> null
         }
 

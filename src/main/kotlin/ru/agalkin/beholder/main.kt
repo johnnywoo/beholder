@@ -53,13 +53,13 @@ fun main(args: Array<String>) {
         }
     })
 
-    val configMaker: () -> Config
+    val configMaker: (Beholder) -> Config
 
     when {
         // beholder --config="from udp 3231; to stdout"
         cli.configText != null -> {
             InternalLog.info("Using config from CLI arguments")
-            configMaker = { Config.fromStringWithLog(cli.configText + "\n", "cli-arg") }
+            configMaker = { Config.fromStringWithLog(it, cli.configText + "\n", "cli-arg") }
         }
 
         // beholder --config-file=/etc/beholder/beholder.conf
@@ -75,7 +75,7 @@ fun main(args: Array<String>) {
 
             InternalLog.info("Using config from file: $filename")
 
-            configMaker = { Config.fromFile(filename) }
+            configMaker = { Config.fromFile(it, filename) }
         }
 
         // no file and no config text:
@@ -84,7 +84,7 @@ fun main(args: Array<String>) {
         else -> {
             InternalLog.info("Using bundled config from jar resources")
 
-            configMaker = { Config.fromStringWithLog(readTextFromResource("default-config.conf"), "config-from-jar") }
+            configMaker = { Config.fromStringWithLog(it, readTextFromResource("default-config.conf"), "config-from-jar") }
         }
     }
 

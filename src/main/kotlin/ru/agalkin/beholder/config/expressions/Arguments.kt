@@ -51,7 +51,7 @@ abstract class Arguments {
     fun shiftFixedString(errorMessage: String): String {
         val string = shiftString(errorMessage)
         if (TemplateFormatter.hasTemplates(string)) {
-            throw CommandException(errorMessage + " (message fields are not allowed here)")
+            throw CommandException("$errorMessage (message fields are not allowed here)")
         }
         return string
     }

@@ -122,7 +122,7 @@ abstract class CommandAbstract(protected val app: Beholder, private val argument
             sb.append(";")
         } else {
             sb.append(" {\n")
-            sb.append(getChildrenDefinition(indent + "    "))
+            sb.append(getChildrenDefinition("$indent    "))
             sb.append(indent).append("}")
         }
 

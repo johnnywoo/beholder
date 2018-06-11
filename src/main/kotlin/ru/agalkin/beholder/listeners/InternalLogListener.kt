@@ -6,13 +6,13 @@ import ru.agalkin.beholder.queue.BeholderQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 class InternalLogListener(app: Beholder) {
-    private val queue = BeholderQueue<Message>(app, ConfigOption.FROM_INTERNAL_LOG_BUFFER_MESSAGES_COUNT)
-
     val router = MessageRouter()
 
-    private val emitterThread = QueueEmitterThread(app, AtomicBoolean(false), router, queue, "internal-log-emitter")
+    private val queue = BeholderQueue<Message>(app, ConfigOption.FROM_INTERNAL_LOG_BUFFER_MESSAGES_COUNT) {
+        router.sendMessageToSubscribers(it)
+    }
+
     init {
-        emitterThread.start()
         InternalLog.listeners.add(this)
     }
 

@@ -2,20 +2,67 @@ package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
+import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.config.ConfigOption
+import ru.agalkin.beholder.queue.BeholderQueue
+import ru.agalkin.beholder.readInputStreamAndDiscard
+import java.io.File
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.atomic.AtomicLong
 
-class ShellSender(app: Beholder, shellCommand: String) {
-    private val writerThread = ShellWriterThread(app, shellCommand)
-    init {
-        writerThread.start()
+class ShellSender(app: Beholder, private val shellCommand: String) {
+    val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT) { fieldValue ->
+        while (true) {
+            val process = startProcess()
+            try {
+                val outputStream = process.outputStream
+                outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
+                outputStream.flush()
+            } catch (e: Throwable) {
+                InternalLog.exception(e)
+            }
+        }
     }
 
     fun writeMessagePayload(fieldValue: FieldValue) {
-        writerThread.queue.add(fieldValue)
+        queue.add(fieldValue)
     }
 
     fun stop() {
-        writerThread.isWriterDestroyed.set(true)
+        // writerThread.isWriterDestroyed.set(true)
+    }
+
+    private val nextRestartAtMillis = AtomicLong()
+
+    private var process: Process? = null
+
+    private fun startProcess(): Process {
+        val currentProcess = process
+        if (currentProcess != null && currentProcess.isAlive) {
+            return currentProcess
+        }
+
+        while (System.currentTimeMillis() < nextRestartAtMillis.get()) {
+            Thread.sleep(50)
+        }
+        nextRestartAtMillis.set(System.currentTimeMillis() + 1000)
+
+        val cwd = System.getProperty("user.dir")
+
+        InternalLog.info("Executing shell command: $shellCommand")
+        InternalLog.info("Current workdir: $cwd")
+
+        val newProcess = ProcessBuilder(shellCommand)
+            .directory(File(cwd))
+            .redirectErrorStream(true)
+            .start()
+
+        InternalLog.info("Started shell process ${newProcess.pid()}")
+
+        readInputStreamAndDiscard(newProcess.inputStream, "shell-skipper")
+
+        process = newProcess
+        return newProcess
     }
 
     class Factory(private val app: Beholder) {

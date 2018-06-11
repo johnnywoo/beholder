@@ -12,9 +12,9 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
 
     val router = MessageRouter()
 
-    private val queue = BeholderQueue<Message>(app, ConfigOption.FROM_TCP_BUFFER_MESSAGES_COUNT)
-
-    private val emitterThread = QueueEmitterThread(app, isListenerDeleted, router, queue, "from-tcp-$address-emitter")
+    private val queue = BeholderQueue<Message>(app, ConfigOption.FROM_TCP_BUFFER_MESSAGES_COUNT) {
+        router.sendMessageToSubscribers(it)
+    }
 
     private val receiver = when (isSyslogFrame) {
         true -> SyslogFrameTcpReceiver(queue)
@@ -28,8 +28,6 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
     }
 
     init {
-        emitterThread.start()
-
         app.selectorThread.addTcpListener(address) {
             receiver.receiveMessage(it)
         }

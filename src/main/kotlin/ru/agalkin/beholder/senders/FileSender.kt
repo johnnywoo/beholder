@@ -2,31 +2,97 @@ package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
+import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.config.ConfigOption
+import ru.agalkin.beholder.queue.BeholderQueue
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileWriter
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
-class FileSender(app: Beholder, file: File) {
-    private val fileThread = FileWriterThread(app, file)
-
-    fun writeMessagePayload(value: FieldValue) {
-        fileThread.queue.add(value)
+class FileSender(app: Beholder, private val file: File) {
+    private val isReloadNeeded = AtomicBoolean(false)
+    init {
+        app.afterReloadCallbacks.add {
+            isReloadNeeded.set(true)
+        }
     }
 
-    init {
-        app.beforeReloadCallbacks.add {
-            fileThread.isWriterStopped.set(true)
-            fileThread.isReloadNeeded.set(true)
+    private val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_FILE_BUFFER_MESSAGES_COUNT) { fieldValue ->
+        try {
+            if (isReloadNeeded.get()) {
+                restartWriter()
+            }
+
+            val writer = getWriter()
+            writer?.write(fieldValue.toString())
+            writer?.flush()
+
+            if (writer == null) {
+                InternalLog.err("Skipped writing to $file")
+            }
+        } catch (e: Throwable) {
+            InternalLog.exception(e)
+            restartWriter()
+        }
+    }
+
+    private var bufferedWriter: BufferedWriter? = null
+
+    private fun getWriter(): BufferedWriter? {
+        val writer = bufferedWriter
+        if (writer != null) {
+            return writer
         }
 
-        app.afterReloadCallbacks.add {
-            fileThread.isWriterStopped.set(false)
+        restartWriter()
+        return bufferedWriter
+    }
+
+    private fun restartWriter(): Boolean {
+        isReloadNeeded.set(false)
+
+        val writer = bufferedWriter
+        if (writer != null) {
+            writer.close()
+            bufferedWriter = null
         }
 
-        fileThread.start()
+        try {
+            file.parentFile.mkdirs()
+            if (!file.exists()) {
+                InternalLog.info("Creating file: $file")
+                file.createNewFile()
+            }
+            if (!file.exists()) {
+                InternalLog.err("Cannot locate file: $file")
+                return false
+            }
+            if (!file.isFile) {
+                InternalLog.err("Not a file: $file")
+                return false
+            }
+            if (!file.canWrite()) {
+                InternalLog.err("Cannot write to a file: $file")
+                return false
+            }
+
+            bufferedWriter = BufferedWriter(FileWriter(file, true))
+
+            return true
+        } catch (e: Throwable) {
+            InternalLog.err("Cannot use file for output: ${e::class.simpleName} ${e.message}")
+            return false
+        }
+    }
+
+    fun writeMessagePayload(value: FieldValue) {
+        queue.add(value)
     }
 
     fun destroy() {
-        fileThread.isWriterStopped.set(true)
+        // fileThread.isWriterStopped.set(true)
     }
 
     class Factory(private val app: Beholder) {

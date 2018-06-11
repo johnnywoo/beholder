@@ -3,7 +3,6 @@ package ru.agalkin.beholder.queue
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.stats.Stats
-import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -12,7 +11,9 @@ class BeholderQueue<T : Any>(
     capacityOption: ConfigOption,
     private val receive: (T) -> Result
 ) {
-    private val queue = LinkedBlockingQueue<T>()
+    private var listLength = 0
+    private var head: Item? = null
+    private var tail: Item? = null
 
     private val capacity = AtomicInteger(app.config.getIntOption(capacityOption))
 
@@ -32,14 +33,57 @@ class BeholderQueue<T : Any>(
     }
 
     fun add(message: T) {
-        while (queue.size >= capacity.get()) {
-            queue.take()
+        val newItem = Item(message)
+
+        val maxListLength = capacity.get()
+
+        var overflows = 0
+        var lengthNow = 0
+        synchronized(this) {
+            while (listLength >= maxListLength) {
+                val item = head
+                if (item != null) {
+                    head = item.next
+                    listLength--
+                    overflows++
+                }
+            }
+
+            if (listLength == 0) {
+                head = newItem
+            } else {
+                tail!!.next = newItem
+            }
+            tail = newItem
+            listLength++
+            lengthNow = listLength
+        }
+
+        repeat(overflows) {
             Stats.reportQueueOverflow()
         }
-        queue.offer(message)
-        Stats.reportQueueSize(queue.size.toLong())
+        Stats.reportQueueSize(lengthNow.toLong())
 
         executeNext()
+    }
+
+    private fun poll(): T? {
+        synchronized(this) {
+            val headNow = head
+            if (headNow == null) {
+                return null
+            }
+
+            if (listLength == 1) {
+                head = null
+                tail = null
+            } else {
+                head = headNow.next
+            }
+            listLength--
+
+            return headNow.value
+        }
     }
 
     private val isExecuting = AtomicBoolean(false)
@@ -47,7 +91,7 @@ class BeholderQueue<T : Any>(
     private fun executeNext() {
         if (!isPaused.get() && !isExecuting.compareAndExchange(false, true)) {
             app.executor.execute {
-                val message = queue.poll()
+                val message = poll()
                 if (message != null) {
                     while (true) {
                         val result = receive(message)
@@ -59,10 +103,10 @@ class BeholderQueue<T : Any>(
                             Thread.sleep(result.waitMillis)
                         }
                     }
-                }
-                isExecuting.set(false)
-                if (!queue.isEmpty()) {
+                    isExecuting.set(false)
                     executeNext()
+                } else {
+                    isExecuting.set(false)
                 }
             }
         }
@@ -71,5 +115,9 @@ class BeholderQueue<T : Any>(
     enum class Result(val waitMillis: Long = 0) {
         OK,
         RETRY
+    }
+
+    private open inner class Item(val value: T) {
+        var next: Item? = null
     }
 }

@@ -1,9 +1,10 @@
 package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.config.ConfigOption
-import ru.agalkin.beholder.DataQueue
+import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.config.ConfigOption
+import ru.agalkin.beholder.queue.BeholderQueue
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -13,7 +14,7 @@ class FileWriterThread(app: Beholder, private val file: File) : Thread("file-wri
     val isWriterStopped = AtomicBoolean(false)
     val isReloadNeeded  = AtomicBoolean(false)
 
-    val queue = DataQueue(app, ConfigOption.TO_FILE_BUFFER_MESSAGES_COUNT)
+    val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_FILE_BUFFER_MESSAGES_COUNT)
 
     private var bufferedWriter: BufferedWriter? = null
 

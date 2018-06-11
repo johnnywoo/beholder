@@ -3,6 +3,7 @@ package ru.agalkin.beholder.senders
 import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.ConfigOption
+import ru.agalkin.beholder.queue.BeholderQueue
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
@@ -13,7 +14,7 @@ class TcpWriterThread(app: Beholder, private val address: Address) : Thread("tcp
     val isWriterPaused = AtomicBoolean(false)
     val isWriterDestroyed = AtomicBoolean(false)
 
-    val queue = DataQueue(app, ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT)
+    val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT)
 
     val reconnectIntervalSeconds = AtomicInteger()
 

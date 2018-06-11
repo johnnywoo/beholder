@@ -3,6 +3,7 @@ package ru.agalkin.beholder.listeners
 import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.ConfigOption
+import ru.agalkin.beholder.queue.BeholderQueue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -11,7 +12,7 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
 
     val router = MessageRouter()
 
-    private val queue = MessageQueue(app, ConfigOption.FROM_TCP_BUFFER_MESSAGES_COUNT)
+    private val queue = BeholderQueue<Message>(app, ConfigOption.FROM_TCP_BUFFER_MESSAGES_COUNT)
 
     private val emitterThread = QueueEmitterThread(app, isListenerDeleted, router, queue, "from-tcp-$address-emitter")
 

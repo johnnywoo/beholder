@@ -1,16 +1,17 @@
 package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.config.ConfigOption
-import ru.agalkin.beholder.DataQueue
+import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
+import ru.agalkin.beholder.config.ConfigOption
+import ru.agalkin.beholder.queue.BeholderQueue
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.util.concurrent.atomic.AtomicBoolean
 
 class UdpWriterThread(app: Beholder, private val address: Address) : Thread("udp-writer-$address") {
-    val queue = DataQueue(app, ConfigOption.TO_UDP_BUFFER_MESSAGES_COUNT)
+    val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_UDP_BUFFER_MESSAGES_COUNT)
 
     val isRunning = AtomicBoolean(true)
 

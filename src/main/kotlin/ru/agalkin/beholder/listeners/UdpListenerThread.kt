@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.*
+import ru.agalkin.beholder.queue.BeholderQueue
 import ru.agalkin.beholder.stats.Stats
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -9,7 +10,7 @@ import java.util.*
 
 class UdpListenerThread(
     private val udpListener: UdpListener,
-    private val queue: MessageQueue
+    private val queue: BeholderQueue<Message>
 ) : Thread("from-udp-${udpListener.address}-listener") {
     private val buffer = ByteArray(FROM_UDP_MAX_MESSAGE_BYTES)
 

@@ -1,13 +1,14 @@
 package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.*
+import ru.agalkin.beholder.queue.BeholderQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 class QueueEmitterThread(
     private val app: Beholder,
     private val shouldStop: AtomicBoolean,
     private val router: MessageRouter,
-    private val queue: MessageQueue,
+    private val queue: BeholderQueue<Message>,
     threadName: String
 ) : Thread(threadName) {
 

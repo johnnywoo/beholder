@@ -2,12 +2,13 @@ package ru.agalkin.beholder.senders
 
 import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.ConfigOption
+import ru.agalkin.beholder.queue.BeholderQueue
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 class ShellWriterThread(app: Beholder, private val shellCommand: String) : Thread("shell-writer-${getCommandDescription(shellCommand)}") {
-    val queue = DataQueue(app, ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT)
+    val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT)
 
     val isWriterDestroyed = AtomicBoolean(false)
 

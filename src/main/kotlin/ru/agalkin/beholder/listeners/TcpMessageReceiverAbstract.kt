@@ -2,14 +2,14 @@ package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.MessageQueue
 import ru.agalkin.beholder.getIsoDateFormatter
+import ru.agalkin.beholder.queue.BeholderQueue
 import java.net.InetSocketAddress
 import java.nio.channels.SocketChannel
 import java.util.*
 
 abstract class TcpMessageReceiverAbstract(
-    private val queue: MessageQueue
+    private val queue: BeholderQueue<Message>
 ) {
     abstract fun receiveMessage(socketChannel: SocketChannel)
 

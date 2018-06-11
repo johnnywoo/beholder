@@ -10,15 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger
 class BeholderQueue<T : Any>(
     private val app: Beholder,
     capacityOption: ConfigOption,
-    receive: (T) -> Unit
+    private val receive: (T) -> Unit
 ) {
-    private val attemptRecieve = {
-        val x = queue.poll()
-        if (x != null) {
-            receive(x)
-        }
-    }
-
     private val queue = LinkedBlockingQueue<T>()
 
     private val maxMessages = AtomicInteger(1000)
@@ -33,9 +26,7 @@ class BeholderQueue<T : Any>(
         })
         app.afterReloadCallbacks.add({
             isPaused.set(false)
-            repeat(queue.size) {
-                app.executor.execute(attemptRecieve)
-            }
+            executeNext()
         })
     }
 
@@ -53,8 +44,24 @@ class BeholderQueue<T : Any>(
         queue.offer(message)
         Stats.reportQueueSize(queue.size.toLong())
 
-        if (!isPaused.get()) {
-            app.executor.execute(attemptRecieve)
+        executeNext()
+    }
+
+    private val isExecuting = AtomicBoolean(false)
+
+    private fun executeNext() {
+        if (!isPaused.get() && !isExecuting.get()) {
+            isExecuting.set(true)
+            app.executor.execute {
+                val x = queue.poll()
+                if (x != null) {
+                    receive(x)
+                }
+                isExecuting.set(false)
+                if (!queue.isEmpty()) {
+                    executeNext()
+                }
+            }
         }
     }
 }

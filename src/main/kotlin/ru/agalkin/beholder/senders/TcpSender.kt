@@ -7,8 +7,10 @@ import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.queue.BeholderQueue
 import ru.agalkin.beholder.readInputStreamAndDiscard
+import java.net.ConnectException
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.SocketException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
@@ -22,13 +24,20 @@ class TcpSender(app: Beholder, private val address: Address) {
 
     private val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT) { fieldValue ->
         while (true) {
-            val socket = connect()
             try {
+                val socket = connect()
                 val outputStream = socket.getOutputStream()
                 outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
                 outputStream.flush()
                 break
+            } catch (e: ConnectException) {
+                socket.close()
+                InternalLog.err("Cannot connect to TCP $address: ${e.message}")
+            } catch (e: SocketException) {
+                socket.close()
+                InternalLog.err("TCP error connected to $address: ${e.message}")
             } catch (e: Throwable) {
+                socket.close()
                 InternalLog.exception(e)
             }
         }
@@ -36,7 +45,7 @@ class TcpSender(app: Beholder, private val address: Address) {
 
     private var socket = Socket()
     private fun connect(): Socket {
-        if (socket.isConnected) {
+        if (socket.isConnected && !socket.isClosed) {
             return socket
         }
 

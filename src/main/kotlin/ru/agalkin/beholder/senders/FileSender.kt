@@ -91,10 +91,6 @@ class FileSender(app: Beholder, private val file: File) {
         queue.add(value)
     }
 
-    fun destroy() {
-        // fileThread.isWriterStopped.set(true)
-    }
-
     class Factory(private val app: Beholder) {
         private val senders = ConcurrentHashMap<String, FileSender>()
 
@@ -109,14 +105,6 @@ class FileSender(app: Beholder, private val file: File) {
                 senders[canonicalPath] = newSender
                 return newSender
             }
-        }
-
-        fun destroyAllSenders(): Int {
-            val n = senders.size
-            for (sender in senders.values) {
-                sender.destroy()
-            }
-            return n
         }
     }
 }

@@ -116,8 +116,6 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
             sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())
         }
 
-        override fun stop() {
-            sender.stop()
-        }
+        override fun stop() {}
     }
 }

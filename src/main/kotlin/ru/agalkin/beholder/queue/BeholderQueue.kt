@@ -1,16 +1,14 @@
 package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Executor
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.stats.Stats
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 class BeholderQueue<T : Any>(
-    app: Beholder,
+    private val app: Beholder,
     capacityOption: ConfigOption,
     receive: (T) -> Unit
 ) {
@@ -36,7 +34,7 @@ class BeholderQueue<T : Any>(
         app.afterReloadCallbacks.add({
             isPaused.set(false)
             repeat(queue.size) {
-                Executor.execute(attemptRecieve)
+                app.executor.execute(attemptRecieve)
             }
         })
     }
@@ -56,7 +54,7 @@ class BeholderQueue<T : Any>(
         Stats.reportQueueSize(queue.size.toLong())
 
         if (!isPaused.get()) {
-            Executor.execute(attemptRecieve)
+            app.executor.execute(attemptRecieve)
         }
     }
 }

@@ -20,8 +20,10 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val beforeReloadCallbacks = CopyOnWriteArraySet<() -> Unit>()
     val afterReloadCallbacks  = CopyOnWriteArraySet<() -> Unit>()
 
+    val executor by lazy { Executor() }
+
     val selectorThread by lazy {
-        val st = SelectorThread()
+        val st = SelectorThread(this)
         st.start()
         st
     }
@@ -68,10 +70,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
         needsWaiting += tcpListeners.destroyAllListeners()
         needsWaiting += udpListeners.destroyAllListeners()
 
-        needsWaiting += fileSenders.destroyAllSenders()
-        needsWaiting += shellSenders.destroyAllSenders()
-        needsWaiting += tcpSenders.destroyAllSenders()
-        needsWaiting += udpSenders.destroyAllSenders()
+        executor.destroy()
 
         if (needsWaiting > 0) {
             // Give all blocking threads time to stop.

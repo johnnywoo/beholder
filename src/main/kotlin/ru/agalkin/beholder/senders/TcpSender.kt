@@ -107,10 +107,6 @@ class TcpSender(app: Beholder, private val address: Address) {
         }
     }
 
-    fun destroy() {
-        // writerThread.isWriterDestroyed.set(true)
-    }
-
     class Factory(private val app: Beholder) {
         val senders = ConcurrentHashMap<Address, TcpSender>()
 
@@ -124,14 +120,6 @@ class TcpSender(app: Beholder, private val address: Address) {
                 senders[address] = newSender
                 return newSender
             }
-        }
-
-        fun destroyAllSenders(): Int {
-            val n = senders.size
-            for (sender in senders.values) {
-                sender.destroy()
-            }
-            return n
         }
     }
 }

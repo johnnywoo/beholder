@@ -1,6 +1,6 @@
 package ru.agalkin.beholder.listeners
 
-import ru.agalkin.beholder.Executor
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.stats.Stats
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 private val number = AtomicInteger()
 
-class SelectorThread : Thread("selector${number.incrementAndGet()}") {
+class SelectorThread(private val app: Beholder) : Thread("selector${number.incrementAndGet()}") {
     private val isRunning = AtomicBoolean(true)
 
     init {
@@ -106,7 +106,7 @@ class SelectorThread : Thread("selector${number.incrementAndGet()}") {
                         client.configureBlocking(false)
                         client.register(selector, SelectionKey.OP_READ, key.attachment())
 
-                        Executor.execute {
+                        app.executor.execute {
                             Stats.reportTcpConnected()
                         }
                     }
@@ -127,7 +127,7 @@ class SelectorThread : Thread("selector${number.incrementAndGet()}") {
                     // пока мы там что-то читаем из канала, селектору надо сказать,
                     // чтобы он перестал слушать этот канал
                     key.interestOps(0)
-                    Executor.execute {
+                    app.executor.execute {
                         callback.run(channel)
                         key.interestOps(SelectionKey.OP_READ)
                         selector.wakeup()

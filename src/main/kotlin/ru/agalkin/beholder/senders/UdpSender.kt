@@ -29,10 +29,6 @@ class UdpSender(app: Beholder, address: Address) {
         queue.add(fieldValue)
     }
 
-    fun destroy() {
-        // writerThread.isRunning.set(false)
-    }
-
     class Factory(private val app: Beholder) {
         private val senders = ConcurrentHashMap<Address, UdpSender>()
 
@@ -46,14 +42,6 @@ class UdpSender(app: Beholder, address: Address) {
                 senders[address] = newSender
                 return newSender
             }
-        }
-
-        fun destroyAllSenders(): Int {
-            val n = senders.size
-            for (sender in senders.values) {
-                sender.destroy()
-            }
-            return n
         }
     }
 }

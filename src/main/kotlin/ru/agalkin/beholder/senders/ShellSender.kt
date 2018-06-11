@@ -28,10 +28,6 @@ class ShellSender(app: Beholder, private val shellCommand: String) {
         queue.add(fieldValue)
     }
 
-    fun stop() {
-        // writerThread.isWriterDestroyed.set(true)
-    }
-
     private val nextRestartAtMillis = AtomicLong()
 
     private var process: Process? = null
@@ -72,14 +68,6 @@ class ShellSender(app: Beholder, private val shellCommand: String) {
             val shellSender = ShellSender(app, shellCommand)
             senders.add(shellSender)
             return shellSender
-        }
-
-        fun destroyAllSenders(): Int {
-            val n = senders.size
-            for (sender in senders) {
-                sender.stop()
-            }
-            return n
         }
     }
 }

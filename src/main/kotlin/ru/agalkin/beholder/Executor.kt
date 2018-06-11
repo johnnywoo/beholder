@@ -4,7 +4,7 @@ import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-object Executor {
+class Executor {
     private val pool = ThreadPoolExecutor(
         Runtime.getRuntime().availableProcessors(),
         2000,
@@ -14,5 +14,9 @@ object Executor {
 
     fun execute(block: () -> Unit) {
         pool.execute(block)
+    }
+
+    fun destroy() {
+        pool.shutdownNow()
     }
 }

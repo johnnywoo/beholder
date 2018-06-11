@@ -24,7 +24,6 @@ class SyslogFrameTcpReceiver(queue: BeholderQueue<Message>) : TcpMessageReceiver
         createMessage(FieldValue.fromByteArray(data, data.size), socketChannel)
 
         Stats.reportTcpReceived((lengthStr.length + 1 + data.size).toLong())
-
     }
 
     private fun readLength(input: SocketChannel): String? {

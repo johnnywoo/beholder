@@ -15,7 +15,7 @@ typealias Reader = (length: Int) -> Fieldpack.Chunk
  *
  * NUM is MSB varint encoding, least significant group first
  * -- set I = 0
- * -- read byte X (all bytes are unsigned 8-bit numbers)
+ * -- read byte X (8 bit)
  *    value += (X & 0b01111111) << (7 * I)
  *    if (X & 0b10000000) != 0, then I++ and read next byte
  *
@@ -25,7 +25,7 @@ typealias Reader = (length: Int) -> Fieldpack.Chunk
  * 1     -> 0x01      00000001
  * 127   -> 0x7F      01111111
  * 128   -> 0x8001    10000000 00000001
- * 129   -> 0x8002    10000001 00000001
+ * 129   -> 0x8101    10000001 00000001
  * 16383 -> 0xFF7F    11111111 01111111
  *
  * Most fields will use 1 byte for field name length.

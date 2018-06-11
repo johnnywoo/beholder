@@ -50,8 +50,7 @@ class BeholderQueue<T : Any>(
     private val isExecuting = AtomicBoolean(false)
 
     private fun executeNext() {
-        if (!isPaused.get() && !isExecuting.get()) {
-            isExecuting.set(true)
+        if (!isPaused.get() && !isExecuting.compareAndExchange(false, true)) {
             app.executor.execute {
                 val x = queue.poll()
                 if (x != null) {

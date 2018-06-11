@@ -3,7 +3,6 @@ package ru.agalkin.beholder.listeners
 import ru.agalkin.beholder.BeholderException
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.MessageQueue
 import ru.agalkin.beholder.queue.BeholderQueue
 import ru.agalkin.beholder.stats.Stats
 import java.nio.ByteBuffer

@@ -23,23 +23,24 @@ class TcpSender(app: Beholder, private val address: Address) {
     private val reconnectIntervalSeconds = AtomicInteger()
 
     private val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT) { fieldValue ->
-        while (true) {
-            try {
-                val socket = connect()
-                val outputStream = socket.getOutputStream()
-                outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
-                outputStream.flush()
-                break
-            } catch (e: ConnectException) {
-                socket.close()
-                InternalLog.err("Cannot connect to TCP $address: ${e.message}")
-            } catch (e: SocketException) {
-                socket.close()
-                InternalLog.err("TCP error connected to $address: ${e.message}")
-            } catch (e: Throwable) {
-                socket.close()
-                InternalLog.exception(e)
-            }
+        try {
+            val socket = connect()
+            val outputStream = socket.getOutputStream()
+            outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
+            outputStream.flush()
+            BeholderQueue.Result.OK
+        } catch (e: ConnectException) {
+            socket.close()
+            InternalLog.err("Cannot connect to TCP $address: ${e.message}")
+            BeholderQueue.Result.RETRY
+        } catch (e: SocketException) {
+            socket.close()
+            InternalLog.err("TCP error connected to $address: ${e.message}")
+            BeholderQueue.Result.RETRY
+        } catch (e: Throwable) {
+            socket.close()
+            InternalLog.exception(e)
+            BeholderQueue.Result.RETRY
         }
     }
 

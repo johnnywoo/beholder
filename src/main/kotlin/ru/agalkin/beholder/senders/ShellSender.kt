@@ -12,15 +12,15 @@ import java.util.concurrent.atomic.AtomicLong
 
 class ShellSender(app: Beholder, private val shellCommand: String) {
     val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT) { fieldValue ->
-        while (true) {
-            val process = startProcess()
-            try {
-                val outputStream = process.outputStream
-                outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
-                outputStream.flush()
-            } catch (e: Throwable) {
-                InternalLog.exception(e)
-            }
+        val process = startProcess()
+        try {
+            val outputStream = process.outputStream
+            outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
+            outputStream.flush()
+            BeholderQueue.Result.OK
+        } catch (e: Throwable) {
+            InternalLog.exception(e)
+            BeholderQueue.Result.RETRY
         }
     }
 

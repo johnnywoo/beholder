@@ -36,6 +36,7 @@ class FileSender(app: Beholder, private val file: File) {
             InternalLog.exception(e)
             restartWriter()
         }
+        BeholderQueue.Result.OK
     }
 
     private var bufferedWriter: BufferedWriter? = null

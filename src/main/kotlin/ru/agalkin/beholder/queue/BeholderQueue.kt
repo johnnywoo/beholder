@@ -10,11 +10,11 @@ import java.util.concurrent.atomic.AtomicInteger
 class BeholderQueue<T : Any>(
     private val app: Beholder,
     capacityOption: ConfigOption,
-    private val receive: (T) -> Unit
+    private val receive: (T) -> Result
 ) {
     private val queue = LinkedBlockingQueue<T>()
 
-    private val maxMessages = AtomicInteger(1000)
+    private val capacity = AtomicInteger(app.config.getIntOption(capacityOption))
 
     // перед тем, как заменять конфиг приложения,
     // мы хотим поставить приём сообщений на паузу
@@ -32,12 +32,12 @@ class BeholderQueue<T : Any>(
 
     init {
         app.afterReloadCallbacks.add {
-            maxMessages.set(app.config.getIntOption(capacityOption))
+            capacity.set(app.config.getIntOption(capacityOption))
         }
     }
 
     fun add(message: T) {
-        while (queue.size >= maxMessages.get()) {
+        while (queue.size >= capacity.get()) {
             queue.take()
             Stats.reportQueueOverflow()
         }
@@ -52,9 +52,18 @@ class BeholderQueue<T : Any>(
     private fun executeNext() {
         if (!isPaused.get() && !isExecuting.compareAndExchange(false, true)) {
             app.executor.execute {
-                val x = queue.poll()
-                if (x != null) {
-                    receive(x)
+                val message = queue.poll()
+                if (message != null) {
+                    while (true) {
+                        val result = receive(message)
+                        if (result == Result.OK) {
+                            break
+                        }
+                        // Result.RETRY
+                        if (result.waitMillis > 0) {
+                            Thread.sleep(result.waitMillis)
+                        }
+                    }
                 }
                 isExecuting.set(false)
                 if (!queue.isEmpty()) {
@@ -62,5 +71,10 @@ class BeholderQueue<T : Any>(
                 }
             }
         }
+    }
+
+    enum class Result(val waitMillis: Long = 0) {
+        OK,
+        RETRY
     }
 }

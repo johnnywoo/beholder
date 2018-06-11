@@ -18,6 +18,7 @@ class UdpListener(private val app: Beholder, val address: Address) {
 
     private val queue = BeholderQueue<Message>(app, ConfigOption.FROM_UDP_BUFFER_MESSAGES_COUNT) {
         router.sendMessageToSubscribers(it)
+        BeholderQueue.Result.OK
     }
 
     private val listenerThread = UdpListenerThread(this, queue)

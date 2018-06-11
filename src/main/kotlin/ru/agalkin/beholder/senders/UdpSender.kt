@@ -16,13 +16,18 @@ class UdpSender(app: Beholder, address: Address) {
 
     private val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_UDP_BUFFER_MESSAGES_COUNT) { fieldValue ->
         try {
-            val byteArray = fieldValue.toByteArray()
-            socket.send(DatagramPacket(byteArray, fieldValue.getByteLength(), inetAddress, address.port))
+            socket.send(DatagramPacket(
+                fieldValue.toByteArray(),
+                fieldValue.getByteLength(),
+                inetAddress,
+                address.port
+            ))
         } catch (e: Throwable) {
             InternalLog.exception(e)
             socket.use { it.close() }
             socket = DatagramSocket()
         }
+        BeholderQueue.Result.OK
     }
 
     fun writeMessagePayload(fieldValue: FieldValue) {

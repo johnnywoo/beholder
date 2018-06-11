@@ -21,18 +21,13 @@ class BeholderQueue<T : Any>(
     private val isPaused = AtomicBoolean(false)
 
     init {
-        app.beforeReloadCallbacks.add({
+        app.beforeReloadCallbacks.add {
             isPaused.set(true)
-        })
-        app.afterReloadCallbacks.add({
-            isPaused.set(false)
-            executeNext()
-        })
-    }
-
-    init {
+        }
         app.afterReloadCallbacks.add {
             capacity.set(app.config.getIntOption(capacityOption))
+            isPaused.set(false)
+            executeNext()
         }
     }
 

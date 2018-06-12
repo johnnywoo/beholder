@@ -1,11 +1,11 @@
 package ru.agalkin.beholder
 
 import ru.agalkin.beholder.config.Config
-import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.listeners.InternalLogListener
 import ru.agalkin.beholder.listeners.SelectorThread
 import ru.agalkin.beholder.listeners.TcpListener
 import ru.agalkin.beholder.listeners.UdpListener
+import ru.agalkin.beholder.queue.DataBuffer
 import ru.agalkin.beholder.senders.FileSender
 import ru.agalkin.beholder.senders.ShellSender
 import ru.agalkin.beholder.senders.TcpSender
@@ -21,6 +21,8 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val afterReloadCallbacks  = CopyOnWriteArraySet<() -> Unit>()
 
     val executor by lazy { Executor() }
+
+    val defaultBuffer by lazy { DataBuffer() }
 
     val selectorThread by lazy {
         val st = SelectorThread(this)
@@ -49,7 +51,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     fun start() {
         config.start()
 
-        notifyAfter()
+        notifyAfterReload()
     }
 
     /**
@@ -57,7 +59,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
      * Actual production Beholder app never closes.
      */
     override fun close() {
-        notifyBefore()
+        notifyBeforeReload()
 
         config.stop()
 
@@ -83,31 +85,29 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
         val newConfig: Config
         try {
             newConfig = configMaker(this)
-        } catch (e: ParseException) {
-            InternalLog.err("=== Error: invalid config ===")
-            InternalLog.err(e.message)
-            InternalLog.err("=== Config was not applied ===")
+        } catch (e: BeholderException) {
+            InternalLog.err("=== Error: invalid config ===\n${e.message}\n=== Config was not applied ===")
             return
         }
 
-        notifyBefore()
+        notifyBeforeReload()
 
         config.stop()
         config = newConfig
         config.start()
 
-        notifyAfter()
+        notifyAfterReload()
 
         Stats.reportReload()
     }
 
-    private fun notifyBefore() {
+    private fun notifyBeforeReload() {
         for (receiver in beforeReloadCallbacks) {
             receiver()
         }
     }
 
-    private fun notifyAfter() {
+    private fun notifyAfterReload() {
         for (receiver in afterReloadCallbacks) {
             receiver()
         }

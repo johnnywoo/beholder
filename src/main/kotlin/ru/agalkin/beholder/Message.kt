@@ -1,5 +1,6 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.queue.DataBuffer
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -8,7 +9,7 @@ import kotlin.collections.HashMap
 
 private val createdMessagesCount = AtomicLong(0)
 
-class Message(initialFields: Map<String, FieldValue>? = null) {
+class Message(initialFields: Map<String, FieldValue>? = null) : DataBuffer.Item {
     private var fields = if (initialFields == null) HashMap() else HashMap(initialFields)
 
     val messageId = createdMessagesCount.getAndIncrement()

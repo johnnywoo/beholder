@@ -5,6 +5,9 @@ Beholder is a log processor. Its purpose is to receive, process, transfer and ex
 WARNING: Beholder has no stable version yet.
 Config syntax, commands, options, behaviour, everything is going to be changed without any backwards compatibility.
 
+WARNING: current experimental version of Beholder does not have any limits on queue size.
+If it cannot send incoming messages away, the queue will grow until Out Of Memory error kills the process.
+
  * [Usage](#usage)
  * [Building Beholder](#building-beholder)
  * [Recipes](#recipes)
@@ -672,3 +675,7 @@ This can be changed using `extra_gc_interval_seconds` config option. If you don'
 extra GC can be disabled by setting `extra_gc_interval_seconds` to 0.
 
     extra_gc_interval_seconds 5;
+
+Internal buffer options, docs are to be written.
+
+    queue_chunk_messages 500;

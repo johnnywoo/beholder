@@ -1,21 +1,17 @@
 package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.ConfigOption
-import ru.agalkin.beholder.stats.Stats
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
 class BeholderQueue<T : Any>(
     private val app: Beholder,
     capacityOption: ConfigOption,
     private val receive: (T) -> Result
 ) {
-    private var listLength = 0
-    private var head: Item? = null
-    private var tail: Item? = null
-
-    private val capacity = AtomicInteger(app.config.getIntOption(capacityOption))
+    private val chunks: MutableList<Chunk> = LinkedList()
 
     // перед тем, как заменять конфиг приложения,
     // мы хотим поставить приём сообщений на паузу
@@ -26,63 +22,52 @@ class BeholderQueue<T : Any>(
             isPaused.set(true)
         }
         app.afterReloadCallbacks.add {
-            capacity.set(app.config.getIntOption(capacityOption))
             isPaused.set(false)
             executeNext()
         }
     }
 
     fun add(message: T) {
-        val newItem = Item(message)
-
-        val maxListLength = capacity.get()
-
-        var overflows = 0
-        var lengthNow = 0
+        InternalLog.info("Adding (1) $message")
         synchronized(this) {
-            while (listLength >= maxListLength) {
-                val item = head
-                if (item != null) {
-                    head = item.next
-                    listLength--
-                    overflows++
-                }
-            }
-
-            if (listLength == 0) {
-                head = newItem
+            InternalLog.info("Adding (2) $message")
+            // добавляем сообщения в последний кусок
+            val lastChunk = chunks.lastOrNull()
+            val chunk: Chunk
+            if (lastChunk == null || !lastChunk.canAdd()) {
+                // последний кусок закончился, будем добавлять новый
+                chunk = Chunk(300)
+                chunks.add(chunk)
             } else {
-                tail!!.next = newItem
+                chunk = lastChunk
             }
-            tail = newItem
-            listLength++
-            lengthNow = listLength
+
+            InternalLog.info("Adding (3) $message")
+            chunk.add(message)
+            InternalLog.info("Added (3) $message")
         }
 
-        repeat(overflows) {
-            Stats.reportQueueOverflow()
-        }
-        Stats.reportQueueSize(lengthNow.toLong())
+        // todo decide what to do here
+//        repeat(overflows) {
+//            Stats.reportQueueOverflow()
+//        }
+//        Stats.reportQueueSize(lengthNow.toLong())
 
         executeNext()
     }
 
     private fun poll(): T? {
         synchronized(this) {
-            val headNow = head
-            if (headNow == null) {
+            // берём сообщения из первого куска
+            val firstChunk = chunks.firstOrNull()
+            if (firstChunk == null) {
                 return null
             }
-
-            if (listLength == 1) {
-                head = null
-                tail = null
-            } else {
-                head = headNow.next
+            val value = firstChunk.shift()
+            if (firstChunk.isUsedCompletely()) {
+                chunks.removeAt(0)
             }
-            listLength--
-
-            return headNow.value
+            return value
         }
     }
 
@@ -117,7 +102,29 @@ class BeholderQueue<T : Any>(
         RETRY
     }
 
-    private open inner class Item(val value: T) {
-        var next: Item? = null
+    private inner class Chunk(private val capacity: Int) {
+        private val list = mutableListOf<T>()
+        private var index = 0
+
+        fun canAdd()
+            = list.size < capacity
+
+        fun isUsedCompletely()
+            = index >= list.size && !canAdd()
+
+        fun add(message: T): Boolean {
+            if (!canAdd()) {
+                return false
+            }
+            list.add(message)
+            return true
+        }
+
+        fun shift(): T? {
+            if (index >= list.size) {
+                return null
+            }
+            return list[index++]
+        }
     }
 }

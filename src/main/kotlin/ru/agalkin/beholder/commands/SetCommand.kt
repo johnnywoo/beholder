@@ -1,8 +1,10 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.BeholderException
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
+import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.formatters.*
 
@@ -20,7 +22,36 @@ class SetCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app,
             "prefix-with-length" -> SyslogFrameFormatter()
             "syslog-frame" -> SyslogFrameFormatter()
             "dump" -> DumpFormatter()
-            "time" -> TimeFormatter()
+            "time", "date" -> {
+                val format: TimeFormatter.Format
+                if (arguments.shiftLiteralOrNull("as") != null) {
+                    val literal = arguments.shiftAnyLiteralOrNull()
+                    if (literal != null) {
+                        val namedFormat = TimeFormatter.getNamedFormat(literal)
+                        if (namedFormat != null) {
+                            format = namedFormat
+                        } else {
+                            format = TimeFormatter.getSimpleDateFormat(literal)
+                        }
+                    } else {
+                        val string = arguments.shiftFixedString("`set ... $arg as` needs a string")
+                        format = TimeFormatter.getSimpleDateFormat(string)
+                    }
+                } else {
+                    format = when (arg) {
+                        "time" -> TimeFormatter.FORMAT_TIME
+                        "date" -> TimeFormatter.FORMAT_DATE
+                        else -> throw BeholderException("Impossible")
+                    }
+                }
+
+                var dateSource: TemplateFormatter? = null
+                if (arguments.shiftLiteralOrNull("in") != null) {
+                    dateSource = arguments.shiftStringTemplate("`set ... $arg in` needs a string")
+                }
+
+                TimeFormatter(format, dateSource)
+            }
             "host" -> HostFormatter()
             "env" -> EnvFormatter(arguments.shiftFixedString("`set ... env` needs an environment variable name"))
             "basename" -> BasenameFormatter(arguments.shiftStringTemplate("`set ... basename` needs a file path"))

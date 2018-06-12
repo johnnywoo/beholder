@@ -39,13 +39,19 @@ abstract class Arguments {
         return this
     }
 
-    private fun shiftString(errorMessage: String): String {
-        val token = shiftToken(errorMessage)
+    private fun shiftStringOrNull(): String? {
+        if (peekNext() == null) {
+            return null
+        }
+        val token = shiftToken("")
         if (token !is LiteralToken && token !is QuotedStringToken) {
-            throw CommandException(errorMessage)
+            return null
         }
         return token.getValue()
     }
+
+    private fun shiftString(errorMessage: String)
+        = shiftStringOrNull() ?: throw CommandException(errorMessage)
 
     // string that has no template variables
     fun shiftFixedString(errorMessage: String): String {
@@ -56,8 +62,16 @@ abstract class Arguments {
         return string
     }
 
+    fun shiftStringTemplateOrNull(): TemplateFormatter? {
+        val string = shiftStringOrNull()
+        if (string == null) {
+            return null
+        }
+        return TemplateFormatter.create(string)
+    }
+
     fun shiftStringTemplate(errorMessage: String)
-        = TemplateFormatter.create(shiftString(errorMessage))
+        = shiftStringTemplateOrNull() ?: throw CommandException(errorMessage)
 
     fun shiftFieldName(errorMessage: String): String {
         val arg = shiftAnyLiteral(errorMessage)

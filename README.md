@@ -88,6 +88,19 @@ Send internal beholder log as syslog over UDP:
         to udp 1234;
     }
 
+Send internal stats (metrics) into Influx over UDP:
+
+    flow {
+        from timer 30 seconds;
+        parse beholder-stats;
+        parse each-field-as-message;
+        switch $value { case ~^[0-9]+$~ {} } # drop messages with non-numeric values like $date
+        set $host host;
+        set $nanos time as unixtime-nanoseconds;
+        set $payload 'beholder,host=$host $key=$value $nanos';
+        to udp influxdb-address:8089;
+    }
+
 
 ## Configuration
 
@@ -339,7 +352,8 @@ Functions:
 
 * `syslog` — Generates a IETF syslog payload based on syslog-related fields; see `parse syslog` for details.
 * `replace` — String replacement with regexp. See below.
-* `time` — Current time, e.g. 01:23:45.
+* `time` — Current time, e.g. 01:23:45. There are more options, see below.
+* `date` — Current date, e.g. 2018-01-30. There are more options, see below.
 * `host` — Current hostname. Warning: if you're running Beholder in a Docker container,
     you should provide correct hostname into it, e.g. `net=host` or `docker run --hostname`.
 * `env` — Environment variable value: `set $path env PATH`.
@@ -363,6 +377,32 @@ Be aware of double-escaping in replacement strings! Example:
     set $payload replace ~\n~ '\\\\n';
 
 This command converts newlines into `\n` sequences.
+
+`set $field date ...` and `set $field time ...` support the following options:
+
+    set $field date [as <format>] [in <subject>]
+    set $field time [as <format>] [in <subject>]
+
+Available date formats:
+
+* `time` — "11:26:12"
+* `date` — "2018-06-13"
+* `datetime` — "2018-06-12T11:26:12+00:00".
+    This is an ISO 8601 variant with timezone always written like "+00:00" (no "Z").
+* `unixtime-seconds` — 1528799172.
+* `unixtime-milliseconds` — 1528799172000 (subsecond part may be non-zero).
+* `unixtime-microseconds` — 1528799172000000 (subsecond part may be non-zero).
+* `unixtime-nanoseconds` — 1528799172000000000 (subsecond part may be non-zero).
+* Any format string for java.time.format.DateTimeFormatter.
+    `set $field date as 'yyyy-MM-dd HH:mm';`
+
+Beholder will try to preserve timezone information when it can.
+
+    set $date '2018-06-12T11:26:12+01:00';
+    set $time time in $date; # 11:26:12 — timezone will be preserved even if local time is not +01:00
+
+Date parser understands some common formats of datetimes. For now a safe bet is to use
+ISO 8601 full datetime that Beholder produces by default: "2018-06-12T11:26:12+00:00".
 
 `set $payload json` generates a JSON string with all fields of the message.
 Alternatively you may specify which fields to include: `set $payload json $field $field2`.

@@ -666,26 +666,6 @@ If your regexp has named groups, those groups will be placed as fields into the 
 Global settings may be provided at the top level of the config.
 It is done in form of a command.
 
-`from` buffers are used when Beholder cannot process incoming messages quickly enough.
-These buffers hold incoming messages while Beholder is reloading.
-Every source has its own buffer; if you are listening on two different TCP ports,
-Beholder will create a separate buffer for each of those ports.
-
-    from_internal_log_buffer_messages_count 1000;
-    from_tcp_buffer_messages_count 1000;
-    from_udp_buffer_messages_count 1000;
-
-`to` buffers hold messages to be written to a destination. If a destination cannot accept
-new data quickly enough, Beholder will put it into a buffer. When the buffer is full,
-old messages are deleted to make space for new ones.
-Every destination has its own buffer; if you are writing messages into two different files,
-Beholder will create a separate buffer for each of those files.
-
-    to_file_buffer_messages_count 1000;
-    to_shell_buffer_messages_count 1000;
-    to_tcp_buffer_messages_count 1000;
-    to_udp_buffer_messages_count 1000;
-
 Beholder periodically initiates JVM garbage collection in order to keep memory footprint as low as possible.
 Because messages are processed using lots of short-lived objects, by default we initiate GC every 5 seconds.
 This can be changed using `extra_gc_interval_seconds` config option. If you don't want this behaviour,

@@ -12,7 +12,7 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
 
     val router = MessageRouter()
 
-    private val queue = BeholderQueue<Message>(app, ConfigOption.FROM_TCP_BUFFER_MESSAGES_COUNT) {
+    private val queue = BeholderQueue<Message>(app) {
         router.sendMessageToSubscribers(it)
         BeholderQueue.Result.OK
     }

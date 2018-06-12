@@ -9,9 +9,6 @@ const val COLLECTOR_TCP_PORT    = 11000
 
 class IntegrationTest : TestAbstract() {
     private val agentConfig = """
-        from_udp_buffer_messages_count 10000;
-        to_tcp_buffer_messages_count 10000;
-
         # Access log from nginx
         # access_log syslog:server=172.17.0.1:10000,tag=robot_dvru;
         join { from udp 10000; set ¥agent_type 'udp-nginx-access'; }

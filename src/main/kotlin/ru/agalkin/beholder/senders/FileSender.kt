@@ -3,7 +3,6 @@ package ru.agalkin.beholder.senders
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.queue.BeholderQueue
 import java.io.BufferedWriter
 import java.io.File
@@ -19,7 +18,7 @@ class FileSender(app: Beholder, private val file: File) {
         }
     }
 
-    private val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_FILE_BUFFER_MESSAGES_COUNT) { fieldValue ->
+    private val queue = BeholderQueue<FieldValue>(app) { fieldValue ->
         try {
             if (isReloadNeeded.get()) {
                 restartWriter()

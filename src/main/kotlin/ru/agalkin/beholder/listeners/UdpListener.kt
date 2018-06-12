@@ -4,7 +4,6 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.MessageRouter
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.queue.BeholderQueue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -16,7 +15,7 @@ class UdpListener(private val app: Beholder, val address: Address) {
 
     val router = MessageRouter()
 
-    private val queue = BeholderQueue<Message>(app, ConfigOption.FROM_UDP_BUFFER_MESSAGES_COUNT) {
+    private val queue = BeholderQueue<Message>(app) {
         router.sendMessageToSubscribers(it)
         BeholderQueue.Result.OK
     }

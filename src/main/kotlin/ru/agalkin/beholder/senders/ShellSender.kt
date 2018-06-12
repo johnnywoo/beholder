@@ -3,7 +3,6 @@ package ru.agalkin.beholder.senders
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.queue.BeholderQueue
 import ru.agalkin.beholder.readInputStreamAndDiscard
 import java.io.File
@@ -11,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicLong
 
 class ShellSender(app: Beholder, private val shellCommand: String) {
-    val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_SHELL_BUFFER_MESSAGES_COUNT) { fieldValue ->
+    val queue = BeholderQueue<FieldValue>(app) { fieldValue ->
         val process = startProcess()
         try {
             val outputStream = process.outputStream

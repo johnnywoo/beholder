@@ -4,7 +4,6 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.queue.BeholderQueue
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -14,7 +13,7 @@ class UdpSender(app: Beholder, address: Address) {
     private var socket = DatagramSocket()
     private val inetAddress = address.getInetAddress()
 
-    private val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_UDP_BUFFER_MESSAGES_COUNT) { fieldValue ->
+    private val queue = BeholderQueue<FieldValue>(app) { fieldValue ->
         try {
             socket.send(DatagramPacket(
                 fieldValue.toByteArray(),

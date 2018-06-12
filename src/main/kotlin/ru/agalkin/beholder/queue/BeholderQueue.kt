@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class BeholderQueue<T : Any>(
     private val app: Beholder,
-    capacityOption: ConfigOption,
     private val receive: (T) -> Result
 ) {
     private val chunks: MutableList<Chunk> = LinkedList()

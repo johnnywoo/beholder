@@ -4,7 +4,6 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.queue.BeholderQueue
 import ru.agalkin.beholder.readInputStreamAndDiscard
 import java.net.ConnectException
@@ -22,7 +21,7 @@ class TcpSender(app: Beholder, private val address: Address) {
 
     private val reconnectIntervalSeconds = AtomicInteger()
 
-    private val queue = BeholderQueue<FieldValue>(app, ConfigOption.TO_TCP_BUFFER_MESSAGES_COUNT) { fieldValue ->
+    private val queue = BeholderQueue<FieldValue>(app) { fieldValue ->
         try {
             val socket = connect()
             val outputStream = socket.getOutputStream()

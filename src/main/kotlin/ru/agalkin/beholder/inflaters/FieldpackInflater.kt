@@ -11,7 +11,7 @@ class FieldpackInflater : Inflater {
             val data = message.getPayloadValue().toByteArray()
             var index = 0
             val messages = fieldpack.readMessages { length ->
-                val chunk = Fieldpack.Chunk(data, index, length)
+                val chunk = Fieldpack.Portion(data, index, length)
                 index += length
                 chunk
             }

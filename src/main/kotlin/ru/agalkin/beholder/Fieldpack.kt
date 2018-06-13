@@ -1,7 +1,7 @@
 package ru.agalkin.beholder
 
 typealias Writer = (source: ByteArray, readLength: Int) -> Unit
-typealias Reader = (length: Int) -> Fieldpack.Chunk
+typealias Reader = (length: Int) -> Fieldpack.Portion
 
 /**
  * Fieldpack:
@@ -33,7 +33,7 @@ typealias Reader = (length: Int) -> Fieldpack.Chunk
  * Most payloads will use 2 bytes for payload length. Nginx access log syslog payload almost always has length from 100 to 500 bytes.
  */
 class Fieldpack {
-    open class Chunk(val data: ByteArray, val offset: Int = 0, private val length: Int = data.size - offset) {
+    open class Portion(val data: ByteArray, val offset: Int = 0, private val length: Int = data.size - offset) {
         override fun toString()
             = String(data, offset, length, Charsets.UTF_8)
 
@@ -46,7 +46,7 @@ class Fieldpack {
         }
 
         companion object {
-            val empty = object : Chunk(ByteArray(0)) {
+            val empty = object : Portion(ByteArray(0)) {
                 override fun toString()
                     = ""
 
@@ -83,6 +83,13 @@ class Fieldpack {
         }
 
         return result
+    }
+
+    fun getPackedLength(messages: List<Message>): Int {
+        var packedLength = 0
+        // todo something a bit faster, perhaps?
+        writeMessages(messages) { _, length -> packedLength += length }
+        return packedLength
     }
 
     fun writeMessages(messages: List<Message>, write: Writer): Int {
@@ -142,10 +149,10 @@ class Fieldpack {
         return writtenLength
     }
 
-    private inline fun readNumStr(read: Reader): Chunk {
+    private inline fun readNumStr(read: Reader): Portion {
         val length = readNum(read)
         if (length == 0L) {
-            return Chunk.empty
+            return Portion.empty
         }
         return read(length.toInt())
     }

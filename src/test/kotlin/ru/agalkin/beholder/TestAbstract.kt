@@ -62,7 +62,7 @@ abstract class TestAbstract {
         return receiveMessagesWithConfig(config, 1, senderBlock).firstOrNull()
     }
 
-    private fun makeApp(config: String)
+    protected fun makeApp(config: String)
         = Beholder({ Config.fromStringWithLog(it, config, "test-config") })
 
     protected fun receiveMessagesWithConfig(config: String, count: Int, senderBlock: (CommandAbstract) -> Unit): List<Message> {

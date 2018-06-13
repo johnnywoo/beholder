@@ -1,8 +1,6 @@
 package ru.agalkin.beholder
 
-import ru.agalkin.beholder.queue.DataBuffer
-
-abstract class FieldValue : DataBuffer.Item {
+abstract class FieldValue {
     companion object {
         val empty: FieldValue = StringFieldValue("")
 

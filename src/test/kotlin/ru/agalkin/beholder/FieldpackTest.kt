@@ -37,7 +37,7 @@ class FieldpackTest : TestAbstract() {
         // unpacking
         var index = 0
         val unpackedMessages = fieldpack.readMessages { readLength ->
-            val chunk = Fieldpack.Chunk(buffer, index, readLength)
+            val chunk = Fieldpack.Portion(buffer, index, readLength)
             index += readLength
             if (index > length) {
                 fail("readMessages tried to read $index bytes, packed length $length")
@@ -97,7 +97,7 @@ class FieldpackTest : TestAbstract() {
         // unpacking
         var index = 0
         val unpackedMessages = fieldpack.readMessages { readLength ->
-            val chunk = Fieldpack.Chunk(buffer, index, readLength)
+            val chunk = Fieldpack.Portion(buffer, index, readLength)
             index += readLength
             if (index > length) {
                 fail("readMessages tried to read $index bytes, packed length $length")
@@ -128,7 +128,7 @@ class FieldpackTest : TestAbstract() {
             }
             var i = 0
             val unpackedN = fieldpack.readNum { toRead ->
-                val chunk = Fieldpack.Chunk(byteArray, i, toRead)
+                val chunk = Fieldpack.Portion(byteArray, i, toRead)
 
                 i += toRead
                 if (i > length) {

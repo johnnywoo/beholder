@@ -7,14 +7,14 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
-class BeholderQueue<T : DataBuffer.Item>(
+class BeholderQueue<T>(
     private val app: Beholder,
     private val receive: (T) -> Result
 ) {
     // linked list is both Queue and List
     private val chunks = LinkedList<Chunk>()
 
-    private val buffer = app.defaultBuffer
+    private val buffer by lazy { app.defaultBuffer }
 
     private val totalMessagesCount = AtomicLong()
 
@@ -85,11 +85,13 @@ class BeholderQueue<T : DataBuffer.Item>(
     }
 
     private fun compressChunksIfNeeded() {
-        if (chunks.size > 2) {
-            val notForBuffer = setOf(chunks.peekFirst(), chunks.peekLast())
-            for (chunk in chunks) {
-                if (chunk !in notForBuffer) {
-                    chunk.moveToBuffer()
+        synchronized(this) {
+            if (chunks.size > 2) {
+                val notForBuffer = setOf(chunks.peekFirst(), chunks.peekLast())
+                for (chunk in chunks) {
+                    if (chunk !in notForBuffer) {
+                        chunk.moveToBuffer()
+                    }
                 }
             }
         }

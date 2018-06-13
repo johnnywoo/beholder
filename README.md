@@ -679,4 +679,4 @@ extra GC can be disabled by setting `extra_gc_interval_seconds` to 0.
 Internal buffer options, docs are to be written.
 
     queue_chunk_messages 500;
-    buffer_size_bytes 128m;
+    buffer_memory_bytes 128m;

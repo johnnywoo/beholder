@@ -22,7 +22,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
 
     val executor by lazy { Executor() }
 
-    val defaultBuffer by lazy { DataBuffer() }
+    val defaultBuffer by lazy { DataBuffer(this) }
 
     val selectorThread by lazy {
         val st = SelectorThread(this)

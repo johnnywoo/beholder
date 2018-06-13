@@ -46,7 +46,18 @@ class RootCommand(app: Beholder) : ConveyorCommandAbstract(
             val option = ConfigOption.valueOf(arguments.getCommandName().toUpperCase())
             when (option.type) {
                 ConfigOption.Type.INT -> {
-                    optionValues[option] = arguments.shiftFixedString("An integer value is required").toInt()
+                    val numberDefinition = arguments.shiftFixedString("An integer option value is required")
+                    val match = "^(\\d+)([kmg])?$".toRegex(RegexOption.IGNORE_CASE).matchEntire(numberDefinition)
+                    val n = match?.groups?.get(1)?.value?.toIntOrNull()
+                    if (n == null) {
+                        throw CommandException("An integer option value is required")
+                    }
+                    optionValues[option] = n * when (match.groups[2]?.value?.toLowerCase()) {
+                        "g" -> 1024 * 1024 * 1024
+                        "m" -> 1024 * 1024
+                        "k" -> 1024
+                        else -> 1
+                    }
                 }
             }
             arguments.end()

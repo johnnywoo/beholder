@@ -7,9 +7,6 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
-private const val NOT_BUFFERED  = -2L
-private const val BUFFERING_NOW = -1L
-
 class BeholderQueue<T : DataBuffer.Item>(
     private val app: Beholder,
     private val receive: (T) -> Result
@@ -129,13 +126,23 @@ class BeholderQueue<T : DataBuffer.Item>(
         RETRY
     }
 
+    private inner class FakeCell : DataBuffer.Cell<T> {
+        override fun getList(): List<T>
+            = emptyList()
+        override fun getMemoryUsedBytes()
+            = 0
+    }
+
+    private val notBuffered  = FakeCell()
+    private val bufferingNow = FakeCell()
+
     private inner class Chunk(private val capacity: Int) {
         @Volatile private var list = mutableListOf<T>()
 
         @Volatile private var index = 0
         @Volatile private var size = 0 // list will be moved off to buffer
 
-        @Volatile private var bufferCellId = NOT_BUFFERED
+        @Volatile private var bufferCell: DataBuffer.Cell<T> = notBuffered
 
         @Volatile private var listForBuffer = mutableListOf<T>()
 
@@ -160,27 +167,27 @@ class BeholderQueue<T : DataBuffer.Item>(
 
         // called from the queue itself, already synchronized on it
         fun next(): T? {
-            when (bufferCellId) {
-                NOT_BUFFERED -> {
+            when {
+                bufferCell === notBuffered -> {
                     // no need to do anything
                 }
-                BUFFERING_NOW -> {
+                bufferCell === bufferingNow -> {
                     // cancel the buffering process
                     list = listForBuffer
                     listForBuffer = mutableListOf()
-                    bufferCellId = NOT_BUFFERED
+                    bufferCell = notBuffered
                 }
                 else -> {
                     // the chunk is in the buffer, we need to retrieve it
-                    val loadedList = buffer.load<T>(bufferCellId)
+                    val loadedList = buffer.load(bufferCell)
 
-                    val cellIdToRemove = bufferCellId
+                    val cellToRemove = bufferCell
                     app.executor.execute {
-                        buffer.remove(cellIdToRemove)
+                        buffer.remove(cellToRemove)
                     }
 
-                    list = loadedList
-                    bufferCellId = NOT_BUFFERED
+                    list = loadedList.toMutableList()
+                    bufferCell = notBuffered
                 }
             }
 
@@ -196,20 +203,20 @@ class BeholderQueue<T : DataBuffer.Item>(
                 if (index != 0) {
                     return
                 }
-                if (bufferCellId != NOT_BUFFERED) {
+                if (bufferCell !== notBuffered) {
                     return
                 }
                 listForBuffer = list
                 list = mutableListOf()
-                bufferCellId = BUFFERING_NOW
+                bufferCell = bufferingNow
             }
 
             // this can run on its own synchronization
-            val cellId = buffer.store(listForBuffer)
+            val cell = buffer.store(listForBuffer)
 
             synchronized(this@BeholderQueue) {
-                if (bufferCellId == BUFFERING_NOW) {
-                    bufferCellId = cellId
+                if (bufferCell === bufferingNow) {
+                    bufferCell = cell
                     listForBuffer = mutableListOf()
                 }
             }

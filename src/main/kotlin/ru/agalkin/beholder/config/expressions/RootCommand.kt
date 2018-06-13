@@ -14,13 +14,6 @@ class RootCommand(app: Beholder) : ConveyorCommandAbstract(
     sendInputToSubcommands = false,
     sendLastSubcommandToOutput = false
 ) {
-    val optionValues = hashMapOf<ConfigOption, Any>()
-    init {
-        for (option in ConfigOption.values()) {
-            optionValues[option] = option.defaultValue
-        }
-    }
-
     override fun createSubcommand(args: Arguments): CommandAbstract? {
         if (args.getCommandName() in ConfigOption.values().map { it.name.toLowerCase() }) {
             return ConfigOptionCommand(app, args)
@@ -52,7 +45,7 @@ class RootCommand(app: Beholder) : ConveyorCommandAbstract(
                     if (n == null) {
                         throw CommandException("An integer option value is required")
                     }
-                    optionValues[option] = n * when (match.groups[2]?.value?.toLowerCase()) {
+                    app.optionValues[option] = n * when (match.groups[2]?.value?.toLowerCase()) {
                         "g" -> 1024 * 1024 * 1024
                         "m" -> 1024 * 1024
                         "k" -> 1024

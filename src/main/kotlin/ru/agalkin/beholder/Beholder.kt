@@ -1,6 +1,7 @@
 package ru.agalkin.beholder
 
 import ru.agalkin.beholder.config.Config
+import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.listeners.InternalLogListener
 import ru.agalkin.beholder.listeners.SelectorThread
 import ru.agalkin.beholder.listeners.TcpListener
@@ -12,11 +13,19 @@ import ru.agalkin.beholder.senders.TcpSender
 import ru.agalkin.beholder.senders.UdpSender
 import ru.agalkin.beholder.stats.Stats
 import java.io.Closeable
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
 
 const val BEHOLDER_SYSLOG_PROGRAM = "beholder"
 
 class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
+    val optionValues = ConcurrentHashMap<ConfigOption, Any>()
+    init {
+        for (option in ConfigOption.values()) {
+            optionValues[option] = option.defaultValue
+        }
+    }
+
     val beforeReloadCallbacks = CopyOnWriteArraySet<() -> Unit>()
     val afterReloadCallbacks  = CopyOnWriteArraySet<() -> Unit>()
 
@@ -112,4 +121,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
             receiver()
         }
     }
+
+    fun getIntOption(name: ConfigOption)
+        = optionValues[name] as Int
 }

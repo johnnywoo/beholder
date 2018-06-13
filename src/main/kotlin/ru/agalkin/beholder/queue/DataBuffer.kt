@@ -18,10 +18,10 @@ import java.util.concurrent.atomic.AtomicInteger
 
 // This whole class must be thread-safe.
 class DataBuffer(app: Beholder) {
-    private val maxTotalSize = AtomicInteger(app.config.getIntOption(ConfigOption.BUFFER_MEMORY_BYTES))
+    private val maxTotalSize = AtomicInteger(app.getIntOption(ConfigOption.BUFFER_MEMORY_BYTES))
     init {
         app.afterReloadCallbacks.add {
-            maxTotalSize.set(app.config.getIntOption(ConfigOption.BUFFER_MEMORY_BYTES))
+            maxTotalSize.set(app.getIntOption(ConfigOption.BUFFER_MEMORY_BYTES))
         }
     }
 

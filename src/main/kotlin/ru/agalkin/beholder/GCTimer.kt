@@ -7,7 +7,7 @@ class GCTimer(private val app: Beholder) {
     private var timer = Timer()
 
     private val afterReload = {
-        val intervalSeconds = app.config.getIntOption(ConfigOption.EXTRA_GC_INTERVAL_SECONDS)
+        val intervalSeconds = app.getIntOption(ConfigOption.EXTRA_GC_INTERVAL_SECONDS)
         InternalLog.info("GCTimer interval is $intervalSeconds seconds")
         if (intervalSeconds > 0) {
             timer.schedule(

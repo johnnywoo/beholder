@@ -43,7 +43,4 @@ class Config(app: Beholder, configText: String, configSourceDescription: String)
 
     fun stop()
         = root.stop()
-
-    fun getIntOption(name: ConfigOption)
-        = root.optionValues[name] as Int
 }

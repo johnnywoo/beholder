@@ -61,7 +61,7 @@ class BeholderQueue<T>(
             val chunk: Chunk
             if (lastChunk == null || !lastChunk.canAdd()) {
                 // последний кусок закончился, будем добавлять новый
-                chunk = Chunk(app.config.getIntOption(ConfigOption.QUEUE_CHUNK_MESSAGES))
+                chunk = Chunk(app.getIntOption(ConfigOption.QUEUE_CHUNK_MESSAGES))
                 chunks.add(chunk)
                 wasChunkAdded = true
             } else {

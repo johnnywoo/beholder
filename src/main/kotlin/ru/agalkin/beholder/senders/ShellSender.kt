@@ -3,23 +3,24 @@ package ru.agalkin.beholder.senders
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.queue.BeholderQueue
+import ru.agalkin.beholder.queue.BeholderQueueAbstract
+import ru.agalkin.beholder.queue.FieldValueQueue
 import ru.agalkin.beholder.readInputStreamAndDiscard
 import java.io.File
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicLong
 
 class ShellSender(app: Beholder, private val shellCommand: String) {
-    val queue = BeholderQueue<FieldValue>(app) { fieldValue ->
+    val queue = FieldValueQueue(app) { fieldValue ->
         val process = startProcess()
         try {
             val outputStream = process.outputStream
             outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
             outputStream.flush()
-            BeholderQueue.Result.OK
+            BeholderQueueAbstract.Result.OK
         } catch (e: Throwable) {
             InternalLog.exception(e)
-            BeholderQueue.Result.RETRY
+            BeholderQueueAbstract.Result.RETRY
         }
     }
 

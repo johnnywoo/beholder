@@ -4,14 +4,15 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.MessageRouter
-import ru.agalkin.beholder.queue.BeholderQueue
+import ru.agalkin.beholder.queue.BeholderQueueAbstract
+import ru.agalkin.beholder.queue.MessageQueue
 
 class InternalLogListener(app: Beholder) {
     val router = MessageRouter()
 
-    private val queue = BeholderQueue<Message>(app) {
+    private val queue = MessageQueue(app) {
         router.sendMessageToSubscribers(it)
-        BeholderQueue.Result.OK
+        BeholderQueueAbstract.Result.OK
     }
 
     init {

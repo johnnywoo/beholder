@@ -3,7 +3,8 @@ package ru.agalkin.beholder.senders
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.queue.BeholderQueue
+import ru.agalkin.beholder.queue.BeholderQueueAbstract
+import ru.agalkin.beholder.queue.FieldValueQueue
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -18,7 +19,7 @@ class FileSender(app: Beholder, private val file: File) {
         }
     }
 
-    private val queue = BeholderQueue<FieldValue>(app) { fieldValue ->
+    private val queue = FieldValueQueue(app) { fieldValue ->
         try {
             if (isReloadNeeded.get()) {
                 restartWriter()
@@ -35,7 +36,7 @@ class FileSender(app: Beholder, private val file: File) {
             InternalLog.exception(e)
             restartWriter()
         }
-        BeholderQueue.Result.OK
+        BeholderQueueAbstract.Result.OK
     }
 
     private var bufferedWriter: BufferedWriter? = null

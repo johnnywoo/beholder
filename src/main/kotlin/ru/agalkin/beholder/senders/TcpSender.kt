@@ -4,7 +4,8 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.queue.BeholderQueue
+import ru.agalkin.beholder.queue.BeholderQueueAbstract
+import ru.agalkin.beholder.queue.FieldValueQueue
 import ru.agalkin.beholder.readInputStreamAndDiscard
 import java.net.ConnectException
 import java.net.InetSocketAddress
@@ -21,25 +22,25 @@ class TcpSender(app: Beholder, private val address: Address) {
 
     private val reconnectIntervalSeconds = AtomicInteger()
 
-    private val queue = BeholderQueue<FieldValue>(app) { fieldValue ->
+    private val queue = FieldValueQueue(app) { fieldValue ->
         try {
             val socket = connect()
             val outputStream = socket.getOutputStream()
             outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
             outputStream.flush()
-            BeholderQueue.Result.OK
+            BeholderQueueAbstract.Result.OK
         } catch (e: ConnectException) {
             socket.close()
             InternalLog.err("Cannot connect to TCP $address: ${e.message}")
-            BeholderQueue.Result.RETRY
+            BeholderQueueAbstract.Result.RETRY
         } catch (e: SocketException) {
             socket.close()
             InternalLog.err("TCP error connected to $address: ${e.message}")
-            BeholderQueue.Result.RETRY
+            BeholderQueueAbstract.Result.RETRY
         } catch (e: Throwable) {
             socket.close()
             InternalLog.exception(e)
-            BeholderQueue.Result.RETRY
+            BeholderQueueAbstract.Result.RETRY
         }
     }
 

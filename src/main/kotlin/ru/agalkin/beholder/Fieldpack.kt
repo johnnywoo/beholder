@@ -58,7 +58,7 @@ class Fieldpack {
 
     class FieldpackException(message: String) : Exception(message)
 
-    fun readMessages(read: Reader): List<Message> {
+    fun readMessagesTo(list: MutableList<Message>, read: Reader) {
         // NUM F = number of field names
         val fieldNumber = readNum(read)
 
@@ -73,15 +73,18 @@ class Fieldpack {
         val messageNumber = readNum(read)
 
         // M x F x ( NSTR value )  fields of a message are next to each other
-        val result = mutableListOf<Message>()
         for (i in 0 until messageNumber) {
             val message = Message()
             for (fieldName in fieldNames) {
                 message.setFieldValue(fieldName, readNumStr(read).toFieldValue())
             }
-            result.add(message)
+            list.add(message)
         }
+    }
 
+    fun readMessages(read: Reader): List<Message> {
+        val result = mutableListOf<Message>()
+        readMessagesTo(result, read)
         return result
     }
 

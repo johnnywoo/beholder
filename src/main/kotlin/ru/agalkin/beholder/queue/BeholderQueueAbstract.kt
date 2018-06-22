@@ -1,20 +1,19 @@
 package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.stats.Stats
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
-class BeholderQueue<T>(
-    private val app: Beholder,
+abstract class BeholderQueueAbstract<T>(
+    protected val app: Beholder,
     private val receive: (T) -> Result
 ) {
     // linked list is both Queue and List
-    private val chunks = LinkedList<Chunk>()
+    private val chunks = LinkedList<Chunk<T>>()
 
-    private val buffer by lazy { app.defaultBuffer }
+    protected val buffer by lazy { app.defaultBuffer }
 
     private val totalMessagesCount = AtomicLong()
 
@@ -32,11 +31,14 @@ class BeholderQueue<T>(
         }
     }
 
+    abstract fun createChunk(): Chunk<T>
+
     private fun poll(): T? {
         synchronized(this) {
-            // берём сообщения из первого куска
+            // убираем израсходованные куски
             while (chunks.peekFirst()?.isUsedCompletely() == true) {
-                chunks.poll()
+                val droppedChunk = chunks.pollFirst()
+                totalMessagesCount.addAndGet(-droppedChunk.droppedItemsNumber.toLong())
             }
             val firstChunk = chunks.peekFirst()
             if (firstChunk == null) {
@@ -58,10 +60,10 @@ class BeholderQueue<T>(
         synchronized(this) {
             // добавляем сообщения в последний кусок
             val lastChunk = chunks.peekLast()
-            val chunk: Chunk
+            val chunk: Chunk<T>
             if (lastChunk == null || !lastChunk.canAdd()) {
                 // последний кусок закончился, будем добавлять новый
-                chunk = Chunk(app.getIntOption(ConfigOption.QUEUE_CHUNK_MESSAGES))
+                chunk = createChunk()
                 chunks.add(chunk)
                 wasChunkAdded = true
             } else {
@@ -126,102 +128,5 @@ class BeholderQueue<T>(
     enum class Result(val waitMillis: Long = 0) {
         OK,
         RETRY
-    }
-
-    private inner class FakeCell : DataBuffer.Cell<T> {
-        override fun getList(): List<T>
-            = emptyList()
-        override fun getMemoryUsedBytes()
-            = 0
-    }
-
-    private val notBuffered  = FakeCell()
-    private val bufferingNow = FakeCell()
-
-    private inner class Chunk(private val capacity: Int) {
-        @Volatile private var list = mutableListOf<T>()
-
-        @Volatile private var index = 0
-        @Volatile private var size = 0 // list will be moved off to buffer
-
-        @Volatile private var bufferCell: DataBuffer.Cell<T> = notBuffered
-
-        @Volatile private var listForBuffer = mutableListOf<T>()
-
-
-        // called from the queue itself, already synchronized on it
-        fun canAdd()
-            = size < capacity
-
-        // called from the queue itself, already synchronized on it
-        fun isUsedCompletely()
-            = index >= size && !canAdd()
-
-        // called from the queue itself, already synchronized on it
-        fun add(message: T): Boolean {
-            if (!canAdd()) {
-                return false
-            }
-            list.add(message)
-            size++
-            return true
-        }
-
-        // called from the queue itself, already synchronized on it
-        fun next(): T? {
-            when {
-                bufferCell === notBuffered -> {
-                    // no need to do anything
-                }
-                bufferCell === bufferingNow -> {
-                    // cancel the buffering process
-                    list = listForBuffer
-                    listForBuffer = mutableListOf()
-                    bufferCell = notBuffered
-                }
-                else -> {
-                    // the chunk is in the buffer, we need to retrieve it
-                    val loadedList = buffer.load(bufferCell)
-
-                    val cellToRemove = bufferCell
-                    app.executor.execute {
-                        buffer.remove(cellToRemove)
-                    }
-
-                    list = loadedList.toMutableList()
-                    bufferCell = notBuffered
-                }
-            }
-
-            if (index >= size) {
-                return null
-            }
-            return list[index++]
-        }
-
-        // Called from Executor, synchronization needed
-        fun moveToBuffer() {
-            synchronized(this@BeholderQueue) {
-                if (index != 0) {
-                    return
-                }
-                if (bufferCell !== notBuffered) {
-                    return
-                }
-                listForBuffer = list
-                list = mutableListOf()
-                bufferCell = bufferingNow
-            }
-
-            // this can run on its own synchronization
-            val cell = buffer.store(listForBuffer)
-
-            synchronized(this@BeholderQueue) {
-                if (bufferCell === bufferingNow) {
-                    bufferCell = cell
-                    listForBuffer = mutableListOf()
-                }
-            }
-        }
     }
 }

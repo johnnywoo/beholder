@@ -6,7 +6,7 @@ import ru.agalkin.beholder.Fieldpack
 import ru.agalkin.beholder.config.ConfigOption
 import java.lang.ref.WeakReference
 
-class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Result) : BeholderQueueAbstract<FieldValue>(app, receive) {
+class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : BeholderQueueAbstract<FieldValue>(app, receive) {
     override fun createChunk(): Chunk<FieldValue> {
         return FieldValueChunk(app.getIntOption(ConfigOption.QUEUE_CHUNK_MESSAGES), buffer)
     }

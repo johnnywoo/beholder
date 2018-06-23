@@ -4,8 +4,8 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.queue.BeholderQueueAbstract
 import ru.agalkin.beholder.queue.FieldValueQueue
+import ru.agalkin.beholder.queue.Received
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.util.concurrent.ConcurrentHashMap
@@ -27,7 +27,7 @@ class UdpSender(app: Beholder, address: Address) {
             socket.use { it.close() }
             socket = DatagramSocket()
         }
-        BeholderQueueAbstract.Result.OK
+        Received.OK
     }
 
     fun writeMessagePayload(fieldValue: FieldValue) {

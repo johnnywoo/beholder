@@ -6,7 +6,7 @@ import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.ConfigOption
 import java.lang.ref.WeakReference
 
-class MessageQueue(app: Beholder, receive: (Message) -> Result) : BeholderQueueAbstract<Message>(app, receive) {
+class MessageQueue(app: Beholder, receive: (Message) -> Received) : BeholderQueueAbstract<Message>(app, receive) {
     override fun createChunk(): Chunk<Message> {
         return MessageChunk(app.getIntOption(ConfigOption.QUEUE_CHUNK_MESSAGES), buffer)
     }

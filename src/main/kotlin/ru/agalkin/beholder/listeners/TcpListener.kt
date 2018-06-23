@@ -2,8 +2,8 @@ package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.Address
-import ru.agalkin.beholder.queue.BeholderQueueAbstract
 import ru.agalkin.beholder.queue.MessageQueue
+import ru.agalkin.beholder.queue.Received
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -14,7 +14,7 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
 
     private val queue = MessageQueue(app) {
         router.sendMessageToSubscribers(it)
-        BeholderQueueAbstract.Result.OK
+        Received.OK
     }
 
     private val receiver = when (isSyslogFrame) {

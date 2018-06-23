@@ -22,21 +22,24 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
     abstract fun unpack(bufferRef: WeakReference<ByteArray>): MutableList<T>
 
 
+    private fun isFull()
+        = size >= capacity
+
     fun canAdd(): Boolean {
         synchronized(this) {
-            return size < capacity
+            return !isFull()
         }
     }
 
     fun isUsedCompletely(): Boolean {
         synchronized(this) {
-            return nextIndexToRead >= size && !canAdd()
+            return nextIndexToRead >= size && isFull()
         }
     }
 
     fun add(message: T): Boolean {
         synchronized(this) {
-            if (!canAdd()) {
+            if (isFull()) {
                 return false
             }
             list.add(message)
@@ -62,6 +65,8 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
                     val loadedList = unpack(cell.byteArrayReference)
                     buffer.release(cell.byteArrayReference)
 
+                    // if the buffer dropped some of our data, we will not read all items that were packed
+                    // in this case we need to report the number for stats
                     droppedItemsNumber += size - loadedList.size
 
                     list = loadedList
@@ -108,9 +113,9 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
     }
 
 
-    open inner class BufferStatus
+    private open inner class BufferStatus
 
-    inner class NotBuffered : BufferStatus()
-    inner class BufferingNow(val list: MutableList<T>) : BufferStatus()
-    inner class Buffered(val byteArrayReference: WeakReference<ByteArray>) : BufferStatus()
+    private inner class NotBuffered : BufferStatus()
+    private inner class BufferingNow(val list: MutableList<T>) : BufferStatus()
+    private inner class Buffered(val byteArrayReference: WeakReference<ByteArray>) : BufferStatus()
 }

@@ -3,8 +3,8 @@ package ru.agalkin.beholder.senders
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
-import ru.agalkin.beholder.queue.BeholderQueueAbstract
 import ru.agalkin.beholder.queue.FieldValueQueue
+import ru.agalkin.beholder.queue.Received
 import ru.agalkin.beholder.readInputStreamAndDiscard
 import java.io.File
 import java.util.concurrent.CopyOnWriteArraySet
@@ -17,10 +17,10 @@ class ShellSender(app: Beholder, private val shellCommand: String) {
             val outputStream = process.outputStream
             outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
             outputStream.flush()
-            BeholderQueueAbstract.Result.OK
+            Received.OK
         } catch (e: Throwable) {
             InternalLog.exception(e)
-            BeholderQueueAbstract.Result.RETRY
+            Received.RETRY
         }
     }
 

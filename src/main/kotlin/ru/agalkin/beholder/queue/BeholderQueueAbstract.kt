@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 abstract class BeholderQueueAbstract<T>(
     protected val app: Beholder,
-    private val receive: (T) -> Result
+    private val receive: (T) -> Received
 ) {
     // linked list is both Queue and List
     private val chunks = LinkedList<Chunk<T>>()
@@ -108,10 +108,10 @@ abstract class BeholderQueueAbstract<T>(
                 if (message != null) {
                     while (true) {
                         val result = receive(message)
-                        if (result == Result.OK) {
+                        if (result == Received.OK) {
                             break
                         }
-                        // Result.RETRY
+                        // Received.RETRY
                         if (result.waitMillis > 0) {
                             Thread.sleep(result.waitMillis)
                         }
@@ -125,8 +125,4 @@ abstract class BeholderQueueAbstract<T>(
         }
     }
 
-    enum class Result(val waitMillis: Long = 0) {
-        OK,
-        RETRY
-    }
 }

@@ -41,8 +41,8 @@ class StatsHolder {
         stats["fromTcpNewConnections"]?.incrementAndGet()
     }
 
-    fun reportQueueOverflow() {
-        stats["queueOverflows"]?.incrementAndGet()
+    fun reportQueueOverflow(droppedNumber: Long) {
+        stats["queueOverflows"]?.addAndGet(droppedNumber)
     }
 
     fun reportQueueSize(size: Long) {

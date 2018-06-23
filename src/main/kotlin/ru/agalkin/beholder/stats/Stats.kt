@@ -33,9 +33,9 @@ object Stats {
         }
     }
 
-    fun reportQueueOverflow() {
+    fun reportQueueOverflow(droppedNumber: Long) {
         for (holder in holders) {
-            holder.reportQueueOverflow()
+            holder.reportQueueOverflow(droppedNumber)
         }
     }
 

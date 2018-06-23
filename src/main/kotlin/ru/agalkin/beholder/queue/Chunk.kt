@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.queue
 
+import ru.agalkin.beholder.stats.Stats
 import java.lang.ref.WeakReference
 
 abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuffer) {
@@ -68,6 +69,7 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
                     // if the buffer dropped some of our data, we will not read all items that were packed
                     // in this case we need to report the number for stats
                     droppedItemsNumber += size - loadedList.size
+                    Stats.reportQueueOverflow(droppedItemsNumber.toLong())
 
                     list = loadedList
                     bufferCell = notBuffered

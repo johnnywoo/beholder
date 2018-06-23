@@ -37,7 +37,8 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             "fromTcpMaxBytes", "fromTcpMessages", "fromTcpNewConnections", "fromTcpTotalBytes",
             "fromUdpMaxBytes", "fromUdpMessages", "fromUdpTotalBytes",
             "heapBytes", "heapMaxBytes", "heapUsedBytes",
-            "queueMaxSize", "queueOverflows", "uptimeSeconds", "messagesReceived", "configReloads", "unparsedDropped",
+            "queueMaxSize", "queueOverflows", "queueChunksCreated", "uptimeSeconds", "messagesReceived", "configReloads", "unparsedDropped",
+            "allBuffersAllocatedBytes", "allBuffersMaxBytes", "defaultBufferAllocatedBytes", "defaultBufferMaxBytes",
             "payload"
         )
     }
@@ -51,7 +52,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
                 switch ¥value { case ~^[0-9]+¥~ {} }
                 set ¥payload 'beholder,tag=tagval ¥key=¥value';
             """.replace('¥', '$'),
-            16,
+            21,
             {
                 val message = Message()
                 message["date"]    = "2017-11-26T16:16:01+03:00"
@@ -65,7 +66,11 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             .sorted()
 
         assertEquals(listOf(
+            "beholder,tag=tagval allBuffersAllocatedBytes=N",
+            "beholder,tag=tagval allBuffersMaxBytes=N",
             "beholder,tag=tagval configReloads=N",
+            "beholder,tag=tagval defaultBufferAllocatedBytes=N",
+            "beholder,tag=tagval defaultBufferMaxBytes=N",
             "beholder,tag=tagval fromTcpMaxBytes=N",
             "beholder,tag=tagval fromTcpMessages=N",
             "beholder,tag=tagval fromTcpNewConnections=N",
@@ -77,6 +82,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             "beholder,tag=tagval heapMaxBytes=N",
             "beholder,tag=tagval heapUsedBytes=N",
             "beholder,tag=tagval messagesReceived=N",
+            "beholder,tag=tagval queueChunksCreated=N",
             "beholder,tag=tagval queueMaxSize=N",
             "beholder,tag=tagval queueOverflows=N",
             "beholder,tag=tagval unparsedDropped=N",

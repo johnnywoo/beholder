@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.stats
 
+import ru.agalkin.beholder.queue.DataBuffer
 import java.util.concurrent.CopyOnWriteArraySet
 
 object Stats {
@@ -54,6 +55,18 @@ object Stats {
     fun reportReload() {
         for (holder in holders) {
             holder.reportConfigReload()
+        }
+    }
+
+    fun reportChunkCreated() {
+        for (holder in holders) {
+            holder.reportChunkCreated()
+        }
+    }
+
+    fun reportBufferAllocation(buffer: DataBuffer, currentMemoryBytes: Long, allBuffersMemoryBytes: Long, allocatedBytes: Long) {
+        for (holder in holders) {
+            holder.reportBufferAllocation(buffer, currentMemoryBytes, allBuffersMemoryBytes, allocatedBytes)
         }
     }
 }

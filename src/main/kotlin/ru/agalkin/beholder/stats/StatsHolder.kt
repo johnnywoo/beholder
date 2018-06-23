@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.stats
 
+import ru.agalkin.beholder.queue.DataBuffer
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.max
@@ -19,6 +20,11 @@ class StatsHolder {
         "messagesReceived" to AtomicLong(),
         "queueOverflows" to AtomicLong(),
         "queueMaxSize" to AtomicLong(),
+        "queueChunksCreated" to AtomicLong(),
+        "defaultBufferMaxBytes" to AtomicLong(),
+        "defaultBufferAllocatedBytes" to AtomicLong(),
+        "allBuffersMaxBytes" to AtomicLong(),
+        "allBuffersAllocatedBytes" to AtomicLong(),
         "configReloads" to AtomicLong(),
         "unparsedDropped" to AtomicLong()
     )
@@ -55,6 +61,19 @@ class StatsHolder {
 
     fun reportUnparsedDropped() {
         stats["unparsedDropped"]?.incrementAndGet()
+    }
+
+    fun reportBufferAllocation(buffer: DataBuffer, currentMemoryBytes: Long, allBuffersMemoryBytes: Long, allocatedBytes: Long) {
+        stats["allBuffersMaxBytes"]?.updateAndGet { max(it, allBuffersMemoryBytes) }
+        stats["allBuffersAllocatedBytes"]?.addAndGet(allocatedBytes)
+        if (buffer.id == "") {
+            stats["defaultBufferMaxBytes"]?.updateAndGet { max(it, currentMemoryBytes) }
+            stats["defaultBufferAllocatedBytes"]?.addAndGet(allocatedBytes)
+        }
+    }
+
+    fun reportChunkCreated() {
+        stats["queueChunksCreated"]?.incrementAndGet()
     }
 
     private fun getStatValuesAndReset(): Map<String, Long> {

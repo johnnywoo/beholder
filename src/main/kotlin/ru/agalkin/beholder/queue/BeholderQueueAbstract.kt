@@ -77,6 +77,7 @@ abstract class BeholderQueueAbstract<T>(
 
         if (wasChunkAdded) {
             app.executor.execute {
+                Stats.reportChunkCreated()
                 compressChunksIfNeeded()
             }
         }

@@ -37,12 +37,12 @@ class FieldpackTest : TestAbstract() {
         // unpacking
         var index = 0
         val unpackedMessages = fieldpack.readMessages { readLength ->
-            val chunk = Fieldpack.Portion(buffer, index, readLength)
+            val portion = Fieldpack.Portion(buffer, index, readLength)
             index += readLength
             if (index > length) {
                 fail("readMessages tried to read $index bytes, packed length $length")
             }
-            chunk
+            portion
         }
 
         assertEquals(1, unpackedMessages.size)
@@ -97,12 +97,12 @@ class FieldpackTest : TestAbstract() {
         // unpacking
         var index = 0
         val unpackedMessages = fieldpack.readMessages { readLength ->
-            val chunk = Fieldpack.Portion(buffer, index, readLength)
+            val portion = Fieldpack.Portion(buffer, index, readLength)
             index += readLength
             if (index > length) {
                 fail("readMessages tried to read $index bytes, packed length $length")
             }
-            chunk
+            portion
         }
 
         assertEquals(2, unpackedMessages.size)
@@ -128,13 +128,13 @@ class FieldpackTest : TestAbstract() {
             }
             var i = 0
             val unpackedN = fieldpack.readNum { toRead ->
-                val chunk = Fieldpack.Portion(byteArray, i, toRead)
+                val portion = Fieldpack.Portion(byteArray, i, toRead)
 
                 i += toRead
                 if (i > length) {
                     throw BeholderException("Too many reads: $i original=$n packed=" + byteArray.joinToString(",") { (it.toInt() and 0xff).toString() })
                 }
-                chunk
+                portion
             }
             assertEquals(n, unpackedN, "Invalid unpack: unpacked=$unpackedN original=$n packed=" + byteArray.joinToString(",") { (it.toInt() and 0xff).toString() })
         }

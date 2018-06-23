@@ -41,7 +41,10 @@ class DataBuffer(app: Beholder) {
             return
         }
         synchronized(this) {
-            byteArrays.remove(byteArray)
+            val isRemoved = byteArrays.remove(byteArray)
+            if (isRemoved) {
+                currentSizeInMemory.addAndGet(-byteArray.size)
+            }
         }
     }
 }

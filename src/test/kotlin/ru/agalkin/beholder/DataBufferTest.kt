@@ -58,14 +58,7 @@ class DataBufferTest : TestAbstract() {
 
             // this is of course not the actual memory usage, but it's something we can measure properly
 
-
-
-            // the problem: our buffer is shared by the inbound message queue and the outbound TCP field value queue
-            // they are used in parallel, so it's impossible to predict buffer usage by the message queue
-            // we need a better test here
-
-
-            // assertEquals(260, app.defaultBuffer.currentSizeInMemory.get())
+            assertEquals(260, app.defaultBuffer.currentSizeInMemory.get())
         }
     }
 }

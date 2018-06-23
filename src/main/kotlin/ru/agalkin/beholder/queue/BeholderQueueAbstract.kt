@@ -38,7 +38,9 @@ abstract class BeholderQueueAbstract<T>(
             // убираем израсходованные куски
             while (chunks.peekFirst()?.isUsedCompletely() == true) {
                 val droppedChunk = chunks.pollFirst()
-                totalMessagesCount.addAndGet(-droppedChunk.droppedItemsNumber.toLong())
+                val unusedItemsNumber = droppedChunk.getUnusedItemsNumber().toLong()
+                totalMessagesCount.addAndGet(-unusedItemsNumber)
+                Stats.reportQueueOverflow(unusedItemsNumber)
             }
             val firstChunk = chunks.peekFirst()
             if (firstChunk == null) {

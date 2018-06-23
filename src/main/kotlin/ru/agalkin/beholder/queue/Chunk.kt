@@ -1,7 +1,7 @@
 package ru.agalkin.beholder.queue
 
-import ru.agalkin.beholder.stats.Stats
 import java.lang.ref.WeakReference
+import kotlin.math.max
 
 abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuffer) {
     private val notBuffered = NotBuffered()
@@ -11,20 +11,24 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
     // list will be moved off to buffer, we cannot use size of that
     // also data can be dropped in the buffer, but we need to know how many items there were
     @Volatile private var nextIndexToRead = 0
-    @Volatile private var size = 0
+    @Volatile private var addedItemsCount = 0
+    @Volatile private var droppedItemsCount = 0
 
-    @Volatile var droppedItemsNumber = 0
-        private set
-
-    @Volatile private var bufferCell: BufferStatus = notBuffered
+    @Volatile private var bufferState: BufferState = notBuffered
 
 
     abstract fun pack(list: List<T>): WeakReference<ByteArray>
     abstract fun unpack(bufferRef: WeakReference<ByteArray>): MutableList<T>
 
 
+    fun getUnusedItemsNumber(): Int {
+        synchronized(this) {
+            return droppedItemsCount + max(0, addedItemsCount - nextIndexToRead)
+        }
+    }
+
     private fun isFull()
-        = size >= capacity
+        = addedItemsCount >= capacity
 
     fun canAdd(): Boolean {
         synchronized(this) {
@@ -34,7 +38,7 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
 
     fun isUsedCompletely(): Boolean {
         synchronized(this) {
-            return nextIndexToRead >= size && isFull()
+            return nextIndexToRead >= addedItemsCount && isFull()
         }
     }
 
@@ -44,14 +48,14 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
                 return false
             }
             list.add(message)
-            size++
+            addedItemsCount++
             return true
         }
     }
 
     fun next(): T? {
         synchronized(this) {
-            val cell = bufferCell
+            val cell = bufferState
             when (cell) {
                 is NotBuffered -> {
                     // no need to do anything
@@ -59,7 +63,7 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
                 is BufferingNow -> {
                     // cancel the buffering process
                     list = cell.list
-                    bufferCell = notBuffered
+                    bufferState = notBuffered
                 }
                 is Buffered -> {
                     // the chunk is in the buffer, we need to retrieve it
@@ -68,15 +72,14 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
 
                     // if the buffer dropped some of our data, we will not read all items that were packed
                     // in this case we need to report the number for stats
-                    droppedItemsNumber += size - loadedList.size
-                    Stats.reportQueueOverflow(droppedItemsNumber.toLong())
+                    droppedItemsCount += addedItemsCount - loadedList.size
 
                     list = loadedList
-                    bufferCell = notBuffered
+                    bufferState = notBuffered
                 }
             }
 
-            if (nextIndexToRead >= size) {
+            if (nextIndexToRead >= addedItemsCount) {
                 return null
             }
             return list[nextIndexToRead++]
@@ -88,11 +91,11 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
             if (nextIndexToRead != 0) {
                 return null
             }
-            if (bufferCell !is NotBuffered) {
+            if (bufferState !is NotBuffered) {
                 return null
             }
             val cell = BufferingNow(list)
-            bufferCell = cell
+            bufferState = cell
             list = mutableListOf()
             return cell
         }
@@ -108,16 +111,16 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
         val reference = pack(cell.list)
 
         synchronized(this) {
-            if (bufferCell is BufferingNow) {
-                bufferCell = Buffered(reference)
+            if (bufferState is BufferingNow) {
+                bufferState = Buffered(reference)
             }
         }
     }
 
 
-    private open inner class BufferStatus
+    private open inner class BufferState
 
-    private inner class NotBuffered : BufferStatus()
-    private inner class BufferingNow(val list: MutableList<T>) : BufferStatus()
-    private inner class Buffered(val byteArrayReference: WeakReference<ByteArray>) : BufferStatus()
+    private inner class NotBuffered : BufferState()
+    private inner class BufferingNow(val list: MutableList<T>) : BufferState()
+    private inner class Buffered(val byteArrayReference: WeakReference<ByteArray>) : BufferState()
 }

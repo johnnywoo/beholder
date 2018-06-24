@@ -2,11 +2,12 @@ package ru.agalkin.beholder.stats
 
 import ru.agalkin.beholder.queue.DataBuffer
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.max
 
 class StatsHolder {
-    private val stats = mapOf(
+    private val stats = ConcurrentHashMap(mapOf(
         "fromUdpMessages" to AtomicLong(),
         "fromUdpMaxBytes" to AtomicLong(),
         "fromUdpTotalBytes" to AtomicLong(),
@@ -16,6 +17,21 @@ class StatsHolder {
         "fromTcpTotalBytes" to AtomicLong(),
 
         "fromTcpNewConnections" to AtomicLong(),
+
+        "packCount" to AtomicLong(),
+        "packDurationMaxNanos" to AtomicLong(),
+        "packDurationTotalNanos" to AtomicLong(),
+        "unpackCount" to AtomicLong(),
+        "unpackDurationMaxNanos" to AtomicLong(),
+        "unpackDurationTotalNanos" to AtomicLong(),
+        "compressCount" to AtomicLong(),
+        "compressDurationMaxNanos" to AtomicLong(),
+        "compressDurationTotalNanos" to AtomicLong(),
+        "compressBeforeTotalBytes" to AtomicLong(),
+        "compressAfterTotalBytes" to AtomicLong(),
+        "decompressCount" to AtomicLong(),
+        "decompressDurationMaxNanos" to AtomicLong(),
+        "decompressDurationTotalNanos" to AtomicLong(),
 
         "messagesReceived" to AtomicLong(),
         "queueOverflows" to AtomicLong(),
@@ -27,7 +43,7 @@ class StatsHolder {
         "allBuffersAllocatedBytes" to AtomicLong(),
         "configReloads" to AtomicLong(),
         "unparsedDropped" to AtomicLong()
-    )
+    ))
 
     fun reportUdpReceived(size: Long) {
         stats["messagesReceived"]?.incrementAndGet()
@@ -74,6 +90,32 @@ class StatsHolder {
 
     fun reportChunkCreated() {
         stats["queueChunksCreated"]?.incrementAndGet()
+    }
+
+    fun reportPackTime(spentNanos: Long) {
+        stats["packCount"]?.incrementAndGet()
+        stats["packDurationMaxNanos"]?.updateAndGet { max(it, spentNanos) }
+        stats["packDurationTotalNanos"]?.addAndGet(spentNanos)
+    }
+
+    fun reportUnpackTime(spentNanos: Long) {
+        stats["unpackCount"]?.incrementAndGet()
+        stats["unpackDurationMaxNanos"]?.updateAndGet { max(it, spentNanos) }
+        stats["unpackDurationTotalNanos"]?.addAndGet(spentNanos)
+    }
+
+    fun reportCompressTime(spentNanos: Long, originalLength: Int, compressedLength: Int) {
+        stats["compressCount"]?.incrementAndGet()
+        stats["compressDurationMaxNanos"]?.updateAndGet { max(it, spentNanos) }
+        stats["compressDurationTotalNanos"]?.addAndGet(spentNanos)
+        stats["compressBeforeTotalBytes"]?.addAndGet(originalLength.toLong())
+        stats["compressAfterTotalBytes"]?.addAndGet(compressedLength.toLong())
+    }
+
+    fun reportDecompressTime(spentNanos: Long) {
+        stats["decompressCount"]?.incrementAndGet()
+        stats["decompressDurationMaxNanos"]?.updateAndGet { max(it, spentNanos) }
+        stats["decompressDurationTotalNanos"]?.addAndGet(spentNanos)
     }
 
     private fun getStatValuesAndReset(): Map<String, Long> {

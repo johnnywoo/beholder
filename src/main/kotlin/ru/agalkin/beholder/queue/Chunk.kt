@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.queue
 
+import ru.agalkin.beholder.stats.Stats
 import java.lang.ref.WeakReference
 import kotlin.math.max
 
@@ -26,8 +27,9 @@ abstract class Chunk<T>(private val capacity: Int, private val buffer: DataBuffe
     private val originalLengths = mutableMapOf<WeakReference<*>, Int>()
 
     private fun packAndCompress(list: List<T>): WeakReference<ByteArray> {
-        val bytes = pack(list)
-        val reference = buffer.allocate(compressor.compress(bytes))
+        val bytes = Stats.timePackProcess { pack(list) }
+        val compressedBytes = Stats.timeCompressProcess(bytes.size) { compressor.compress(bytes) }
+        val reference = buffer.allocate(compressedBytes)
         originalLengths[reference] = bytes.size
         return reference
     }
@@ -40,8 +42,8 @@ abstract class Chunk<T>(private val capacity: Int, private val buffer: DataBuffe
         }
 
         val compressedBytes = allocated.get() ?: return mutableListOf()
-        val bytes = compressor.decompress(compressedBytes, originalLength)
-        return unpack(bytes)
+        val bytes = Stats.timeDecompressProcess { compressor.decompress(compressedBytes, originalLength) }
+        return Stats.timeUnpackProcess { unpack(bytes) }
     }
 
     fun getUnusedItemsNumber(): Int {

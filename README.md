@@ -506,23 +506,42 @@ Use this with `from timer` to create a health log.
 
 Fields produced by `parse beholder-stats`:
 
-* `$configReloads`         — Number of successful config reloads
-* `$fromTcpMaxBytes`       — Maximum length of a message received over TCP
-* `$fromTcpMessages`       — Number of messages received over TCP
-* `$fromTcpNewConnections` — Number of accepted TCP connections
-* `$fromTcpTotalBytes`     — Total number of bytes received over TCP
-* `$fromUdpMaxBytes`       — Maximum length of a packet received over UDP
-* `$fromUdpMessages`       — Number of messages received over UDP
-* `$fromUdpTotalBytes`     — Summed length of all packets received over UDP
-* `$heapBytes`             — Current heap size in bytes (memory usage)
-* `$heapMaxBytes`          — Maximal heap size
-* `$heapUsedBytes`         — Used memory in the heap
-* `$messagesReceived`      — Count of received messages
-* `$queueMaxSize`          — Maximum size of a queue
-* `$queueOverflows`        — Number of messages dropped due to a queue overflow
-* `$unparsedDropped`       — Number of messages dropped due to parse errors
-* `$uptimeSeconds`         — Uptime in seconds
-* `$payload`               — A summary of all these stats
+* `$allBuffersAllocatedBytes`     — Total amount of bytes allocated in all buffers (does not decrease when memory is released)
+* `$allBuffersMaxBytes`           — Maximum individual allocation size in all buffers
+* `$compressAfterTotalBytes`      — Total size of all data fed into compressors
+* `$compressBeforeTotalBytes`     — Total size of data produced by compressors
+* `$compressCount`                — Number of compress operations (chunk moves from queue to buffer)
+* `$compressDurationMaxNanos`     — Max duration of a compress
+* `$compressDurationTotalNanos`   — Total duration of all compress operations
+* `$configReloads`                — Number of successful config reloads
+* `$decompressCount`              — Number of decompress operations (chunk moves from buffer to queue)
+* `$decompressDurationMaxNanos`   — Max duration of a decompress
+* `$decompressDurationTotalNanos` — Total duration of all decompress operations
+* `$defaultBufferAllocatedBytes`  — Total amount of bytes allocated in the default buffer (does not decrease when memory is released)
+* `$defaultBufferMaxBytes`        — Maximum individual allocation size in the default buffer
+* `$fromTcpMaxBytes`              — Maximum length of a message received over TCP
+* `$fromTcpMessages`              — Number of messages received over TCP
+* `$fromTcpNewConnections`        — Number of accepted TCP connections
+* `$fromTcpTotalBytes`            — Total number of bytes received over TCP
+* `$fromUdpMaxBytes`              — Maximum length of a packet received over UDP
+* `$fromUdpMessages`              — Number of messages received over UDP
+* `$fromUdpTotalBytes`            — Summed length of all packets received over UDP
+* `$heapBytes`                    — Current heap size in bytes (memory usage)
+* `$heapMaxBytes`                 — Maximal heap size
+* `$heapUsedBytes`                — Used memory in the heap
+* `$messagesReceived`             — Count of received messages
+* `$packCount`                    — Number of pack operations (chunk moves from queue to buffer)
+* `$packDurationMaxNanos`         — Max duration of a pack
+* `$packDurationTotalNanos`       — Total duration of all pack operations
+* `$queueChunksCreated`           — Number of queue chunks created
+* `$queueMaxSize`                 — Maximum size of a queue
+* `$queueOverflows`               — Number of messages dropped due to a queue overflow
+* `$unpackCount`                  — Number of unpacks (chunk moves from buffer to queue)
+* `$unpackDurationMaxNanos`       — Max duration of an unpack
+* `$unpackDurationTotalNanos`     — Total duration of all unpacks
+* `$unparsedDropped`              — Number of messages dropped due to parse errors
+* `$uptimeSeconds`                — Uptime in seconds
+* `$payload`                      — A summary of all these stats
 
 All counter stats are rotated: numbers are reset to 0 every time `parse beholder-stats` happens.
 If you have multiple `parse beholder-stats` commands in your config,

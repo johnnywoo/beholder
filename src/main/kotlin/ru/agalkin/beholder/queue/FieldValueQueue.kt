@@ -4,6 +4,7 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Fieldpack
 import ru.agalkin.beholder.config.ConfigOption
+import ru.agalkin.beholder.threadLocal
 
 class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : BeholderQueueAbstract<FieldValue>(app, receive) {
     override fun createChunk(): Chunk<FieldValue> {
@@ -58,6 +59,6 @@ class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : Behold
     }
 
     companion object {
-        private val fieldpack = Fieldpack()
+        private val fieldpack by threadLocal { Fieldpack() }
     }
 }

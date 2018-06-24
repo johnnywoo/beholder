@@ -3,9 +3,10 @@ package ru.agalkin.beholder.formatters
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Fieldpack
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.threadLocal
 
 class FieldpackFormatter(private val fields: List<String>?) : Formatter {
-    private val fieldpack = Fieldpack()
+    private val fieldpack by threadLocal { Fieldpack() }
 
     override fun formatMessage(message: Message): FieldValue {
         val length: Int

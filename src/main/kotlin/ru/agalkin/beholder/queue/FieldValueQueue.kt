@@ -4,7 +4,6 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Fieldpack
 import ru.agalkin.beholder.config.ConfigOption
-import java.lang.ref.WeakReference
 
 class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : BeholderQueueAbstract<FieldValue>(app, receive) {
     override fun createChunk(): Chunk<FieldValue> {
@@ -12,15 +11,14 @@ class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : Behold
     }
 
     class FieldValueChunk(capacity: Int, buffer: DataBuffer) : Chunk<FieldValue>(capacity, buffer) {
-        override fun pack(list: List<FieldValue>): WeakReference<ByteArray> {
+        override fun pack(list: List<FieldValue>): ByteArray {
             var length = 0
             for (item in list) {
                 val byteLength = item.getByteLength()
                 length += fieldpack.writeNum(byteLength, { _, _ -> }) + byteLength
             }
 
-            val reference = buffer.allocate(length)
-            val bytes = reference.get() ?: return reference
+            val bytes = ByteArray(length)
             var offset = 0
             for (item in list) {
                 val byteLength = item.getByteLength()
@@ -36,13 +34,11 @@ class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : Behold
                 }
                 offset += byteLength
             }
-            return reference
+            return bytes
         }
 
-        override fun unpack(bufferRef: WeakReference<ByteArray>): MutableList<FieldValue> {
+        override fun unpack(bytes: ByteArray): MutableList<FieldValue> {
             val list = mutableListOf<FieldValue>()
-
-            val bytes = bufferRef.get() ?: return list
 
             var offset = 0
             while (offset < bytes.size) {

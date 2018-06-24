@@ -1,5 +1,8 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.compressors.Compressor
+import ru.agalkin.beholder.compressors.LZ4FastCompressor
+import ru.agalkin.beholder.compressors.NoCompressor
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.listeners.InternalLogListener
@@ -124,4 +127,14 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
 
     fun getIntOption(name: ConfigOption)
         = optionValues[name] as Int
+
+    fun getCompressionOption(name: ConfigOption)
+        = optionValues[name] as ConfigOption.Compression
+
+    fun createCompressor(name: ConfigOption): Compressor {
+        return when (optionValues[name] as ConfigOption.Compression) {
+            ConfigOption.Compression.OFF -> NoCompressor()
+            ConfigOption.Compression.LZ4_FAST -> LZ4FastCompressor()
+        }
+    }
 }

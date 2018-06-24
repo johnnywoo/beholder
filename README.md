@@ -689,3 +689,7 @@ there are lots of things on JVM that eat bytes. Watch your metrics!
 
     buffer_memory_bytes 128m;
     queue_chunk_messages 500;
+
+When a queue chunk is buffered, it is compressed. You can turn off compression with `buffer_compression off`.
+
+    buffer_compression lz4-fast; # one of: lz4-fast, off

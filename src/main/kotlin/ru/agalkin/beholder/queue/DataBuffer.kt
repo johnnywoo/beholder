@@ -10,9 +10,16 @@ import java.util.concurrent.atomic.AtomicLong
 
 class DataBuffer(app: Beholder, val id: String = "") {
     private val maxTotalSize = AtomicInteger(app.getIntOption(ConfigOption.BUFFER_MEMORY_BYTES))
+    @Volatile var compressionName = app.getCompressionOption(ConfigOption.BUFFER_COMPRESSION)
+    @Volatile var compressor = app.createCompressor(ConfigOption.BUFFER_COMPRESSION)
+
     init {
         app.afterReloadCallbacks.add {
             maxTotalSize.set(app.getIntOption(ConfigOption.BUFFER_MEMORY_BYTES))
+            if (compressionName != app.getCompressionOption(ConfigOption.BUFFER_COMPRESSION)) {
+                compressionName = app.getCompressionOption(ConfigOption.BUFFER_COMPRESSION)
+                compressor = app.createCompressor(ConfigOption.BUFFER_COMPRESSION)
+            }
         }
     }
 
@@ -28,16 +35,15 @@ class DataBuffer(app: Beholder, val id: String = "") {
         }
     }
 
-    fun allocate(size: Int): WeakReference<ByteArray> {
+    fun allocate(bytes: ByteArray): WeakReference<ByteArray> {
         synchronized(this) {
-            while (currentSizeInMemory.get() + size > maxTotalSize.get()) {
+            while (currentSizeInMemory.get() + bytes.size > maxTotalSize.get()) {
                 val removed = byteArrays.pollFirst()
                 addMemorySize(-removed.size)
             }
 
-            val bytes = ByteArray(size)
             byteArrays.addLast(bytes)
-            addMemorySize(size)
+            addMemorySize(bytes.size)
 
             return WeakReference(bytes)
         }

@@ -3,7 +3,9 @@ package ru.agalkin.beholder.queue
 import java.lang.ref.WeakReference
 import kotlin.math.max
 
-abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuffer) {
+abstract class Chunk<T>(private val capacity: Int, private val buffer: DataBuffer) {
+    private val compressor = buffer.compressor
+
     private val notBuffered = NotBuffered()
 
     @Volatile private var list = mutableListOf<T>()
@@ -17,9 +19,30 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
     @Volatile private var bufferState: BufferState = notBuffered
 
 
-    abstract fun pack(list: List<T>): WeakReference<ByteArray>
-    abstract fun unpack(bufferRef: WeakReference<ByteArray>): MutableList<T>
+    abstract fun pack(list: List<T>): ByteArray
+    abstract fun unpack(bytes: ByteArray): MutableList<T>
 
+
+    private val originalLengths = mutableMapOf<WeakReference<*>, Int>()
+
+    private fun packAndCompress(list: List<T>): WeakReference<ByteArray> {
+        val bytes = pack(list)
+        val reference = buffer.allocate(compressor.compress(bytes))
+        originalLengths[reference] = bytes.size
+        return reference
+    }
+
+    private fun decompressAndUnpack(allocated: WeakReference<ByteArray>): MutableList<T> {
+        val originalLength = originalLengths[allocated]
+        originalLengths.remove(allocated)
+        if (originalLength == null) {
+            return mutableListOf()
+        }
+
+        val compressedBytes = allocated.get() ?: return mutableListOf()
+        val bytes = compressor.decompress(compressedBytes, originalLength)
+        return unpack(bytes)
+    }
 
     fun getUnusedItemsNumber(): Int {
         synchronized(this) {
@@ -67,7 +90,7 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
                 }
                 is Buffered -> {
                     // the chunk is in the buffer, we need to retrieve it
-                    val loadedList = unpack(cell.byteArrayReference)
+                    val loadedList = decompressAndUnpack(cell.byteArrayReference)
                     buffer.release(cell.byteArrayReference)
 
                     // if the buffer dropped some of our data, we will not read all items that were packed
@@ -108,7 +131,7 @@ abstract class Chunk<T>(private val capacity: Int, protected val buffer: DataBuf
         }
 
         // this can run on its own synchronization
-        val reference = pack(cell.list)
+        val reference = packAndCompress(cell.list)
 
         synchronized(this) {
             if (bufferState is BufferingNow) {

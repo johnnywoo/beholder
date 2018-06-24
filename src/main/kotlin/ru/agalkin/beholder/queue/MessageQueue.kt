@@ -4,7 +4,6 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Fieldpack
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.ConfigOption
-import java.lang.ref.WeakReference
 
 class MessageQueue(app: Beholder, receive: (Message) -> Received) : BeholderQueueAbstract<Message>(app, receive) {
     override fun createChunk(): Chunk<Message> {
@@ -12,9 +11,8 @@ class MessageQueue(app: Beholder, receive: (Message) -> Received) : BeholderQueu
     }
 
     class MessageChunk(capacity: Int, buffer: DataBuffer) : Chunk<Message>(capacity, buffer) {
-        override fun pack(list: List<Message>): WeakReference<ByteArray> {
-            val reference = buffer.allocate(fieldpack.getPackedLength(list))
-            val bytes = reference.get() ?: return reference
+        override fun pack(list: List<Message>): ByteArray {
+            val bytes = ByteArray(fieldpack.getPackedLength(list))
 
             var offset = 0
             fieldpack.writeMessages(list) { source, length ->
@@ -23,13 +21,11 @@ class MessageQueue(app: Beholder, receive: (Message) -> Received) : BeholderQueu
                 }
                 offset += length
             }
-            return reference
+            return bytes
         }
 
-        override fun unpack(bufferRef: WeakReference<ByteArray>): MutableList<Message> {
+        override fun unpack(bytes: ByteArray): MutableList<Message> {
             val list = mutableListOf<Message>()
-
-            val bytes = bufferRef.get() ?: return list
 
             var offset = 0
             fieldpack.readMessagesTo(list) { length ->

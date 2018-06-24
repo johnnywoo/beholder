@@ -20,7 +20,7 @@ class DataBufferTest : TestAbstract() {
     @Test
     fun testNowhereToSend() {
         val messageText = "Message: поехали!"
-        val config = "queue_chunk_messages 5; from udp 3821; to tcp 1212"
+        val config = "buffer_compression off; queue_chunk_messages 5; from udp 3821; to tcp 1212"
 
         makeApp(config).use { app ->
             val root = app.config.root
@@ -59,6 +59,44 @@ class DataBufferTest : TestAbstract() {
             // this is of course not the actual memory usage, but it's something we can measure properly
 
             assertEquals(260, app.defaultBuffer.currentSizeInMemory.get())
+        }
+    }
+
+    @Test
+    fun testNowhereToSendCompressed() {
+        val messageText = "Message: поехали!"
+        val config = "queue_chunk_messages 5; from udp 3821; to tcp 1212"
+
+        makeApp(config).use { app ->
+            val root = app.config.root
+
+            var processedMessagesNum = 0
+            val sentMessagesNum = 20
+
+            root.subcommands.last().output.addSubscriber { processedMessagesNum++ }
+
+            root.start()
+            Thread.sleep(100)
+
+            repeat(sentMessagesNum) {
+                sendToUdp(3821, messageText)
+            }
+
+            var timeSpentMillis = 0
+            while (timeSpentMillis < 300) {
+                if (processedMessagesNum == sentMessagesNum) {
+                    break
+                }
+                Thread.sleep(50)
+                timeSpentMillis += 50
+            }
+
+            assertEquals(sentMessagesNum, processedMessagesNum, "Expected number of messages does not match")
+
+            // when uncompressed, total buffer length is 260 bytes
+            // with default lz4-fast compression, it gets down to 74 bytes
+
+            assertEquals(74, app.defaultBuffer.currentSizeInMemory.get())
         }
     }
 }

@@ -648,6 +648,9 @@ Message routing for `join`:
 ### `switch` — conditional processing
 
     switch 'template with $fields' {
+        case 'some-value' {
+            <subcommands>
+        }
         case ~regexp~ {
             <subcommands>
         }
@@ -664,6 +667,8 @@ Subcommands of `case`/`default`: all commands are allowed.
 First matching `case` wins: its subcommands receive the message.
 If there was no match, an optional `default` block receives the message.
 There can be multiple `case` blocks, but only one `default`, and it must be the last block in `switch`.
+
+The template can be a literal, quoted string or a regexp.
 
 If a message does not match any `case` and there is no `default`, the message will be discarded.
 This way `switch` can work as an if-statement:

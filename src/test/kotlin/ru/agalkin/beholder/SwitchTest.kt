@@ -136,4 +136,35 @@ class SwitchTest : TestAbstract() {
 
         assertEquals("unknown", processedMessage!!.getStringField("animal"))
     }
+
+    @Test
+    fun testSwitchMatchLiteral() {
+        val message = Message()
+        message["animal"] = "initial"
+
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { case dog { set \$animal 'ok' } }")
+
+        assertEquals("ok", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchMatchQuoted() {
+        val message = Message()
+        message["animal"] = "initial"
+
+        val processedMessage = processMessageWithConfig(message, "switch 'dog' { case 'dog' { set \$animal 'ok' } }")
+
+        assertEquals("ok", processedMessage!!.getStringField("animal"))
+    }
+
+    @Test
+    fun testSwitchMatchTemplate() {
+        val message = Message()
+        message["feline"] = "cat"
+        message["animal"] = "cat"
+
+        val processedMessage = processMessageWithConfig(message, "switch \$animal { case \$feline { set \$animal 'ok' } }")
+
+        assertEquals("ok", processedMessage!!.getStringField("animal"))
+    }
 }

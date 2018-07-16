@@ -1,16 +1,22 @@
 package ru.agalkin.beholder.config
 
 import ru.agalkin.beholder.config.expressions.CommandException
+import java.time.DateTimeException
+import java.time.ZoneId
+import java.time.zone.ZoneRulesException
 
 enum class ConfigOption(val defaultValue: Any, val type: Type) {
     QUEUE_CHUNK_MESSAGES(500, Type.INT),
     BUFFER_MEMORY_BYTES(128 * 1024 * 1024, Type.INT),
     BUFFER_COMPRESSION(Compression.LZ4_FAST, Type.COMPRESSION),
 
-    EXTRA_GC_INTERVAL_SECONDS(5, Type.INT);
+    EXTRA_GC_INTERVAL_SECONDS(5, Type.INT),
+
+    CREATE_DATES_IN_TIMEZONE(ZoneId.systemDefault(), Type.TIMEZONE);
 
     enum class Type {
         INT,
+        TIMEZONE,
         COMPRESSION
     }
 
@@ -39,6 +45,16 @@ enum class ConfigOption(val defaultValue: Any, val type: Type) {
                 "off" -> Compression.OFF
                 "lz4-fast" -> Compression.LZ4_FAST
                 else -> throw CommandException("Unknown compression mode: $string")
+            }
+        }
+
+        fun timezoneFromString(string: String): ZoneId {
+            try {
+                return ZoneId.of(string)
+            } catch (e: DateTimeException) {
+                throw CommandException("Invalid timezone: $string")
+            } catch (e: ZoneRulesException) {
+                throw CommandException("Unknown timezone: $string")
             }
         }
     }

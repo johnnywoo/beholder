@@ -1,12 +1,13 @@
 package ru.agalkin.beholder.listeners
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.queue.MessageQueue
 import ru.agalkin.beholder.stats.Stats
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 
-class NewlineTerminatedTcpReceiver(queue: MessageQueue) : TcpMessageReceiverAbstract(queue) {
+class NewlineTerminatedTcpReceiver(app: Beholder, queue: MessageQueue) : TcpMessageReceiverAbstract(app, queue) {
     override fun receiveMessage(socketChannel: SocketChannel) {
         val data = readTerminated(socketChannel, '\n')
         if (data == null) {

@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.listeners
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.BeholderException
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.queue.MessageQueue
@@ -7,7 +8,7 @@ import ru.agalkin.beholder.stats.Stats
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 
-class SyslogFrameTcpReceiver(queue: MessageQueue) : TcpMessageReceiverAbstract(queue) {
+class SyslogFrameTcpReceiver(app: Beholder, queue: MessageQueue) : TcpMessageReceiverAbstract(app, queue) {
     override fun receiveMessage(socketChannel: SocketChannel) {
         val lengthStr = readLength(socketChannel)
         if (lengthStr == null) {

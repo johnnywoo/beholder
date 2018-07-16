@@ -3,8 +3,6 @@ package ru.agalkin.beholder
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.SocketException
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.properties.ReadOnlyProperty
@@ -13,14 +11,6 @@ import kotlin.reflect.KProperty
 fun d(message: String) {
     println("[" + Thread.currentThread().name + "] " + message)
 }
-
-fun getIsoDateFormatter()
-    = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
-
-// 2017-11-26T16:16:01+03:00
-// 2017-11-26T16:16:01Z if UTC
-fun getIsoDate(date: Date = Date()): String
-    = getIsoDateFormatter().format(date)
 
 fun readTextFromResource(name: String): String {
     val inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(name)

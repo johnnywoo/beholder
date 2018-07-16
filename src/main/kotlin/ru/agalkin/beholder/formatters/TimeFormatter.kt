@@ -4,20 +4,16 @@ import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Message
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 class TimeFormatter(private val format: Format, private val dateSource: TemplateFormatter?) : Formatter {
     override fun formatMessage(message: Message): FieldValue {
-        var date: ZonedDateTime? = null
+        val date: ZonedDateTime?
         if (dateSource == null) {
             date = ZonedDateTime.now()
         } else {
             val dateString = dateSource.formatMessage(message).toString()
-            for ((regex, dateFormat) in dateDecodeRegexps) {
-                if (dateString.matches(regex)) {
-                    date = ZonedDateTime.parse(dateString, DateTimeFormatter.ofPattern(dateFormat))
-                    break
-                }
-            }
+            date = parseDate(dateString)
         }
 
         if (date == null) {
@@ -69,6 +65,7 @@ class TimeFormatter(private val format: Format, private val dateSource: Template
 
         val FORMAT_TIME = supportedFormats["time"]!!
         val FORMAT_DATE = supportedFormats["date"]!!
+        val FORMAT_STABLE_DATETIME = supportedFormats["datetime"]!!
 
         fun getNamedFormat(formatName: String): Format? {
             if (supportedFormats.containsKey(formatName)) {
@@ -79,11 +76,34 @@ class TimeFormatter(private val format: Format, private val dateSource: Template
 
         fun getSimpleDateFormat(formatString: String)
             = Format(formatString)
+
+        fun parseDate(dateString: String?): ZonedDateTime? {
+            if (dateString == null) {
+                return null
+            }
+            for ((regex, dateFormat) in dateDecodeRegexps) {
+                if (dateString.matches(regex)) {
+                    try {
+                        return ZonedDateTime.parse(dateString, DateTimeFormatter.ofPattern(dateFormat))
+                    } catch (e: DateTimeParseException) {
+                        return null
+                    }
+                }
+            }
+            return null
+        }
     }
 
-    open class Format(private val dateFormat: String) {
-        open fun format(date: ZonedDateTime): String
-            = date.format(DateTimeFormatter.ofPattern(dateFormat))
+    open class Format(dateFormat: String) {
+        private val dateTimeFormatter = DateTimeFormatter.ofPattern(dateFormat)
+
+        open fun format(date: ZonedDateTime): String {
+            return date.format(dateTimeFormatter)
+        }
+
+        fun parse(date: String): ZonedDateTime {
+            return ZonedDateTime.parse(date, dateTimeFormatter)
+        }
     }
 
     private class StableDatetimeFormat : Format("yyyy-MM-dd'T'HH:mm:ssXXX") {

@@ -16,6 +16,7 @@ class BasenameFormatterTest : TestAbstract() {
     @Test fun testBasename4() = runTest("a/b/c/", "c")
     @Test fun testBasename5() = runTest("~user", "user")
     @Test fun testBasename6() = runTest("/path/filename.ext", "filename.ext")
+    @Test fun testBasename7() = runTest("beholder-collector", "beholder-collector")
 
     private fun runTest(path: String, expected: String) {
         val message = Message()

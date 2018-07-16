@@ -1,14 +1,17 @@
 package ru.agalkin.beholder.listeners
 
-import ru.agalkin.beholder.*
+import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.FieldValue
+import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.queue.MessageQueue
 import ru.agalkin.beholder.stats.Stats
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.SocketTimeoutException
-import java.util.*
 
 class UdpListenerThread(
+    private val app: Beholder,
     private val udpListener: UdpListener,
     private val queue: MessageQueue
 ) : Thread("from-udp-${udpListener.address}-listener") {
@@ -36,7 +39,7 @@ class UdpListenerThread(
                 val byteArray = ByteArray(packet.length) { packet.data[it] }
                 message.setFieldValue("payload", FieldValue.fromByteArray(byteArray, packet.length))
 
-                message["date"] = curDateIso()
+                message["date"] = app.curDateIso()
                 message["from"] = "udp://${packet.address.hostAddress}:${packet.port}"
 
                 queue.add(message)
@@ -47,11 +50,4 @@ class UdpListenerThread(
 
         InternalLog.info("Thread $name got deleted")
     }
-
-    // 2017-11-26T16:16:01+03:00
-    // 2017-11-26T16:16:01Z if UTC
-    private val formatter = getIsoDateFormatter()
-
-    private fun curDateIso(): String
-        = formatter.format(Date())
 }

@@ -5,10 +5,8 @@ import ru.agalkin.beholder.compressors.LZ4FastCompressor
 import ru.agalkin.beholder.compressors.NoCompressor
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.ConfigOption
-import ru.agalkin.beholder.listeners.InternalLogListener
-import ru.agalkin.beholder.listeners.SelectorThread
-import ru.agalkin.beholder.listeners.TcpListener
-import ru.agalkin.beholder.listeners.UdpListener
+import ru.agalkin.beholder.formatters.TimeFormatter
+import ru.agalkin.beholder.listeners.*
 import ru.agalkin.beholder.queue.DataBuffer
 import ru.agalkin.beholder.senders.FileSender
 import ru.agalkin.beholder.senders.ShellSender
@@ -16,6 +14,8 @@ import ru.agalkin.beholder.senders.TcpSender
 import ru.agalkin.beholder.senders.UdpSender
 import ru.agalkin.beholder.stats.Stats
 import java.io.Closeable
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -44,6 +44,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val tcpListeners by lazy { TcpListener.Factory(this) }
     val udpListeners by lazy { UdpListener.Factory(this) }
     val internalLogListener by lazy { InternalLogListener(this) }
+    val timerListener by lazy { TimerListener(this) }
 
     val fileSenders  by lazy { FileSender.Factory(this) }
     val shellSenders by lazy { ShellSender.Factory(this) }
@@ -131,10 +132,19 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     fun getCompressionOption(name: ConfigOption)
         = optionValues[name] as ConfigOption.Compression
 
+    private fun getTimezoneOption(name: ConfigOption)
+        = optionValues[name] as ZoneId
+
     fun createCompressor(name: ConfigOption): Compressor {
         return when (optionValues[name] as ConfigOption.Compression) {
             ConfigOption.Compression.OFF -> NoCompressor()
             ConfigOption.Compression.LZ4_FAST -> LZ4FastCompressor()
         }
     }
+
+    fun curDate(): ZonedDateTime
+        = ZonedDateTime.now(getTimezoneOption(ConfigOption.CREATE_DATES_IN_TIMEZONE))
+
+    fun curDateIso(): String
+        = TimeFormatter.FORMAT_STABLE_DATETIME.format(curDate())
 }

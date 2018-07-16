@@ -3,7 +3,7 @@ package ru.agalkin.beholder.listeners
 import ru.agalkin.beholder.*
 import java.util.*
 
-class TimerListenerThread : Thread("timer-listener") {
+class TimerListenerThread(private val app: Beholder) : Thread("timer-listener") {
     val router = MessageRouter()
 
     override fun run() {
@@ -15,7 +15,7 @@ class TimerListenerThread : Thread("timer-listener") {
             router.sendUniqueMessagesToSubscribers {
                 val message = Message()
 
-                message["date"]    = curDateIso()
+                message["date"]    = app.curDateIso()
                 message["program"] = BEHOLDER_SYSLOG_PROGRAM
                 message["from"]    = TIMER_FROM_FIELD
 
@@ -39,11 +39,6 @@ class TimerListenerThread : Thread("timer-listener") {
             sleep(millis - afterLoopTime)
         }
     }
-
-    private val formatter = getIsoDateFormatter()
-
-    private fun curDateIso(): String
-        = formatter.format(Date())
 
     companion object {
         private val messageParts = arrayOf(

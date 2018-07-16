@@ -1,10 +1,9 @@
 package ru.agalkin.beholder
 
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.*
+import ru.agalkin.beholder.formatters.TimeFormatter
+import java.time.ZonedDateTime
+import java.time.format.DateTimeParseException
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.collections.HashMap
 
 private val createdMessagesCount = AtomicLong(0)
 
@@ -51,24 +50,8 @@ class Message(initialFields: Map<String, FieldValue>? = null) {
     fun getFieldValue(field: String)
         = fields[field] ?: FieldValue.empty
 
-    private var dateFormat: SimpleDateFormat? = null
-
-    fun getDateField(field: String): Date? {
-        var format = dateFormat
-        if (format == null) {
-            format = getIsoDateFormatter()
-            dateFormat = format
-        }
-        val fieldValue = fields[field]
-        if (fieldValue == null) {
-            return null
-        }
-        try {
-            return format.parse(fieldValue.toString())
-        } catch (e: ParseException) {
-            return null
-        }
-    }
+    fun getDateField(field: String): ZonedDateTime?
+        = TimeFormatter.parseDate(fields[field].toString())
 
     fun getIntField(field: String, default: Int): Int {
         try {

@@ -20,7 +20,7 @@ class UdpListener(private val app: Beholder, val address: Address) {
         Received.OK
     }
 
-    private val listenerThread = UdpListenerThread(this, queue)
+    private val listenerThread = UdpListenerThread(app, this, queue)
 
     fun destroy() {
         isListenerDeleted.set(true)

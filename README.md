@@ -688,6 +688,14 @@ If your regexp has named groups, those groups will be placed as fields into the 
 Global settings may be provided at the top level of the config.
 It is done in form of a command.
 
+When Beholder creates a datetime (e.g. when a new message is received), it uses system timezone.
+You can override this by setting `create_dates_in_timezone` to a desired timezone.
+See https://docs.oracle.com/javase/9/docs/api/java/time/ZoneId.html#of-java.lang.String- for details.
+Example timezones: `UTC`, `Europe/Moscow`.
+When a date is received in a message (not created), Beholder will try to keep its timezone intact.
+
+    create_dates_in_timezone UTC;
+
 Beholder periodically initiates JVM garbage collection in order to keep memory footprint as low as possible.
 Because messages are processed using lots of short-lived objects, by default we initiate GC every 5 seconds.
 This can be changed using `extra_gc_interval_seconds` config option. If you don't want this behaviour,

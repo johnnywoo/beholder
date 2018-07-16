@@ -18,8 +18,8 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
     }
 
     private val receiver = when (isSyslogFrame) {
-        true -> SyslogFrameTcpReceiver(queue)
-        else -> NewlineTerminatedTcpReceiver(queue)
+        true -> SyslogFrameTcpReceiver(app, queue)
+        else -> NewlineTerminatedTcpReceiver(app, queue)
     }
 
     fun destroy() {

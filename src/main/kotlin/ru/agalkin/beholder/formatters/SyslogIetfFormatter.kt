@@ -1,15 +1,14 @@
 package ru.agalkin.beholder.formatters
 
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.getIsoDateFormatter
 import java.net.InetAddress
-import java.util.*
 
 /**
  * IETF syslog format with timezone in date
  */
-class SyslogIetfFormatter : Formatter {
+class SyslogIetfFormatter(private val app: Beholder) : Formatter {
     // хост сам перезагрузится на SIGHUP, потому что мы пересоздадим все команды и их внутренности
     private val defaultHost = InetAddress.getLocalHost().hostName
 
@@ -24,8 +23,8 @@ class SyslogIetfFormatter : Formatter {
         sb.append("<").append(facility * 8 + severity).append(">1 ")
 
         // time (received time for now)
-        val date = message.getDateField("date") ?: Date()
-        sb.append(formatDate(date)).append(' ')
+        val date = message.getDateField("date") ?: app.curDate()
+        sb.append(TimeFormatter.FORMAT_STABLE_DATETIME.format(date)).append(' ')
 
         // host
         sb.append(message.getStringField("host", defaultHost)).append(' ')
@@ -42,10 +41,4 @@ class SyslogIetfFormatter : Formatter {
         // payload
         return message.getPayloadValue().prepend(sb.toString())
     }
-
-    private val dateFormat = getIsoDateFormatter()
-
-    // чтобы всё было как можно более одинаковое, мы заменим Z для UTC на +00:00
-    private fun formatDate(date: Date): String
-        = dateFormat.format(date).replace(Regex("Z$"), "+00:00")
 }

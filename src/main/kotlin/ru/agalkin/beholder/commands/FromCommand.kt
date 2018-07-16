@@ -7,7 +7,6 @@ import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
-import ru.agalkin.beholder.listeners.TimerListener
 
 class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val source: Source
@@ -111,12 +110,12 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to timer")
-            TimerListener.messageRouter.addSubscriber(receiver)
+            app.timerListener.messageRouter.addSubscriber(receiver)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from timer")
-            TimerListener.messageRouter.removeSubscriber(receiver)
+            app.timerListener.messageRouter.removeSubscriber(receiver)
         }
     }
 

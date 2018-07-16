@@ -1,12 +1,12 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.formatters.TimeFormatter
 import ru.agalkin.beholder.listeners.InternalLogListener
 import java.io.File
 import java.io.PrintStream
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.ZonedDateTime
 
 object InternalLog {
     private var stdout: PrintStream? = System.out
@@ -52,15 +52,15 @@ object InternalLog {
             return
         }
 
-        val date    = Date()
-        val isoDate = getIsoDate(date)
+        val date    = ZonedDateTime.now()
+        val isoDate = TimeFormatter.FORMAT_STABLE_DATETIME.format(date)
 
         val destination = when (Severity.WARNING.isMoreUrgentThan(severity)) {
             true  -> stdout
             false -> stderr
         }
         destination?.println(
-            SimpleDateFormat("HH:mm:ss").format(date)
+            TimeFormatter.FORMAT_TIME.format(date)
                 + " " + text
         )
 

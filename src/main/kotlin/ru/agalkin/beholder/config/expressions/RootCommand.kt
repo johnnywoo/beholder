@@ -46,6 +46,10 @@ class RootCommand(app: Beholder) : ConveyorCommandAbstract(
                     val definition = arguments.shiftFixedString("Compression mode name is required")
                     app.optionValues[option] = ConfigOption.compressionFromString(definition)
                 }
+                ConfigOption.Type.TIMEZONE -> {
+                    val definition = arguments.shiftFixedString("Timezone name is required")
+                    app.optionValues[option] = ConfigOption.timezoneFromString(definition)
+                }
             }
             arguments.end()
         }

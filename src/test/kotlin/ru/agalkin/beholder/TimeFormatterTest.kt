@@ -36,4 +36,44 @@ class TimeFormatterTest : TestAbstract() {
             assertEquals(pair.second, processedMessage?.getStringField("d"), "Definiftion '$formatDefiniton' input '${pair.first}'")
         }
     }
+
+    @Test
+    fun testCreateDatesInTimezoneMoscow() {
+        val messageText = "text"
+        val processedMessage = receiveMessageWithConfig("create_dates_in_timezone Europe/Moscow; from udp 3820") {
+            sendToUdp(3820, messageText)
+        }
+
+        assertNotNull(processedMessage)
+        if (processedMessage == null) {
+            return
+        }
+        assertFieldNames(processedMessage, "date", "from", "payload")
+        val dateString = processedMessage.getStringField("date")
+        assertEquals("+03:00", dateString.substring(dateString.length - 6))
+    }
+
+    @Test
+    fun testCreateDatesInTimezoneUtc() {
+        val messageText = "text"
+        val processedMessage = receiveMessageWithConfig("create_dates_in_timezone UTC; from udp 3820") {
+            sendToUdp(3820, messageText)
+        }
+
+        assertNotNull(processedMessage)
+        if (processedMessage == null) {
+            return
+        }
+        assertFieldNames(processedMessage, "date", "from", "payload")
+        val dateString = processedMessage.getStringField("date")
+        assertEquals("+00:00", dateString.substring(dateString.length - 6))
+    }
+
+    @Test
+    fun testCreateDatesInTimezoneInvalid() {
+        assertConfigFails(
+            "create_dates_in_timezone NoSuchTimezone",
+            "Invalid timezone: NoSuchTimezone: create_dates_in_timezone NoSuchTimezone [test-config:1]"
+        )
+    }
 }

@@ -14,8 +14,8 @@ class SyslogFrameTcpReceiver(app: Beholder, queue: MessageQueue) : TcpMessageRec
         if (lengthStr == null) {
             return
         }
-        val length = lengthStr.toInt()
-        if (length == 0) {
+        val length = lengthStr.toIntOrNull()
+        if (length == null || length == 0) {
             return
         }
 

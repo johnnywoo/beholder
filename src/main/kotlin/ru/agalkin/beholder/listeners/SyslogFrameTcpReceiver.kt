@@ -31,7 +31,7 @@ class SyslogFrameTcpReceiver(app: Beholder, queue: MessageQueue) : TcpMessageRec
         buffer.rewind()
         var sb = StringBuilder()
         while (true) {
-            val number = input.read(buffer)
+            val number = readCarefully(input, buffer)
             if (number < 1) {
                 return null
             }
@@ -56,13 +56,15 @@ class SyslogFrameTcpReceiver(app: Beholder, queue: MessageQueue) : TcpMessageRec
         val buffer = ByteBuffer.allocate(length)
         buffer.rewind()
         while (buffer.hasRemaining()) {
-            if (input.read(buffer) < 0) {
+            if (readCarefully(input, buffer) < 0) {
+                input.close()
                 break
             }
         }
         if (buffer.hasRemaining()) {
             throw BeholderException("TCP listener: could not read expected $length bytes of data")
         }
+        buffer.rewind()
         val ba = ByteArray(length)
         buffer.get(ba)
         return ba

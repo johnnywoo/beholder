@@ -41,7 +41,7 @@ class NewlineTerminatedTcpReceiver(app: Beholder, queue: MessageQueue) : TcpMess
         val buffer = ByteBuffer.allocate(1)
         while (true) {
             buffer.rewind()
-            val number = input.read(buffer)
+            val number = readCarefully(input, buffer)
             if (number < 0) {
                 if (bytes.isEmpty()) {
                     return null

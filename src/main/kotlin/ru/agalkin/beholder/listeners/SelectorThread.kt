@@ -129,7 +129,9 @@ class SelectorThread(private val app: Beholder) : Thread("selector${number.incre
                     key.interestOps(0)
                     app.executor.execute {
                         callback.run(channel)
-                        key.interestOps(SelectionKey.OP_READ)
+                        if (key.isValid) {
+                            key.interestOps(SelectionKey.OP_READ)
+                        }
                         selector.wakeup()
                     }
                 }
@@ -139,8 +141,14 @@ class SelectorThread(private val app: Beholder) : Thread("selector${number.incre
     }
 
     private class Callback(val address: Address, private val block: (SocketChannel) -> Unit) {
-        fun run(channel: SocketChannel)
-            = block(channel)
+        fun run(channel: SocketChannel) {
+            try {
+                block(channel)
+            } catch (e: Throwable) {
+                InternalLog.exception(e)
+                channel.close()
+            }
+        }
     }
 }
 

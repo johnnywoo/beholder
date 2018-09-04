@@ -4,7 +4,6 @@ import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Fieldpack
 import ru.agalkin.beholder.config.ConfigOption
-import ru.agalkin.beholder.threadLocal
 
 class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : BeholderQueueAbstract<FieldValue>(app, receive) {
     override fun createChunk(): Chunk<FieldValue> {
@@ -16,14 +15,14 @@ class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : Behold
             var length = 0
             for (item in list) {
                 val byteLength = item.getByteLength()
-                length += fieldpack.writeNum(byteLength, { _, _ -> }) + byteLength
+                length += Fieldpack.writeNum(byteLength, { _, _ -> }) + byteLength
             }
 
             val bytes = ByteArray(length)
             var offset = 0
             for (item in list) {
                 val byteLength = item.getByteLength()
-                fieldpack.writeNum(byteLength, { source, readLength ->
+                Fieldpack.writeNum(byteLength, { source, readLength ->
                     for (i in 0 until readLength) {
                         bytes[offset + i] = source[i]
                     }
@@ -43,7 +42,7 @@ class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : Behold
 
             var offset = 0
             while (offset < bytes.size) {
-                val byteLength = (fieldpack.readNum { length ->
+                val byteLength = (Fieldpack.readNum { length ->
                     val portion = Fieldpack.Portion(bytes, offset, length)
                     offset += length
                     portion
@@ -56,9 +55,5 @@ class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : Behold
             }
             return list
         }
-    }
-
-    companion object {
-        private val fieldpack by threadLocal { Fieldpack() }
     }
 }

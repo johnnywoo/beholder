@@ -5,8 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class FieldpackTest : TestAbstract() {
-    private val fieldpack = Fieldpack()
-
     @Test
     fun testFieldpackUnpackTrivial() {
         val message = Message(mapOf(
@@ -17,7 +15,7 @@ class FieldpackTest : TestAbstract() {
         var length = 0
 
         // packing and writing
-        fieldpack.writeMessages(listOf(message)) { source, readLength ->
+        Fieldpack.writeMessages(listOf(message)) { source, readLength ->
             for (i in 0 until readLength) {
                 buffer[length++] = source[i]
             }
@@ -36,7 +34,7 @@ class FieldpackTest : TestAbstract() {
 
         // unpacking
         var index = 0
-        val unpackedMessages = fieldpack.readMessages { readLength ->
+        val unpackedMessages = Fieldpack.readMessages { readLength ->
             val portion = Fieldpack.Portion(buffer, index, readLength)
             index += readLength
             if (index > length) {
@@ -70,7 +68,7 @@ class FieldpackTest : TestAbstract() {
         var length = 0
 
         // packing and writing
-        fieldpack.writeMessages(messages) { source, readLength ->
+        Fieldpack.writeMessages(messages) { source, readLength ->
             for (i in 0 until readLength) {
                 buffer[length++] = source[i]
             }
@@ -96,7 +94,7 @@ class FieldpackTest : TestAbstract() {
 
         // unpacking
         var index = 0
-        val unpackedMessages = fieldpack.readMessages { readLength ->
+        val unpackedMessages = Fieldpack.readMessages { readLength ->
             val portion = Fieldpack.Portion(buffer, index, readLength)
             index += readLength
             if (index > length) {
@@ -121,13 +119,13 @@ class FieldpackTest : TestAbstract() {
         // some small numbers
         for (n in 0..33000L) {
             val byteArray = ByteArray(10)
-            val length = fieldpack.writeNum(n) { source, readLength ->
+            val length = Fieldpack.writeNum(n) { source, readLength ->
                 for (i in 0 until readLength) {
                     byteArray[i] = source[i]
                 }
             }
             var i = 0
-            val unpackedN = fieldpack.readNum { toRead ->
+            val unpackedN = Fieldpack.readNum { toRead ->
                 val portion = Fieldpack.Portion(byteArray, i, toRead)
 
                 i += toRead
@@ -173,9 +171,9 @@ class FieldpackTest : TestAbstract() {
     }
 
     private fun createNumSequence(n: Long): ByteArray {
-        val length = fieldpack.writeNum(n, {_,_->})
+        val length = Fieldpack.writeNum(n, {_,_->})
         val byteArray = ByteArray(length)
-        fieldpack.writeNum(n) { source, readLenth ->
+        Fieldpack.writeNum(n) { source, readLenth ->
             for (i in 0 until readLenth) {
                 byteArray[i] = source[i]
             }

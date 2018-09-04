@@ -32,7 +32,7 @@ typealias Reader = (length: Int) -> Fieldpack.Portion
  * Most non-payload fields will use 1 byte for value length.
  * Most payloads will use 2 bytes for payload length. Nginx access log syslog payload almost always has length from 100 to 500 bytes.
  */
-class Fieldpack {
+object Fieldpack {
     open class Portion(val data: ByteArray, val offset: Int = 0, private val length: Int = data.size - offset) {
         override fun toString()
             = String(data, offset, length, Charsets.UTF_8)

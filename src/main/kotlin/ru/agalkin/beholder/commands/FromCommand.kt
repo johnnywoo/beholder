@@ -70,25 +70,18 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
     }
 
     private inner class UdpSource(private val address: Address) : Source {
-        private val receiver: (Message) -> Unit = {
-            conveyorInput.addMessage(it)
-        }
-
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to UDP listener at $address")
-            app.udpListeners.getListener(address).router.addSubscriber(receiver)
+            app.udpListeners.getListener(address).router.addSubscriber(conveyorInput)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from UDP listener at $address")
-            app.udpListeners.getListener(address).router.removeSubscriber(receiver)
+            app.udpListeners.getListener(address).router.removeSubscriber(conveyorInput)
         }
     }
 
     private inner class TcpSource(private val address: Address, isSyslogFrame: Boolean) : Source {
-        private val receiver: (Message) -> Unit = {
-            conveyorInput.addMessage(it)
-        }
         init {
             if (!app.tcpListeners.setListenerMode(address, isSyslogFrame)) {
                 throw CommandException("TCP listener for $address cannot be both newline-terminated and syslog-frame")
@@ -97,49 +90,47 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to TCP listener at $address")
-            app.tcpListeners.getListener(address).router.addSubscriber(receiver)
+            app.tcpListeners.getListener(address).router.addSubscriber(conveyorInput)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from TCP listener at $address")
-            app.tcpListeners.getListener(address).router.removeSubscriber(receiver)
+            app.tcpListeners.getListener(address).router.removeSubscriber(conveyorInput)
         }
     }
 
     private inner class TimerSource(intervalSeconds: Int) : Source {
         private var secondsToSkip = 0
-        private val receiver: (Message) -> Unit = {
-            if (secondsToSkip <= 0) {
-                secondsToSkip = intervalSeconds
-                conveyorInput.addMessage(it)
+        private val timerInput = object : Conveyor.Input {
+            override fun addMessage(message: Message) {
+                if (secondsToSkip <= 0) {
+                    secondsToSkip = intervalSeconds
+                    conveyorInput.addMessage(message)
+                }
+                secondsToSkip--
             }
-            secondsToSkip--
         }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to timer")
-            app.timerListener.messageRouter.addSubscriber(receiver)
+            app.timerListener.messageRouter.addSubscriber(timerInput)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from timer")
-            app.timerListener.messageRouter.removeSubscriber(receiver)
+            app.timerListener.messageRouter.removeSubscriber(timerInput)
         }
     }
 
     private inner class InternalLogSource : Source {
-        private val receiver: (Message) -> Unit = {
-            conveyorInput.addMessage(it)
-        }
-
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to internal log")
-            app.internalLogListener.router.addSubscriber(receiver)
+            app.internalLogListener.router.addSubscriber(conveyorInput)
         }
 
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from internal log")
-            app.internalLogListener.router.removeSubscriber(receiver)
+            app.internalLogListener.router.removeSubscriber(conveyorInput)
         }
     }
 }

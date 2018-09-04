@@ -46,7 +46,6 @@ abstract class TestAbstract {
 
             root.topLevelOutput.addStep {
                 processedMessages.add(it)
-                return@addStep Conveyor.StepResult.CONTINUE
             }
 
             root.start()

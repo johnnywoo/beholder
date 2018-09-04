@@ -47,10 +47,7 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
     }
 
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
-        conveyor.addStep { message ->
-            destination.write(message)
-            return@addStep Conveyor.StepResult.CONTINUE
-        }
+        conveyor.addStep(destination::write)
         return conveyor
     }
 

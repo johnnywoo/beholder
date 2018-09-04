@@ -4,11 +4,11 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 
 class Conveyor private constructor() {
-    private val steps = CopyOnWriteArrayList<(Message) -> StepResult>()
+    private val steps = CopyOnWriteArrayList<(Message) -> Any>()
 
     private val isReachable = AtomicBoolean(false)
 
-    fun addStep(block: (Message) -> StepResult) {
+    fun addStep(block: (Message) -> Any) {
         if (isReachable.get()) {
             steps.add(block)
         }
@@ -30,10 +30,7 @@ class Conveyor private constructor() {
         if (!isReachable.get()) {
             return
         }
-        addStep { message ->
-            input.addMessage(message)
-            return@addStep StepResult.CONTINUE
-        }
+        addStep(input::addMessage)
     }
 
     fun copyToConveyor(conveyor: Conveyor) {
@@ -43,7 +40,6 @@ class Conveyor private constructor() {
         val input = conveyor.addInput()
         addStep { message ->
             input.addMessage(message.copy())
-            return@addStep StepResult.CONTINUE
         }
     }
 

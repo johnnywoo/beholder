@@ -30,7 +30,6 @@ class DataBufferTest : TestAbstract() {
 
             root.topLevelOutput.addStep {
                 processedMessagesNum++
-                return@addStep Conveyor.StepResult.CONTINUE
             }
 
             root.start()
@@ -78,7 +77,6 @@ class DataBufferTest : TestAbstract() {
 
             root.topLevelOutput.addStep {
                 processedMessagesNum++
-                return@addStep Conveyor.StepResult.CONTINUE
             }
 
             root.start()

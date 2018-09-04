@@ -41,11 +41,11 @@ class ParseCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(ap
         if (inflater is InplaceInflater) {
             // Не добавляем лишних телодвижений, если тут не может появиться второго сообщения
             conveyor.addStep { message ->
-                if (inflater.inflateMessageFieldsInplace(message) || shouldKeepUnparsed) {
-                    return@addStep Conveyor.StepResult.CONTINUE
+                if (!inflater.inflateMessageFieldsInplace(message) && !shouldKeepUnparsed) {
+                    Stats.reportUnparsedDropped()
+                    return@addStep Conveyor.StepResult.DROP
                 }
-                Stats.reportUnparsedDropped()
-                return@addStep Conveyor.StepResult.DROP
+                Conveyor.StepResult.CONTINUE
             }
             return conveyor
         }

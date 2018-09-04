@@ -96,7 +96,6 @@ class SetCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app,
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
         conveyor.addStep { message ->
             message.setFieldValue(field, formatter.formatMessage(message))
-            return@addStep Conveyor.StepResult.CONTINUE
         }
         return conveyor
     }

@@ -29,7 +29,6 @@ class KeepCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
             for (field in message.getFieldNames().minus(fieldsToKeep)) {
                 message.remove(field)
             }
-            return@addStep Conveyor.StepResult.CONTINUE
         }
         return conveyor
     }

@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.Conveyor
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
@@ -45,9 +46,12 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
         arguments.end()
     }
 
-    override fun input(message: Message) {
-        destination.write(message)
-        output.sendMessageToSubscribers(message)
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        conveyor.addStep { message ->
+            destination.write(message)
+            return@addStep Conveyor.StepResult.CONTINUE
+        }
+        return conveyor
     }
 
     override fun start() {

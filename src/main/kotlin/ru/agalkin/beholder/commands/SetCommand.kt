@@ -2,6 +2,7 @@ package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.BeholderException
+import ru.agalkin.beholder.Conveyor
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
@@ -92,8 +93,11 @@ class SetCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app,
         return if(list.isEmpty()) null else list
     }
 
-    override fun input(message: Message) {
-        message.setFieldValue(field, formatter.formatMessage(message))
-        output.sendMessageToSubscribers(message)
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        conveyor.addStep { message ->
+            message.setFieldValue(field, formatter.formatMessage(message))
+            return@addStep Conveyor.StepResult.CONTINUE
+        }
+        return conveyor
     }
 }

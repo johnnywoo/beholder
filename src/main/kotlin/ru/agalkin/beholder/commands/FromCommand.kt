@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.Conveyor
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
@@ -56,8 +57,11 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
     override fun stop()
         = source.stop()
 
-    override fun input(message: Message) {
-        output.sendMessageToSubscribers(message)
+    private lateinit var conveyorInput: Conveyor.Input
+
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        conveyorInput = conveyor.addInput()
+        return conveyor
     }
 
     private interface Source {
@@ -66,7 +70,9 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
     }
 
     private inner class UdpSource(private val address: Address) : Source {
-        private val receiver: (Message) -> Unit = { input(it) }
+        private val receiver: (Message) -> Unit = {
+            conveyorInput.addMessage(it)
+        }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to UDP listener at $address")
@@ -80,7 +86,9 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
     }
 
     private inner class TcpSource(private val address: Address, isSyslogFrame: Boolean) : Source {
-        private val receiver: (Message) -> Unit = { input(it) }
+        private val receiver: (Message) -> Unit = {
+            conveyorInput.addMessage(it)
+        }
         init {
             if (!app.tcpListeners.setListenerMode(address, isSyslogFrame)) {
                 throw CommandException("TCP listener for $address cannot be both newline-terminated and syslog-frame")
@@ -103,7 +111,7 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
         private val receiver: (Message) -> Unit = {
             if (secondsToSkip <= 0) {
                 secondsToSkip = intervalSeconds
-                input(it)
+                conveyorInput.addMessage(it)
             }
             secondsToSkip--
         }
@@ -120,7 +128,9 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
     }
 
     private inner class InternalLogSource : Source {
-        private val receiver: (Message) -> Unit = { input(it) }
+        private val receiver: (Message) -> Unit = {
+            conveyorInput.addMessage(it)
+        }
 
         override fun start() {
             InternalLog.info("${this::class.simpleName} start: connecting to internal log")

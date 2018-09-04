@@ -1,16 +1,10 @@
 package ru.agalkin.beholder
 
 import org.junit.BeforeClass
-import ru.agalkin.beholder.commands.KeepCommand
-import ru.agalkin.beholder.commands.ParseCommand
-import ru.agalkin.beholder.commands.SetCommand
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.expressions.CommandAbstract
-import ru.agalkin.beholder.config.expressions.CommandArguments
-import ru.agalkin.beholder.config.parser.ArgumentToken
-import ru.agalkin.beholder.config.parser.LiteralToken
+import ru.agalkin.beholder.config.expressions.RootCommand
 import ru.agalkin.beholder.config.parser.ParseException
-import ru.agalkin.beholder.config.parser.Token
 import ru.agalkin.beholder.formatters.DumpFormatter
 import java.net.*
 import kotlin.test.assertEquals
@@ -19,31 +13,6 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 abstract class TestAbstract {
-    protected fun processMessageWithCommand(message: Message, command: String): Message? {
-        var processedMessage: Message? = null
-
-        makeApp("").use { app ->
-            val tokens = Token.getTokens(command, "test-config")
-            val arguments = CommandArguments(tokens[0] as LiteralToken)
-            for (token in tokens.drop(1)) {
-                arguments.addToken(token as ArgumentToken)
-            }
-
-            val commandObj = when (arguments.getCommandName()) {
-                "parse" -> ParseCommand(app, arguments)
-                "set"   -> SetCommand(app, arguments)
-                "keep"  -> KeepCommand(app, arguments)
-                else    -> throw IndexOutOfBoundsException("Unknown command: ${arguments.getCommandName()}")
-            }
-
-            commandObj.output.addSubscriber { processedMessage = it }
-            commandObj.input(message)
-
-        }
-
-        return processedMessage
-    }
-
     protected fun processMessageWithConfig(message: Message, config: String): Message? {
         var processedMessage: Message? = null
 
@@ -51,8 +20,12 @@ abstract class TestAbstract {
             val root = app.config.root
             root.start()
 
-            root.subcommands.last().output.addSubscriber { processedMessage = it }
-            root.subcommands[0].input(message)
+            root.topLevelOutput.addStep {
+                processedMessage = it
+                return@addStep Conveyor.StepResult.CONTINUE
+            }
+
+            root.topLevelInput.addMessage(message)
         }
 
         return processedMessage
@@ -65,18 +38,21 @@ abstract class TestAbstract {
     protected fun makeApp(config: String)
         = Beholder({ Config.fromStringWithLog(it, config, "test-config") })
 
-    protected fun receiveMessagesWithConfig(config: String, count: Int, senderBlock: (CommandAbstract) -> Unit): List<Message> {
+    protected fun receiveMessagesWithConfig(config: String, count: Int, senderBlock: (RootCommand) -> Unit): List<Message> {
         val processedMessages = mutableListOf<Message>()
 
         makeApp(config).use { app ->
             val root = app.config.root
 
-            root.subcommands.last().output.addSubscriber { processedMessages.add(it) }
+            root.topLevelOutput.addStep {
+                processedMessages.add(it)
+                return@addStep Conveyor.StepResult.CONTINUE
+            }
 
             root.start()
             Thread.sleep(100)
 
-            senderBlock(root.subcommands.first())
+            senderBlock(root)
 
             var timeSpentMillis = 0
             while (timeSpentMillis < 300) {

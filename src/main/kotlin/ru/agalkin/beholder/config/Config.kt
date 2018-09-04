@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.config
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.Conveyor
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.expressions.RootCommand
 import ru.agalkin.beholder.config.parser.Token
@@ -36,6 +37,8 @@ class Config(app: Beholder, configText: String, configSourceDescription: String)
         // вариант 2: command arg { block }
         // штука сразу делает конкретные экземпляры команд, в которых уже есть бизнес-логика
         root = RootCommand.fromTokens(app, tokens)
+
+        root.buildConveyor(Conveyor.createInitialConveyor())
     }
 
     fun start()

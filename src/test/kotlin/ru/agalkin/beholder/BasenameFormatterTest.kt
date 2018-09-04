@@ -22,7 +22,7 @@ class BasenameFormatterTest : TestAbstract() {
         val message = Message()
         message["path"] = path
 
-        val parsedMessage = processMessageWithCommand(message, "set \$basename basename \$path")
+        val parsedMessage = processMessageWithConfig(message, "set \$basename basename \$path")
 
         assertEquals(expected, parsedMessage?.getStringField("basename"))
     }

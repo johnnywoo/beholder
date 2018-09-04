@@ -34,7 +34,7 @@ class KeepTest : TestAbstract() {
         message["removed"] = "Removed"
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "keep \$payload")
+        val processedMessage = processMessageWithConfig(message, "keep \$payload")
 
         assertFieldNames(processedMessage, "payload")
     }
@@ -45,7 +45,7 @@ class KeepTest : TestAbstract() {
         message["removed"] = "Removed"
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "keep \$payload \$whatever")
+        val processedMessage = processMessageWithConfig(message, "keep \$payload \$whatever")
 
         assertFieldNames(processedMessage, "payload")
     }
@@ -57,7 +57,7 @@ class KeepTest : TestAbstract() {
         message["kind"]    = "Kind"
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "keep \$payload \$kind")
+        val processedMessage = processMessageWithConfig(message, "keep \$payload \$kind")
 
         assertFieldNames(processedMessage, "kind", "payload")
     }

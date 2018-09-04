@@ -62,7 +62,7 @@ class ReplaceTest : TestAbstract() {
         val message = Message()
         message["payload"] = "We've got a cat here"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cat~ 'huge \$1'")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ 'huge \$1'")
 
         // текст не изменился, команда не упала с исключением
         assertEquals("We've got a cat here", processedMessage!!.getStringField("payload"))
@@ -73,7 +73,7 @@ class ReplaceTest : TestAbstract() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cat|dog~ animal")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat|dog~ animal")
 
         assertEquals("We've got animals and animals", processedMessage!!.getStringField("payload"))
     }
@@ -83,7 +83,7 @@ class ReplaceTest : TestAbstract() {
         val message = Message()
         message["payload"] = "Line 1\nLine 2"
 
-        val processedMessage = processMessageWithCommand(message, """set ¥payload replace ~\n~ '\\\\n'""".replace('¥', '$'))
+        val processedMessage = processMessageWithConfig(message, """set ¥payload replace ~\n~ '\\\\n'""".replace('¥', '$'))
 
         assertEquals("""Line 1\nLine 2""", processedMessage!!.getStringField("payload"))
     }
@@ -94,7 +94,7 @@ class ReplaceTest : TestAbstract() {
         message["animal"]  = "feline"
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cat~ '\$animal'")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ '\$animal'")
 
         assertEquals("""We've got felines and dogs""", processedMessage!!.getStringField("payload"))
     }
@@ -105,7 +105,7 @@ class ReplaceTest : TestAbstract() {
         message["size"]    = "huge"
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~(cat|dog)~ '\$size \$1'")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~(cat|dog)~ '\$size \$1'")
 
         assertEquals("""We've got huge cats and huge dogs""", processedMessage!!.getStringField("payload"))
     }
@@ -115,7 +115,7 @@ class ReplaceTest : TestAbstract() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cats and ~ ''")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cats and ~ ''")
 
         assertEquals("""We've got dogs""", processedMessage!!.getStringField("payload"))
     }
@@ -125,7 +125,7 @@ class ReplaceTest : TestAbstract() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cats and ~ \$unknown")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cats and ~ \$unknown")
 
         assertEquals("""We've got dogs""", processedMessage!!.getStringField("payload"))
     }
@@ -135,7 +135,7 @@ class ReplaceTest : TestAbstract() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cats and ~ '' in \$unknown")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cats and ~ '' in \$unknown")
 
         assertEquals("", processedMessage!!.getStringField("payload"))
     }
@@ -145,7 +145,7 @@ class ReplaceTest : TestAbstract() {
         val message = Message()
         message["payload"] = "To be ignored"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cat~ 'animal' in 'Zoo has cats'")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ 'animal' in 'Zoo has cats'")
 
         assertEquals("""Zoo has animals""", processedMessage!!.getStringField("payload"))
     }
@@ -156,7 +156,7 @@ class ReplaceTest : TestAbstract() {
         message["text"]    = "Zoo has cats"
         message["payload"] = "To be ignored"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cat~ 'animal' in \$text")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ 'animal' in \$text")
 
         assertEquals("""Zoo has animals""", processedMessage!!.getStringField("payload"))
     }
@@ -167,7 +167,7 @@ class ReplaceTest : TestAbstract() {
         message["animal"]  = "cat"
         message["payload"] = "To be ignored"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cat~ 'feline' in 'Two cats: \$animal \$animal'")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ 'feline' in 'Two cats: \$animal \$animal'")
 
         assertEquals("""Two felines: feline feline""", processedMessage!!.getStringField("payload"))
     }
@@ -179,7 +179,7 @@ class ReplaceTest : TestAbstract() {
         message["betterName"] = "feline"
         message["payload"]    = "To be ignored"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~cat~ \$betterName in 'Two cats: \$animal \$animal'")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ \$betterName in 'Two cats: \$animal \$animal'")
 
         assertEquals("""Two felines: feline feline""", processedMessage!!.getStringField("payload"))
     }
@@ -189,7 +189,7 @@ class ReplaceTest : TestAbstract() {
         val message = Message()
         message["payload"] = "127.0.0.1 WARN PHP Warning: some warning"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~warn(ing)?~i 'WARNING'")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~warn(ing)?~i 'WARNING'")
 
         assertEquals("127.0.0.1 WARNING PHP WARNING: some WARNING", processedMessage!!.getStringField("payload"))
     }
@@ -200,7 +200,7 @@ class ReplaceTest : TestAbstract() {
         message["subdomain"] = "www"
         message["domain"]    = "example.com"
 
-        val processedMessage = processMessageWithCommand(message, "set \$host replace ~^www\\.~ '' in '\$subdomain.\$domain'")
+        val processedMessage = processMessageWithConfig(message, "set \$host replace ~^www\\.~ '' in '\$subdomain.\$domain'")
 
         assertEquals("example.com", processedMessage!!.getStringField("host"))
 
@@ -208,7 +208,7 @@ class ReplaceTest : TestAbstract() {
         message2["subdomain"] = "mail"
         message2["domain"]    = "example.com"
 
-        val processedMessage2 = processMessageWithCommand(message2, "set \$host replace ~^www\\.~ '' in '\$subdomain.\$domain'")
+        val processedMessage2 = processMessageWithConfig(message2, "set \$host replace ~^www\\.~ '' in '\$subdomain.\$domain'")
 
         assertEquals("mail.example.com", processedMessage2!!.getStringField("host"))
     }
@@ -218,7 +218,7 @@ class ReplaceTest : TestAbstract() {
         val message = Message()
         message["payload"] = "a\nb"
 
-        val processedMessage = processMessageWithCommand(message, "set \$payload replace ~\\n~ '\\\\\\\\n'")
+        val processedMessage = processMessageWithConfig(message, "set \$payload replace ~\\n~ '\\\\\\\\n'")
 
         assertEquals("a\\nb", processedMessage!!.getStringField("payload"))
     }

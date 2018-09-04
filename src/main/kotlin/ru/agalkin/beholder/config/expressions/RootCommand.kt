@@ -1,24 +1,31 @@
 package ru.agalkin.beholder.config.expressions
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.config.ConfigOption
-import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.Conveyor
 import ru.agalkin.beholder.commands.ConveyorCommandAbstract
+import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
 
-class RootCommand(app: Beholder) : ConveyorCommandAbstract(
-    app,
-    RootArguments,
-    sendInputToOutput = false,
-    sendInputToSubcommands = false,
-    sendLastSubcommandToOutput = false
-) {
+class RootCommand(app: Beholder) : ConveyorCommandAbstract(app, RootArguments) {
+    lateinit var topLevelInput: Conveyor.Input
+    lateinit var topLevelOutput: Conveyor
+
     override fun createSubcommand(args: Arguments): CommandAbstract? {
         if (args.getCommandName() in ConfigOption.values().map { it.name.toLowerCase() }) {
             return ConfigOptionCommand(app, args)
         }
         return super.createSubcommand(args)
+    }
+
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        topLevelInput = conveyor.addInput()
+        var currentConveyor = conveyor
+        for (subcommand in subcommands) {
+            currentConveyor = subcommand.buildConveyor(currentConveyor)
+        }
+        topLevelOutput = currentConveyor
+        return currentConveyor
     }
 
     companion object {
@@ -54,8 +61,10 @@ class RootCommand(app: Beholder) : ConveyorCommandAbstract(
             arguments.end()
         }
 
-        override fun input(message: Message) {
-            // Ничего не делаем, тут сообщения не ходят
+        override fun buildConveyor(conveyor: Conveyor): Conveyor {
+            // Тут сообщения не ходят.
+            // Если вдруг сообщение сюда попало, оно просто проходит насквозь без изменений.
+            return conveyor
         }
     }
 }

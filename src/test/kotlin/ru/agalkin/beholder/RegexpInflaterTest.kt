@@ -10,7 +10,7 @@ class RegexpInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val parsedMessage = processMessageWithCommand(message, "parse ~(?<animal>cat|dog)~")
+        val parsedMessage = processMessageWithConfig(message, "parse ~(?<animal>cat|dog)~")
 
         assertEquals(
             """
@@ -26,7 +26,7 @@ class RegexpInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val parsedMessage = processMessageWithCommand(message, "parse ~(?<animal>whale)~")
+        val parsedMessage = processMessageWithConfig(message, "parse ~(?<animal>whale)~")
 
         assertNull(parsedMessage)
     }
@@ -36,7 +36,7 @@ class RegexpInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val parsedMessage = processMessageWithCommand(message, "parse keep-unparsed ~(?<animal>whale)~")
+        val parsedMessage = processMessageWithConfig(message, "parse keep-unparsed ~(?<animal>whale)~")
 
         assertEquals(
             "\$payload=We've got cats and dogs",
@@ -49,7 +49,7 @@ class RegexpInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = "We've got cats and dogs"
 
-        val parsedMessage = processMessageWithCommand(message, "parse ~(cat)~")
+        val parsedMessage = processMessageWithConfig(message, "parse ~(cat)~")
 
         // there are no named groups, so nothing should change
         assertEquals(
@@ -64,7 +64,7 @@ class RegexpInflaterTest : TestAbstract() {
         message["payload"] = "We've got cats and dogs"
         message["animal"]  = "headcrab"
 
-        val parsedMessage = processMessageWithCommand(message, "parse keep-unparsed ~(?<animal>whale)~")
+        val parsedMessage = processMessageWithConfig(message, "parse keep-unparsed ~(?<animal>whale)~")
 
         assertEquals(
             """

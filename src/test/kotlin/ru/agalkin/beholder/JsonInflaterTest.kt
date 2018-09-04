@@ -1,7 +1,6 @@
 package ru.agalkin.beholder
 
 import org.junit.Test
-import ru.agalkin.beholder.formatters.DumpFormatter
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -11,7 +10,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """{"field":"value"}"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertEquals(
             """
@@ -27,7 +26,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """{"field":"value","field2":"value2"}"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertEquals(
             """
@@ -44,7 +43,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """{"field":123,"field2":0}"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertEquals(
             """
@@ -61,7 +60,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """{"field":true,"field2":false}"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertEquals(
             """
@@ -79,7 +78,7 @@ class JsonInflaterTest : TestAbstract() {
         message["field"]   = "To be removed"
         message["payload"] = """{"field":null}"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertEquals(
             """
@@ -94,7 +93,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """{"field":"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertNull(processedMessage)
     }
@@ -104,7 +103,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """[]"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertNull(processedMessage)
     }
@@ -114,7 +113,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """{"a":{"b":"c"}}"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertNull(processedMessage)
     }
@@ -124,7 +123,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """{"z":"z","a":{"b":"c"}}"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertNull(processedMessage)
     }
@@ -134,7 +133,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """{"payload":"Multiple\nlines"}"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertEquals(
             "Multiple\nlines",
@@ -147,7 +146,7 @@ class JsonInflaterTest : TestAbstract() {
         val message = Message()
         message["payload"] = """{"payload":"\u041c\u0430\u043c\u0430 \u043c\u044b\u043b\u0430 \u0440\u0430\u043c\u0443"}"""
 
-        val processedMessage = processMessageWithCommand(message, "parse json")
+        val processedMessage = processMessageWithConfig(message, "parse json")
 
         assertEquals(
             "Мама мыла раму",

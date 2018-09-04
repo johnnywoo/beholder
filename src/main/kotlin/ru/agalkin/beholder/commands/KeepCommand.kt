@@ -1,7 +1,7 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.Conveyor
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 
@@ -24,10 +24,13 @@ class KeepCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
         fieldsToKeep = fieldNames
     }
 
-    override fun input(message: Message) {
-        for (field in message.getFieldNames().minus(fieldsToKeep)) {
-            message.remove(field)
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        conveyor.addStep { message ->
+            for (field in message.getFieldNames().minus(fieldsToKeep)) {
+                message.remove(field)
+            }
+            return@addStep Conveyor.StepResult.CONTINUE
         }
-        output.sendMessageToSubscribers(message)
+        return conveyor
     }
 }

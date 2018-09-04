@@ -1,10 +1,7 @@
 package ru.agalkin.beholder.config.expressions
 
-import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Message
-import ru.agalkin.beholder.MessageRouter
+import ru.agalkin.beholder.*
 import ru.agalkin.beholder.config.parser.*
-import ru.agalkin.beholder.listToString
 
 /**
  * Выражение (команда) из токенов
@@ -28,9 +25,7 @@ abstract class CommandAbstract(protected val app: Beholder, private val argument
         }
     }
 
-    val output = MessageRouter()
-
-    abstract fun input(message: Message)
+    abstract fun buildConveyor(conveyor: Conveyor): Conveyor
 
     val subcommands = ArrayList<CommandAbstract>()
 

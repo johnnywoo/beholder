@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.Conveyor
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandAbstract
@@ -22,25 +23,31 @@ class SwitchCommand(app: Beholder, arguments: Arguments) : CommandAbstract(app, 
     private fun hasDefaultBlock()
         = subcommands.any { it is SwitchDefaultCommand }
 
-    override fun start() {
-        // выход всех вложенных команд (case / default) направляем на выход из switch
-        for (subcommand in subcommands) {
-            subcommand.output.addSubscriber { output.sendMessageToSubscribers(it) }
-        }
-
-        super.start()
-    }
-
     interface SwitchSubcommand {
         fun inputIfMatches(message: Message): Boolean
     }
 
-    override fun input(message: Message) {
-        // если входящее сообщение подходит под условие вложенной команды, направляем его в неё
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        val outputConveyor = conveyor.createRelatedConveyor()
+        val output = outputConveyor.addInput()
+
         for (subcommand in subcommands) {
-            if (subcommand is SwitchSubcommand && subcommand.inputIfMatches(message)) {
-                break
+            if (subcommand is SwitchSubcommand) {
+                subcommand
+                    .buildConveyor(conveyor.createRelatedConveyor())
+                    .mergeIntoInput(output)
             }
         }
+
+        conveyor.addStep { message ->
+            for (subcommand in subcommands) {
+                if (subcommand is SwitchSubcommand && subcommand.inputIfMatches(message)) {
+                    break
+                }
+            }
+            return@addStep Conveyor.StepResult.DROP
+        }
+
+        return outputConveyor
     }
 }

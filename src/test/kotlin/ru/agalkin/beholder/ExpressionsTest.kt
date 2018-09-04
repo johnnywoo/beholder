@@ -231,7 +231,7 @@ class ExpressionsTest : TestAbstract() {
         val message = Message()
         message["cat"] = "a gray cat"
 
-        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in \$cat")
+        val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in \$cat")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
     }
 
@@ -240,7 +240,7 @@ class ExpressionsTest : TestAbstract() {
         val message = Message()
         message["cat"] = "a gray cat"
 
-        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in '\$cat'")
+        val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in '\$cat'")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
     }
 
@@ -249,7 +249,7 @@ class ExpressionsTest : TestAbstract() {
         val message = Message()
         message["cat"] = "a gray cat"
 
-        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in \"\$cat\"")
+        val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in \"\$cat\"")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
     }
 
@@ -266,7 +266,7 @@ class ExpressionsTest : TestAbstract() {
         val message = Message()
         message["cat"] = "a gray cat"
 
-        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in '{\$cat}'")
+        val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in '{\$cat}'")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
     }
 
@@ -275,7 +275,7 @@ class ExpressionsTest : TestAbstract() {
         val message = Message()
         message["cat"] = "a gray cat"
 
-        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in \"{\$cat}\"")
+        val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in \"{\$cat}\"")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
     }
 
@@ -284,7 +284,7 @@ class ExpressionsTest : TestAbstract() {
         val message = Message()
         message["cat"] = "a gray cat"
 
-        val processedMessage = processMessageWithCommand(message, "set \$result replace ~cat~ 'dog' in '{\$cat}astrophe'")
+        val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in '{\$cat}astrophe'")
         assertEquals("a gray dogastrophe", processedMessage?.getStringField("result"))
     }
 

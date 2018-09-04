@@ -1,7 +1,7 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.Conveyor
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
@@ -37,16 +37,24 @@ class ParseCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(ap
         super.stop()
     }
 
-    override fun input(message: Message) {
-        val success = inflater.inflateMessageFields(message) {
-            output.sendMessageToSubscribers(it)
-        }
-        if (!success) {
-            if (shouldKeepUnparsed) {
-                output.sendMessageToSubscribers(message)
-            } else {
-                Stats.reportUnparsedDropped()
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        val nextConveyor = conveyor.createRelatedConveyor()
+        val input = nextConveyor.addInput()
+
+        conveyor.addStep { message ->
+            val success = inflater.inflateMessageFields(message) {
+                input.addMessage(it)
             }
+            if (!success) {
+                if (shouldKeepUnparsed) {
+                    input.addMessage(message)
+                } else {
+                    Stats.reportUnparsedDropped()
+                }
+            }
+            return@addStep Conveyor.StepResult.DROP
         }
+
+        return nextConveyor
     }
 }

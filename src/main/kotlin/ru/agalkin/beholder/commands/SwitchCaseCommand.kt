@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.Conveyor
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.formatters.TemplateFormatter
@@ -11,13 +12,7 @@ class SwitchCaseCommand(
     app: Beholder,
     arguments: Arguments,
     private val template: TemplateFormatter
-) : ConveyorCommandAbstract(
-    app,
-    arguments,
-    sendInputToOutput = false,
-    sendInputToSubcommands = true,
-    sendLastSubcommandToOutput = true
-), SwitchCommand.SwitchSubcommand {
+) : ConveyorCommandAbstract(app, arguments), SwitchCommand.SwitchSubcommand {
     private val matcher: Matcher
     init {
         val regexp = arguments.shiftRegexpOrNull()
@@ -29,7 +24,25 @@ class SwitchCaseCommand(
         arguments.end()
     }
 
-    override fun inputIfMatches(message: Message) = matcher.inputIfMatches(message)
+    private lateinit var conveyorInput: Conveyor.Input
+
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        conveyorInput = conveyor.addInput()
+
+        var currentConveyor = conveyor
+        for (subcommand in subcommands) {
+            currentConveyor = subcommand.buildConveyor(currentConveyor)
+        }
+
+        return currentConveyor
+    }
+
+    private fun inputMessage(message: Message) {
+        conveyorInput.addMessage(message)
+    }
+
+    override fun inputIfMatches(message: Message)
+        = matcher.inputIfMatches(message)
 
     interface Matcher {
         fun inputIfMatches(message: Message): Boolean
@@ -39,13 +52,13 @@ class SwitchCaseCommand(
         private val regexpInflater = RegexpInflater(regexp, template)
 
         override fun inputIfMatches(message: Message): Boolean
-            = regexpInflater.inflateMessageFields(message) { input(it) }
+            = regexpInflater.inflateMessageFields(message) { inputMessage(it) }
     }
 
     private inner class ExactMatcher(private val caseTemplate: TemplateFormatter) : Matcher {
         override fun inputIfMatches(message: Message): Boolean {
             if (caseTemplate.formatMessage(message).toString() == template.formatMessage(message).toString()) {
-                input(message)
+                inputMessage(message)
                 return true
             }
             return false

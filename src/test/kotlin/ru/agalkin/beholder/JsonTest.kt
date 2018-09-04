@@ -37,7 +37,7 @@ class JsonTest : TestAbstract() {
         message["custom"]  = "Custom"
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "set \$json json")
+        val processedMessage = processMessageWithConfig(message, "set \$json json")
 
         assertEquals("""{"custom":"Custom","payload":"We've got cats and dogs"}""", processedMessage!!.getStringField("json"))
     }
@@ -48,7 +48,7 @@ class JsonTest : TestAbstract() {
         message["custom"]  = "Custom\nMore custom"
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "set \$json json")
+        val processedMessage = processMessageWithConfig(message, "set \$json json")
 
         assertEquals("""{"custom":"Custom\nMore custom","payload":"We've got cats and dogs"}""", processedMessage!!.getStringField("json"))
     }
@@ -59,7 +59,7 @@ class JsonTest : TestAbstract() {
         message["ignored"] = "Ignored"
         message["payload"] = "We've got cats and dogs"
 
-        val processedMessage = processMessageWithCommand(message, "set \$json json \$payload \$whatever")
+        val processedMessage = processMessageWithConfig(message, "set \$json json \$payload \$whatever")
 
         assertEquals("""{"payload":"We've got cats and dogs","whatever":""}""", processedMessage!!.getStringField("json"))
     }
@@ -69,7 +69,7 @@ class JsonTest : TestAbstract() {
         val message = Message()
         message["payload"] = "Мама мыла раму"
 
-        val processedMessage = processMessageWithCommand(message, "set \$json json")
+        val processedMessage = processMessageWithConfig(message, "set \$json json")
 
         assertEquals("""{"payload":"Мама мыла раму"}""", processedMessage!!.getStringField("json"))
     }
@@ -79,7 +79,7 @@ class JsonTest : TestAbstract() {
         val message = Message()
         message["payload"] = "\uD83D\uDCA9"
 
-        val processedMessage = processMessageWithCommand(message, "set \$json json")
+        val processedMessage = processMessageWithConfig(message, "set \$json json")
 
         assertEquals("""{"payload":"💩"}""", processedMessage!!.getStringField("json"))
 

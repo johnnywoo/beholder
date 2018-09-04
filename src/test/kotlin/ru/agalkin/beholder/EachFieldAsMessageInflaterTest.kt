@@ -10,7 +10,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             val message = Message()
             message["cat"] = "feline"
             message["dog"] = "canine"
-            it.input(message)
+            it.topLevelInput.addMessage(message)
         }
 
         assertFieldValues(received[0], mapOf(
@@ -29,7 +29,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
         val received = receiveMessagesWithConfig(
             "parse beholder-stats",
             1,
-            { it.input(Message()) }
+            { it.topLevelInput.addMessage(Message()) }
         )
 
         assertFieldNames(
@@ -61,7 +61,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
                 val message = Message()
                 message["date"]    = "2017-11-26T16:16:01+03:00"
                 message["payload"] = "lots of irrelevant words"
-                it.input(message)
+                it.topLevelInput.addMessage(message)
             }
         )
 

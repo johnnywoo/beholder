@@ -10,7 +10,7 @@ class DataBufferTest : TestAbstract() {
 
         val config = "queue_chunk_messages 5; from udp 3821; to tcp 1212"
 
-        receiveMessagesWithConfig(config, 20) {
+        receiveMessagesWithConfig(config, 20) { _ ->
             repeat(20) {
                 sendToUdp(3821, messageText)
             }
@@ -28,7 +28,10 @@ class DataBufferTest : TestAbstract() {
             var processedMessagesNum = 0
             val sentMessagesNum = 20
 
-            root.subcommands.last().output.addSubscriber { processedMessagesNum++ }
+            root.topLevelOutput.addStep {
+                processedMessagesNum++
+                return@addStep Conveyor.StepResult.CONTINUE
+            }
 
             root.start()
             Thread.sleep(100)
@@ -73,7 +76,10 @@ class DataBufferTest : TestAbstract() {
             var processedMessagesNum = 0
             val sentMessagesNum = 20
 
-            root.subcommands.last().output.addSubscriber { processedMessagesNum++ }
+            root.topLevelOutput.addStep {
+                processedMessagesNum++
+                return@addStep Conveyor.StepResult.CONTINUE
+            }
 
             root.start()
             Thread.sleep(100)

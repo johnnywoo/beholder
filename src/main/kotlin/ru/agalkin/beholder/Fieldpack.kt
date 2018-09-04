@@ -58,21 +58,24 @@ object Fieldpack {
 
     class FieldpackException(message: String) : Exception(message)
 
-    fun readMessagesTo(list: MutableList<Message>, read: Reader) {
-        // NUM F = number of field names
-        val fieldNumber = readNum(read)
+    fun readMessagesFromByteArray(bytes: ByteArray): MutableList<Message> {
+        val list = mutableListOf<Message>()
+        var offset = 0
 
-        // F x ( NSTR field name )
+        val read = { length: Int ->
+            val stringValue = Fieldpack.Portion(bytes, offset, length)
+            offset += length
+            stringValue
+        }
+
+        val fieldNumber = readNum(read)
         val fieldNames = mutableListOf<String>()
         for (i in 0 until fieldNumber) {
             val fieldNameChunk = readNumStr(read)
             fieldNames.add(fieldNameChunk.toString())
         }
 
-        // NUM M = number of messages
         val messageNumber = readNum(read)
-
-        // M x F x ( NSTR value )  fields of a message are next to each other
         for (i in 0 until messageNumber) {
             val message = Message()
             for (fieldName in fieldNames) {
@@ -80,22 +83,35 @@ object Fieldpack {
             }
             list.add(message)
         }
+
+        return list
     }
 
-    fun readMessages(read: Reader): List<Message> {
-        val result = mutableListOf<Message>()
-        readMessagesTo(result, read)
-        return result
+    fun writeMessagesToByteArray(messages: List<Message>, fields: List<String>): ByteArray {
+        val length = writeMessages(messages, fields) { _, _ -> }
+        val buffer = ByteArray(length)
+        var index = 0
+        writeMessages(messages, fields) { source, readLength ->
+            for (i in 0 until readLength) {
+                buffer[index++] = source[i]
+            }
+        }
+        return buffer
     }
 
-    fun getPackedLength(messages: List<Message>): Int {
-        var packedLength = 0
-        // todo something a bit faster, perhaps?
-        writeMessages(messages) { _, length -> packedLength += length }
-        return packedLength
+    fun writeMessagesToByteArray(messages: List<Message>): ByteArray {
+        val length = writeMessages(messages) { _, _ -> }
+        val buffer = ByteArray(length)
+        var index = 0
+        writeMessages(messages) { source, readLength ->
+            for (i in 0 until readLength) {
+                buffer[index++] = source[i]
+            }
+        }
+        return buffer
     }
 
-    fun writeMessages(messages: List<Message>, write: Writer): Int {
+    private fun writeMessages(messages: List<Message>, write: Writer): Int {
         val fieldNames = mutableListOf<String>()
         for (message in messages) {
             for (fieldName in message.getFieldNames()) {
@@ -107,7 +123,7 @@ object Fieldpack {
         return writeMessages(messages, fieldNames, write)
     }
 
-    fun writeMessages(messages: List<Message>, fields: List<String>, write: Writer): Int {
+    private fun writeMessages(messages: List<Message>, fields: List<String>, write: Writer): Int {
         // sorting makes output fully reproducible and does not really cost much
         val fieldNames = fields.sorted()
 

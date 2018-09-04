@@ -2,7 +2,6 @@ package ru.agalkin.beholder
 
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.fail
 
 class FieldpackTest : TestAbstract() {
     @Test
@@ -11,15 +10,9 @@ class FieldpackTest : TestAbstract() {
             "payload" to FieldValue.fromString("cat")
         ))
 
-        val buffer = ByteArray(10000)
-        var length = 0
-
         // packing and writing
-        Fieldpack.writeMessages(listOf(message)) { source, readLength ->
-            for (i in 0 until readLength) {
-                buffer[length++] = source[i]
-            }
-        }
+        val buffer = Fieldpack.writeMessagesToByteArray(listOf(message))
+        val length = buffer.size
 
         assertByteArraysEqual(byteArrayOf(
             // * NUM N = number of field names
@@ -33,15 +26,7 @@ class FieldpackTest : TestAbstract() {
         ), buffer.copyOfRange(0, length))
 
         // unpacking
-        var index = 0
-        val unpackedMessages = Fieldpack.readMessages { readLength ->
-            val portion = Fieldpack.Portion(buffer, index, readLength)
-            index += readLength
-            if (index > length) {
-                fail("readMessages tried to read $index bytes, packed length $length")
-            }
-            portion
-        }
+        val unpackedMessages = Fieldpack.readMessagesFromByteArray(buffer)
 
         assertEquals(1, unpackedMessages.size)
         assertFieldNames(unpackedMessages[0], "payload")
@@ -64,15 +49,9 @@ class FieldpackTest : TestAbstract() {
             ))
         )
 
-        val buffer = ByteArray(10000)
-        var length = 0
-
         // packing and writing
-        Fieldpack.writeMessages(messages) { source, readLength ->
-            for (i in 0 until readLength) {
-                buffer[length++] = source[i]
-            }
-        }
+        val buffer = Fieldpack.writeMessagesToByteArray(messages)
+        val length = buffer.size
 
         assertByteArraysEqual(byteArrayOf(
             // * NUM N = number of field names
@@ -93,15 +72,7 @@ class FieldpackTest : TestAbstract() {
         ), buffer.copyOfRange(0, length))
 
         // unpacking
-        var index = 0
-        val unpackedMessages = Fieldpack.readMessages { readLength ->
-            val portion = Fieldpack.Portion(buffer, index, readLength)
-            index += readLength
-            if (index > length) {
-                fail("readMessages tried to read $index bytes, packed length $length")
-            }
-            portion
-        }
+        val unpackedMessages = Fieldpack.readMessagesFromByteArray(buffer)
 
         assertEquals(2, unpackedMessages.size)
 

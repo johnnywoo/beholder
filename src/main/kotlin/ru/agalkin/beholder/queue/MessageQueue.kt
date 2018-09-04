@@ -11,29 +11,10 @@ class MessageQueue(app: Beholder, receive: (Message) -> Received) : BeholderQueu
     }
 
     class MessageChunk(capacity: Int, buffer: DataBuffer) : Chunk<Message>(capacity, buffer) {
-        override fun pack(list: List<Message>): ByteArray {
-            val bytes = ByteArray(Fieldpack.getPackedLength(list))
+        override fun pack(list: List<Message>)
+            = Fieldpack.writeMessagesToByteArray(list)
 
-            var offset = 0
-            Fieldpack.writeMessages(list) { source, length ->
-                for (i in 0 until length) {
-                    bytes[offset + i] = source[i]
-                }
-                offset += length
-            }
-            return bytes
-        }
-
-        override fun unpack(bytes: ByteArray): MutableList<Message> {
-            val list = mutableListOf<Message>()
-
-            var offset = 0
-            Fieldpack.readMessagesTo(list) { length ->
-                val stringValue = Fieldpack.Portion(bytes, offset, length)
-                offset += length
-                stringValue
-            }
-            return list
-        }
+        override fun unpack(bytes: ByteArray)
+            = Fieldpack.readMessagesFromByteArray(bytes)
     }
 }

@@ -48,7 +48,7 @@ class FieldValueQueue(app: Beholder, receive: (FieldValue) -> Received) : Behold
                     portion
                 }).toInt()
                 list.add(FieldValue.fromByteArray(
-                    bytes.copyOfRange(offset, byteLength),
+                    bytes.copyOfRange(offset, offset + byteLength),
                     byteLength
                 ))
                 offset += byteLength

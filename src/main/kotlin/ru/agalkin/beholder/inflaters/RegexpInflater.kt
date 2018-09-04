@@ -8,7 +8,7 @@ import java.util.regex.Pattern
 class RegexpInflater(
     private val regexp: Pattern,
     private val template: TemplateFormatter = TemplateFormatter.payloadFormatter
-) : Inflater {
+) : InplaceInflater {
 
     private val groupNames: Set<String>
 
@@ -24,7 +24,7 @@ class RegexpInflater(
         groupNames = names
     }
 
-    override fun inflateMessageFields(message: Message, emit: (Message) -> Unit): Boolean {
+    override fun inflateMessageFieldsInplace(message: Message): Boolean {
         val matcher = regexp.matcher(template.formatMessage(message).toString())
         if (!matcher.find()) {
             return false
@@ -37,7 +37,6 @@ class RegexpInflater(
             }
         }
 
-        emit(message)
         return true
     }
 }

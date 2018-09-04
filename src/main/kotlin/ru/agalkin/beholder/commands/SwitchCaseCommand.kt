@@ -37,10 +37,6 @@ class SwitchCaseCommand(
         return currentConveyor
     }
 
-    private fun inputMessage(message: Message) {
-        conveyorInput.addMessage(message)
-    }
-
     override fun inputIfMatches(message: Message)
         = matcher.inputIfMatches(message)
 
@@ -51,14 +47,19 @@ class SwitchCaseCommand(
     private inner class RegexpMatcher(regexp: Pattern) : Matcher {
         private val regexpInflater = RegexpInflater(regexp, template)
 
-        override fun inputIfMatches(message: Message): Boolean
-            = regexpInflater.inflateMessageFields(message) { inputMessage(it) }
+        override fun inputIfMatches(message: Message): Boolean {
+            if (regexpInflater.inflateMessageFieldsInplace(message)) {
+                conveyorInput.addMessage(message)
+                return true
+            }
+            return false
+        }
     }
 
     private inner class ExactMatcher(private val caseTemplate: TemplateFormatter) : Matcher {
         override fun inputIfMatches(message: Message): Boolean {
             if (caseTemplate.formatMessage(message).toString() == template.formatMessage(message).toString()) {
-                inputMessage(message)
+                conveyorInput.addMessage(message)
                 return true
             }
             return false

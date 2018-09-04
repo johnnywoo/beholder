@@ -38,6 +38,18 @@ class ParseCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(ap
     }
 
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        if (inflater is InplaceInflater) {
+            // Не добавляем лишних телодвижений, если тут не может появиться второго сообщения
+            conveyor.addStep { message ->
+                if (inflater.inflateMessageFieldsInplace(message) || shouldKeepUnparsed) {
+                    return@addStep Conveyor.StepResult.CONTINUE
+                }
+                Stats.reportUnparsedDropped()
+                return@addStep Conveyor.StepResult.DROP
+            }
+            return conveyor
+        }
+
         val nextConveyor = conveyor.createRelatedConveyor()
         val input = nextConveyor.addInput()
 

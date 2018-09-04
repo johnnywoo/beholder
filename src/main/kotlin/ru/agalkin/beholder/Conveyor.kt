@@ -1,31 +1,48 @@
 package ru.agalkin.beholder
 
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicBoolean
+
 class Conveyor private constructor() {
-    private val steps = mutableListOf<(Message) -> StepResult>()
+    private val steps = CopyOnWriteArrayList<(Message) -> StepResult>()
+
+    private val isReachable = AtomicBoolean(false)
 
     fun addStep(block: (Message) -> StepResult) {
-        steps.add(block)
+        if (isReachable.get()) {
+            steps.add(block)
+        }
     }
 
     fun dropMessages(): Conveyor {
-        return Conveyor()
+        if (!isReachable.get()) {
+            return this
+        }
+        return createRelatedConveyor()
     }
 
     fun addInput(): Input {
+        isReachable.set(true)
         return InputImpl(steps.size)
     }
 
     fun mergeIntoInput(input: Input) {
-        addStep {
-            input.addMessage(it)
+        if (!isReachable.get()) {
+            return
+        }
+        addStep { message ->
+            input.addMessage(message)
             return@addStep StepResult.CONTINUE
         }
     }
 
     fun copyToConveyor(conveyor: Conveyor) {
+        if (!isReachable.get()) {
+            return
+        }
         val input = conveyor.addInput()
-        addStep {
-            input.addMessage(it.copy())
+        addStep { message ->
+            input.addMessage(message.copy())
             return@addStep StepResult.CONTINUE
         }
     }

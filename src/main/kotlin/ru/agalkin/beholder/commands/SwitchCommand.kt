@@ -15,9 +15,21 @@ class SwitchCommand(app: Beholder, arguments: Arguments) : CommandAbstract(app, 
 
     override fun createSubcommand(args: Arguments): CommandAbstract?
         = when (args.getCommandName()) {
-            "case"    -> if (!hasDefaultBlock()) SwitchCaseCommand(app, args, template) else throw CommandException("`switch` cannot have `case` subcommand after `default`")
-            "default" -> if (!hasDefaultBlock()) SwitchDefaultCommand(app, args) else throw CommandException("`switch` cannot have multiple `default` subcommands")
-            else      -> null
+            "case" -> {
+                if (!hasDefaultBlock()) {
+                    SwitchCaseCommand(app, args, template)
+                } else {
+                    throw CommandException("`switch` cannot have `case` subcommand after `default`")
+                }
+            }
+            "default" -> {
+                if (!hasDefaultBlock()) {
+                    SwitchDefaultCommand(app, args)
+                } else {
+                    throw CommandException("`switch` cannot have multiple `default` subcommands")
+                }
+            }
+            else -> null
         }
 
     private fun hasDefaultBlock()
@@ -29,13 +41,16 @@ class SwitchCommand(app: Beholder, arguments: Arguments) : CommandAbstract(app, 
 
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
         val outputConveyor = conveyor.createRelatedConveyor()
-        val output = outputConveyor.addInput()
 
-        for (subcommand in subcommands) {
-            if (subcommand is SwitchSubcommand) {
-                subcommand
-                    .buildConveyor(conveyor.createRelatedConveyor())
-                    .mergeIntoInput(output)
+        if (!subcommands.isEmpty()) {
+            val output = outputConveyor.addInput()
+
+            for (subcommand in subcommands) {
+                if (subcommand is SwitchSubcommand) {
+                    subcommand
+                        .buildConveyor(conveyor.createRelatedConveyor())
+                        .mergeIntoInput(output)
+                }
             }
         }
 

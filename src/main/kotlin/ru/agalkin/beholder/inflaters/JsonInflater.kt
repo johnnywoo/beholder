@@ -5,10 +5,10 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSyntaxException
 import ru.agalkin.beholder.Message
 
-class JsonInflater : Inflater {
+class JsonInflater : InplaceInflater {
     private val gson = Gson()
 
-    override fun inflateMessageFields(message: Message, emit: (Message) -> Unit): Boolean {
+    override fun inflateMessageFieldsInplace(message: Message): Boolean {
         val data: JsonObject?
         try {
             data = gson.fromJson(message.getPayloadString(), JsonObject::class.java)
@@ -39,7 +39,6 @@ class JsonInflater : Inflater {
             message[field] = value.asJsonPrimitive.asString
         }
 
-        emit(message)
         return true
     }
 }

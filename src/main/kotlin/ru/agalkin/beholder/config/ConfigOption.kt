@@ -10,8 +10,6 @@ enum class ConfigOption(val defaultValue: Any, val type: Type) {
     BUFFER_MEMORY_BYTES(128 * 1024 * 1024, Type.INT),
     BUFFER_COMPRESSION(Compression.LZ4_FAST, Type.COMPRESSION),
 
-    EXTRA_GC_INTERVAL_SECONDS(5, Type.INT),
-
     CREATE_DATES_IN_TIMEZONE(ZoneId.systemDefault(), Type.TIMEZONE);
 
     enum class Type {

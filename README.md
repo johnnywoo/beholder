@@ -5,9 +5,6 @@ Beholder is a log processor. Its purpose is to receive, process, transfer and ex
 WARNING: Beholder has no stable version yet.
 Config syntax, commands, options, behaviour, everything is going to be changed without any backwards compatibility.
 
-WARNING: current experimental version of Beholder does not have any limits on queue size.
-If it cannot send incoming messages away, the queue will grow until Out Of Memory error kills the process.
-
  * [Usage](#usage)
  * [Building Beholder](#building-beholder)
  * [Recipes](#recipes)
@@ -700,13 +697,6 @@ Example timezones: `UTC`, `Europe/Moscow`.
 When a date is received in a message (not created), Beholder will try to keep its timezone intact.
 
     create_dates_in_timezone UTC;
-
-Beholder periodically initiates JVM garbage collection in order to keep memory footprint as low as possible.
-Because messages are processed using lots of short-lived objects, by default we initiate GC every 5 seconds.
-This can be changed using `extra_gc_interval_seconds` config option. If you don't want this behaviour,
-extra GC can be disabled by setting `extra_gc_interval_seconds` to 0.
-
-    extra_gc_interval_seconds 5;
 
 When messages cannot be processed quick enough, they are stored in queues.
 When the config is being reloaded, incoming messages are stored in from-queues.

@@ -51,13 +51,6 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val tcpSenders   by lazy { TcpSender.Factory(this) }
     val udpSenders   by lazy { UdpSender.Factory(this) }
 
-    // we need very little memory compared to most Java programs
-    // let's shrink the heap
-    private val gcTimer = GCTimer(this)
-    init {
-        gcTimer.start()
-    }
-
     // тут не ловим никаких ошибок, чтобы при старте с кривым конфигом сразу упасть
     var config: Config = configMaker(this)
 
@@ -78,7 +71,6 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
 
         selectorThread.erase()
         internalLogListener.destroy()
-        gcTimer.destroy()
 
         var needsWaiting = 0
 

@@ -157,7 +157,7 @@ Literal words may contain field names, which are replaced with their values.
 There is no escaping in literal words.
 
 Note also that literal `{$field}` is invalid (it will be parsed as subcommand block),
-while `$field` and quoted `'{$field}` are valid.
+while `$field` and quoted `'{$field}'` are valid.
 
 Example: `127.0.0.1:1234`.
 

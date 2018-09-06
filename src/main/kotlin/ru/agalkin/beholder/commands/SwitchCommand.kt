@@ -49,7 +49,7 @@ class SwitchCommand(app: Beholder, arguments: Arguments) : CommandAbstract(app, 
                 if (subcommand is SwitchSubcommand) {
                     subcommand
                         .buildConveyor(conveyor.createRelatedConveyor())
-                        .mergeIntoInput(output)
+                        .terminateByMergingIntoInput(output)
                 }
             }
         }

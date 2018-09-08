@@ -24,6 +24,9 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Nothing) {
     val isTest: Boolean
         get() = cliArgs.hasOption("test")
 
+    val isDumpInstructions: Boolean
+        get() = cliArgs.hasOption("dump-instructions")
+
     private val options = Options()
     private val cliArgs: CommandLine
 
@@ -80,6 +83,13 @@ class Cli(args: Array<String>, onParseError: (ParseException) -> Nothing) {
             Option.builder("v")
                 .longOpt("version")
                 .desc("Show version")
+                .build()
+        )
+
+        options.addOption(
+            Option.builder()
+                .longOpt("dump-instructions")
+                .desc("Dump conveyor instructions for debugging")
                 .build()
         )
 

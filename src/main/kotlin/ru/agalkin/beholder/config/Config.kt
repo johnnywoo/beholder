@@ -23,6 +23,7 @@ class Config(app: Beholder, configText: String, configSourceDescription: String)
     }
 
     val root: RootCommand
+    val initialConveyor = Conveyor.createInitialConveyor()
 
     fun getDefinition()
         = root.getChildrenDefinition()
@@ -38,7 +39,7 @@ class Config(app: Beholder, configText: String, configSourceDescription: String)
         // штука сразу делает конкретные экземпляры команд, в которых уже есть бизнес-логика
         root = RootCommand.fromTokens(app, tokens)
 
-        root.buildConveyor(Conveyor.createInitialConveyor())
+        root.buildConveyor(initialConveyor)
     }
 
     fun start()

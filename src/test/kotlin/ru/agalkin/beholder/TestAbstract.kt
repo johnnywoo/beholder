@@ -20,15 +20,25 @@ abstract class TestAbstract {
             val root = app.config.root
             root.start()
 
-            root.topLevelOutput.addStep {
-                processedMessage = it
-                return@addStep Conveyor.StepResult.CONTINUE
-            }
+            root.topLevelOutput.addStep(conveyorStepOf {
+                processedMessage = message
+                null
+            })
 
             root.topLevelInput.addMessage(message)
         }
 
         return processedMessage
+    }
+
+    protected fun conveyorStepOf(block: (Message) -> Any?): Conveyor.Step {
+        return object : Conveyor.Step {
+            override fun execute(message: Message)
+                = if (block(message) == Conveyor.StepResult.DROP) Conveyor.StepResult.DROP else Conveyor.StepResult.CONTINUE
+
+            override fun getDescription()
+                = "test callback"
+        }
     }
 
     protected fun receiveMessageWithConfig(config: String, senderBlock: (CommandAbstract) -> Unit): Message? {
@@ -44,9 +54,9 @@ abstract class TestAbstract {
         makeApp(config).use { app ->
             val root = app.config.root
 
-            root.topLevelOutput.addStep {
+            root.topLevelOutput.addStep(conveyorStepOf {
                 processedMessages.add(it)
-            }
+            })
 
             root.start()
             Thread.sleep(100)

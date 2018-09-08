@@ -105,6 +105,11 @@ fun main(args: Array<String>) {
         exitProcess(0)
     }
 
+    if (cli.isDumpInstructions) {
+        app.config.initialConveyor.dumpInstructions()
+        exitProcess(0)
+    }
+
     app.start()
 
     Signal.handle(Signal("HUP")) {

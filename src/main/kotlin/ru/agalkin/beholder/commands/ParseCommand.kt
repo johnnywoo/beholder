@@ -2,6 +2,7 @@ package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Conveyor
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
@@ -37,23 +38,21 @@ class ParseCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(ap
         super.stop()
     }
 
-    override fun buildConveyor(conveyor: Conveyor): Conveyor {
-        if (inflater is InplaceInflater) {
-            // Не добавляем лишних телодвижений, если тут не может появиться второго сообщения
-            conveyor.addStep { message ->
-                if (!inflater.inflateMessageFieldsInplace(message) && !shouldKeepUnparsed) {
-                    Stats.reportUnparsedDropped()
-                    return@addStep Conveyor.StepResult.DROP
-                }
-                Conveyor.StepResult.CONTINUE
+    private inner class ParseInplaceStep : Conveyor.Step {
+        override fun execute(message: Message): Conveyor.StepResult {
+            if (!(inflater as InplaceInflater).inflateMessageFieldsInplace(message) && !shouldKeepUnparsed) {
+                Stats.reportUnparsedDropped()
+                return Conveyor.StepResult.DROP
             }
-            return conveyor
+            return Conveyor.StepResult.CONTINUE
         }
 
-        val nextConveyor = conveyor.createRelatedConveyor()
-        val input = nextConveyor.addInput()
+        override fun getDescription()
+            = getDefinition(includeSubcommands = false)
+    }
 
-        conveyor.addStep { message ->
+    private inner class ParseEmitStep(private val input: Conveyor.Input) : Conveyor.Step {
+        override fun execute(message: Message): Conveyor.StepResult {
             val success = inflater.inflateMessageFields(message) {
                 input.addMessage(it)
             }
@@ -64,8 +63,23 @@ class ParseCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(ap
                     Stats.reportUnparsedDropped()
                 }
             }
-            return@addStep Conveyor.StepResult.DROP
+            return Conveyor.StepResult.DROP
         }
+
+        override fun getDescription()
+            = getDefinition(includeSubcommands = false)
+    }
+
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        if (inflater is InplaceInflater) {
+            // Не добавляем лишних телодвижений, если тут не может появиться второго сообщения
+            conveyor.addStep(ParseInplaceStep())
+            return conveyor
+        }
+
+        val nextConveyor = conveyor.createRelatedConveyor()
+
+        conveyor.addStep(ParseEmitStep(nextConveyor.addInput(getDefinition(includeSubcommands = false))))
 
         return nextConveyor
     }

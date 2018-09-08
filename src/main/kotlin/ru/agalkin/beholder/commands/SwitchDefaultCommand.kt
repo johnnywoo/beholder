@@ -9,12 +9,7 @@ class SwitchDefaultCommand(
     app: Beholder,
     arguments: Arguments
 ) : ConveyorCommandAbstract(app, arguments.end()), SwitchCommand.SwitchSubcommand {
-
-    private lateinit var conveyorInput: Conveyor.Input
-
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
-        conveyorInput = conveyor.addInput()
-
         var currentConveyor = conveyor
         for (subcommand in subcommands) {
             currentConveyor = subcommand.buildConveyor(currentConveyor)
@@ -23,8 +18,15 @@ class SwitchDefaultCommand(
         return currentConveyor
     }
 
-    override fun inputIfMatches(message: Message): Boolean {
-        conveyorInput.addMessage(message)
-        return true
+    private inner class SwitchDefaultStep : Conveyor.Step {
+        override fun execute(message: Message): Conveyor.StepResult
+            = Conveyor.StepResult.CONTINUE
+
+        override fun getDescription()
+            = getDefinition(includeSubcommands = false)
+    }
+
+    override fun getConditionStep(): Conveyor.Step {
+        return SwitchDefaultStep()
     }
 }

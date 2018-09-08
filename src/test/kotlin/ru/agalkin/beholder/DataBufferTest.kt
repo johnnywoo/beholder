@@ -28,9 +28,9 @@ class DataBufferTest : TestAbstract() {
             var processedMessagesNum = 0
             val sentMessagesNum = 20
 
-            root.topLevelOutput.addStep {
+            root.topLevelOutput.addStep(conveyorStepOf {
                 processedMessagesNum++
-            }
+            })
 
             root.start()
             Thread.sleep(100)
@@ -75,9 +75,9 @@ class DataBufferTest : TestAbstract() {
             var processedMessagesNum = 0
             val sentMessagesNum = 20
 
-            root.topLevelOutput.addStep {
+            root.topLevelOutput.addStep(conveyorStepOf {
                 processedMessagesNum++
-            }
+            })
 
             root.start()
             Thread.sleep(100)

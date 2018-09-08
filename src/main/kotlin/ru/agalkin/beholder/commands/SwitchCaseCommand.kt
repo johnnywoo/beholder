@@ -24,11 +24,7 @@ class SwitchCaseCommand(
         arguments.end()
     }
 
-    private lateinit var conveyorInput: Conveyor.Input
-
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
-        conveyorInput = conveyor.addInput()
-
         var currentConveyor = conveyor
         for (subcommand in subcommands) {
             currentConveyor = subcommand.buildConveyor(currentConveyor)
@@ -37,32 +33,32 @@ class SwitchCaseCommand(
         return currentConveyor
     }
 
-    override fun inputIfMatches(message: Message)
-        = matcher.inputIfMatches(message)
-
-    interface Matcher {
-        fun inputIfMatches(message: Message): Boolean
+    override fun getConditionStep(): Conveyor.Step {
+        return matcher
     }
 
-    private inner class RegexpMatcher(regexp: Pattern) : Matcher {
+    private abstract inner class Matcher : Conveyor.Step {
+        override fun getDescription()
+            = getDefinition(includeSubcommands = false)
+    }
+
+    private inner class RegexpMatcher(regexp: Pattern) : Matcher() {
         private val regexpInflater = RegexpInflater(regexp, template)
 
-        override fun inputIfMatches(message: Message): Boolean {
-            if (regexpInflater.inflateMessageFieldsInplace(message)) {
-                conveyorInput.addMessage(message)
-                return true
+        override fun execute(message: Message): Conveyor.StepResult {
+            if (!regexpInflater.inflateMessageFieldsInplace(message)) {
+                return Conveyor.StepResult.DROP
             }
-            return false
+            return Conveyor.StepResult.CONTINUE
         }
     }
 
-    private inner class ExactMatcher(private val caseTemplate: TemplateFormatter) : Matcher {
-        override fun inputIfMatches(message: Message): Boolean {
-            if (caseTemplate.formatMessage(message).toString() == template.formatMessage(message).toString()) {
-                conveyorInput.addMessage(message)
-                return true
+    private inner class ExactMatcher(private val caseTemplate: TemplateFormatter) : Matcher() {
+        override fun execute(message: Message): Conveyor.StepResult {
+            if (caseTemplate.formatMessage(message).toString() != template.formatMessage(message).toString()) {
+                return Conveyor.StepResult.DROP
             }
-            return false
+            return Conveyor.StepResult.CONTINUE
         }
     }
 }

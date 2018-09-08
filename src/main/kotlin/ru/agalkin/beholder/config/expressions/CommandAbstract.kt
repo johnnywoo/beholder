@@ -106,7 +106,7 @@ abstract class CommandAbstract(protected val app: Beholder, private val argument
     fun getChildrenDefinition(indent: String = "")
         = listToString(subcommands, { it.getDefinition(indent) + "\n" })
 
-    private fun getDefinition(indent: String = ""): String {
+    fun getDefinition(indent: String = "", includeSubcommands: Boolean = true): String {
         val sb = StringBuilder()
 
         // args
@@ -115,10 +115,12 @@ abstract class CommandAbstract(protected val app: Beholder, private val argument
         // child expressions
         if (subcommands.isEmpty()) {
             sb.append(";")
-        } else {
+        } else if (includeSubcommands) {
             sb.append(" {\n")
             sb.append(getChildrenDefinition("$indent    "))
             sb.append(indent).append("}")
+        } else {
+            sb.append(" {...}")
         }
 
         return sb.toString()

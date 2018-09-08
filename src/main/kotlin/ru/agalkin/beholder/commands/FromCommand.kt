@@ -60,7 +60,7 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
     private lateinit var conveyorInput: Conveyor.Input
 
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
-        conveyorInput = conveyor.addInput()
+        conveyorInput = conveyor.addInput(getDefinition(includeSubcommands = false))
         return conveyor
     }
 

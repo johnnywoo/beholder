@@ -47,7 +47,7 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
     }
 
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
-        conveyor.addStep(destination::write)
+        conveyor.addStep(destination)
         return conveyor
     }
 
@@ -62,43 +62,48 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
     }
 
 
-    private interface Destination {
-        fun write(message: Message)
+    private abstract inner class Destination : Conveyor.Step {
+        open fun start() {}
+        open fun stop() {}
 
-        fun start() {}
-        fun stop() {}
+        override fun getDescription()
+            = getDefinition(includeSubcommands = false)
     }
 
-    private class StdoutDestination(private val template: TemplateFormatter) : Destination {
-        override fun write(message: Message) {
+    private inner class StdoutDestination(private val template: TemplateFormatter) : Destination() {
+        override fun execute(message: Message): Conveyor.StepResult {
             print(template.formatMessage(message).withNewlineAtEnd().toString())
+            return Conveyor.StepResult.CONTINUE
         }
     }
 
     private inner class FileDestination(
         private val filenameTemplate: TemplateFormatter,
         private val dataTemplate: TemplateFormatter
-    ) : Destination {
+    ) : Destination() {
 
-        override fun write(message: Message) {
+        override fun execute(message: Message): Conveyor.StepResult {
             val sender = app.fileSenders.getSender(filenameTemplate.formatMessage(message).toString())
             sender.writeMessagePayload(dataTemplate.formatMessage(message).withNewlineAtEnd())
+            return Conveyor.StepResult.CONTINUE
         }
     }
 
-    private inner class UdpDestination(address: Address, private val template: TemplateFormatter) : Destination {
+    private inner class UdpDestination(address: Address, private val template: TemplateFormatter) : Destination() {
         private val sender = app.udpSenders.getSender(address)
 
-        override fun write(message: Message) {
+        override fun execute(message: Message): Conveyor.StepResult {
             sender.writeMessagePayload(template.formatMessage(message))
+            return Conveyor.StepResult.CONTINUE
         }
     }
 
-    private inner class TcpDestination(address: Address, private val template: TemplateFormatter) : Destination {
+    private inner class TcpDestination(address: Address, private val template: TemplateFormatter) : Destination() {
         private val sender = app.tcpSenders.getSender(address)
 
-        override fun write(message: Message) {
+        override fun execute(message: Message): Conveyor.StepResult {
             sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())
+            return Conveyor.StepResult.CONTINUE
         }
 
         override fun start() {
@@ -110,13 +115,12 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
         }
     }
 
-    private inner class ShellDestination(shellCommand: String, private val template: TemplateFormatter) : Destination {
+    private inner class ShellDestination(shellCommand: String, private val template: TemplateFormatter) : Destination() {
         private val sender = app.shellSenders.createSender(shellCommand)
 
-        override fun write(message: Message) {
+        override fun execute(message: Message): Conveyor.StepResult {
             sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())
+            return Conveyor.StepResult.CONTINUE
         }
-
-        override fun stop() {}
     }
 }

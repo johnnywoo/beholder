@@ -15,7 +15,7 @@ open class JoinCommand(app: Beholder, arguments: Arguments) : ConveyorCommandAbs
         }
 
         // На выходе из субконвейера стоит основной конвейер
-        subconveyor.terminateByMergingIntoInput(conveyor.addInput())
+        subconveyor.terminateByMergingIntoInput(conveyor.addInput(getDefinition(includeSubcommands = false)))
 
         return conveyor
     }

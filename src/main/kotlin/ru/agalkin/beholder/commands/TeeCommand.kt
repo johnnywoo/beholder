@@ -8,7 +8,7 @@ open class TeeCommand(app: Beholder, arguments: Arguments) : ConveyorCommandAbst
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
         // tee = раздваиваем сообщение, одно уходит просто в субкоманды, другое просто на выход
         val subconveyor = conveyor.createRelatedConveyor()
-        conveyor.copyToConveyor(subconveyor)
+        conveyor.copyToConveyor(subconveyor, getDefinition(includeSubcommands = false))
 
         var currentConveyor = subconveyor
         for (subcommand in subcommands) {

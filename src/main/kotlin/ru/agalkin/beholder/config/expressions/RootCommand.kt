@@ -19,7 +19,7 @@ class RootCommand(app: Beholder) : ConveyorCommandAbstract(app, RootArguments) {
     }
 
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
-        topLevelInput = conveyor.addInput()
+        topLevelInput = conveyor.addInput("top level input in root")
         var currentConveyor = conveyor
         for (subcommand in subcommands) {
             currentConveyor = subcommand.buildConveyor(currentConveyor)

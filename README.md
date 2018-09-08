@@ -36,6 +36,7 @@ With that example config you should see Beholder print randomized messages every
 
     usage: beholder
      -c,--config <text>        Use config from the argument
+        --dump-instructions    Dump conveyor instructions for debugging
      -f,--config-file <file>   Use config from a file
      -h,--help                 Show usage
      -l,--log <file>           Internal log file

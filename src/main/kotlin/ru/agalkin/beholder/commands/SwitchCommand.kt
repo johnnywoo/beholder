@@ -2,7 +2,6 @@ package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.Conveyor
-import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandAbstract
 import ru.agalkin.beholder.config.expressions.CommandException
@@ -36,33 +35,17 @@ class SwitchCommand(app: Beholder, arguments: Arguments) : CommandAbstract(app, 
         = subcommands.any { it is SwitchDefaultCommand }
 
     interface SwitchSubcommand {
-        fun inputIfMatches(message: Message): Boolean
+        fun getConditionStep(): Conveyor.Step
     }
 
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
-        val outputConveyor = conveyor.createRelatedConveyor()
-
-        if (!subcommands.isEmpty()) {
-            val output = outputConveyor.addInput()
-
-            for (subcommand in subcommands) {
-                if (subcommand is SwitchSubcommand) {
-                    subcommand
-                        .buildConveyor(conveyor.createRelatedConveyor())
-                        .terminateByMergingIntoInput(output)
-                }
+        val conditions = mutableListOf<Pair<Conveyor.Step, (Conveyor)->Conveyor>>()
+        for (subcommand in subcommands) {
+            if (subcommand is SwitchSubcommand) {
+                conditions.add(Pair(subcommand.getConditionStep(), subcommand::buildConveyor))
             }
         }
 
-        conveyor.addStep { message ->
-            for (subcommand in subcommands) {
-                if (subcommand is SwitchSubcommand && subcommand.inputIfMatches(message)) {
-                    break
-                }
-            }
-            return@addStep Conveyor.StepResult.DROP
-        }
-
-        return outputConveyor
+        return conveyor.addConditions(conditions)
     }
 }

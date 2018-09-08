@@ -93,10 +93,18 @@ class SetCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app,
         return if(list.isEmpty()) null else list
     }
 
-    override fun buildConveyor(conveyor: Conveyor): Conveyor {
-        conveyor.addStep { message ->
+    private inner class SetStep : Conveyor.Step {
+        override fun execute(message: Message): Conveyor.StepResult {
             message.setFieldValue(field, formatter.formatMessage(message))
+            return Conveyor.StepResult.CONTINUE
         }
+
+        override fun getDescription()
+            = getDefinition(includeSubcommands = false)
+    }
+
+    override fun buildConveyor(conveyor: Conveyor): Conveyor {
+        conveyor.addStep(SetStep())
         return conveyor
     }
 }

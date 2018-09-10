@@ -43,7 +43,36 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             "decompressCount", "decompressDurationMaxNanos", "decompressDurationTotalNanos",
             "queueMaxSize", "queueOverflows", "queueChunksCreated", "uptimeSeconds", "messagesReceived", "configReloads", "unparsedDropped",
             "allBuffersAllocatedBytes", "allBuffersMaxBytes", "defaultBufferAllocatedBytes", "defaultBufferMaxBytes",
-            "payload"
+            "payload", "influxLineProtocolPayload"
+        )
+    }
+
+    @Test
+    fun testStatsLineProtocolNoTags() {
+        val received = receiveMessagesWithConfig(
+            "parse beholder-stats",
+            1,
+            { it.topLevelInput.addMessage(Message()) }
+        )
+
+        // beholder uptimeSeconds=0,heapBytes=268435456,heapUsedBytes=20428360,heapMaxBytes=4294967296,defaultBufferAllocatedBytes=0,unpackDurationMaxNanos=0,allBuffersAllocatedBytes=0,compressBeforeTotalBytes=0,messagesReceived=0,fromTcpMessages=0,fromTcpTotalBytes=0,packDurationTotalNanos=0,fromUdpMessages=0,decompressDurationTotalNanos=0,decompressCount=0,unpackCount=0,compressAfterTotalBytes=0,packCount=0,defaultBufferMaxBytes=0,compressDurationMaxNanos=0,queueMaxSize=0,fromTcpMaxBytes=0,fromUdpTotalBytes=0,decompressDurationMaxNanos=0,packDurationMaxNanos=0,queueOverflows=0,compressCount=0,compressDurationTotalNanos=0,allBuffersMaxBytes=0,fromUdpMaxBytes=0,unparsedDropped=0,unpackDurationTotalNanos=0,configReloads=0,fromTcpNewConnections=0,queueChunksCreated=0 1536478714733216000
+        assertEquals(
+            "beholder field-values-and-nanos",
+            received[0].getStringField("influxLineProtocolPayload").replace("([a-zA-Z]+=\\d+,)*[a-zA-Z]+=\\d+ \\d{19}$".toRegex(), "field-values-and-nanos")
+        )
+    }
+
+    @Test
+    fun testStatsLineProtocolTags() {
+        val received = receiveMessagesWithConfig(
+            "set \$host somehost; set \$animal cat; parse beholder-stats",
+            1,
+            { it.topLevelInput.addMessage(Message()) }
+        )
+
+        assertEquals(
+            "beholder,animal=cat,host=somehost field-values-and-nanos",
+            received[0].getStringField("influxLineProtocolPayload").replace("([a-zA-Z]+=\\d+,)*[a-zA-Z]+=\\d+ \\d{19}$".toRegex(), "field-values-and-nanos")
         )
     }
 

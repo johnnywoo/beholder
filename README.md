@@ -540,10 +540,29 @@ Fields produced by `parse beholder-stats`:
 * `$unparsedDropped`              — Number of messages dropped due to parse errors
 * `$uptimeSeconds`                — Uptime in seconds
 * `$payload`                      — A summary of all these stats
+* `$influxLineProtocolPayload`    — An InfluxDB line protocol payload with all stats
 
 All counter stats are rotated: numbers are reset to 0 every time `parse beholder-stats` happens.
 If you have multiple `parse beholder-stats` commands in your config,
 they will have their own counters so they don't reset each other.
+
+`$influxLineProtocolPayload` will also take fields without whitespace in values and convert those to Influx measurement tags.
+This field will have a value like this: `beholder,tag=value,tag=value uptimeSeconds=0,... 1536478714733216000`
+
+An easy way to monitor Beholder status is to feed the stats into InfluxDB and then visualize those with e.g. Grafana.
+
+    flow {
+        from timer 30 seconds;
+
+        # these fields will become tags in Influx
+        set $host host;
+        set $tag value;
+        keep $host $tag; # Do not create useless tags like 'date'
+
+        parse beholder-stats;
+        set $payload $influxLineProtocolPayload;
+        to udp influxdb-host:8089;
+    }
 
 ### `flow` — creates isolated flows of messages
 

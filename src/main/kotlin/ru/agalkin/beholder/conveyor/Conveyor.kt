@@ -1,14 +1,16 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.conveyor
 
 /// import ru.agalkin.beholder.formatters.JsonFormatter
+import ru.agalkin.beholder.BeholderException
+import ru.agalkin.beholder.Message
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 class Conveyor private constructor(baseConveyor: Conveyor? = null) {
-    private val steps: MutableList<Step> = baseConveyor?.steps ?: CopyOnWriteArrayList()
-    private val instructions: MutableList<Long> = baseConveyor?.instructions ?: CopyOnWriteArrayList()
+    private val steps: StepList = baseConveyor?.steps ?: StepList()
+    private val instructions: InstructionList = baseConveyor?.instructions ?: InstructionList()
     private val inputs: MutableList<InputImpl> = baseConveyor?.inputs ?: CopyOnWriteArrayList()
 
     private val isReachable = AtomicBoolean(false)
@@ -17,24 +19,6 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
     private val forkStepId = 1
     private val conditionalStepId = 2
 
-    init {
-        synchronized(steps) {
-            if (instructions.size == 0) {
-                // Номера инструкций должны начинаться с 1, чтобы проще было определять отсутствие инструкции
-                instructions.add(-1) // id 0
-            }
-
-            if (steps.size == 0) {
-                // Номера шагов должны начинаться с 1, чтобы проще было определять отсутствие шага
-                steps.add(FakeStep) // id 0
-
-                // Добавляем специальные шаги
-                steps.add(FakeStep) // forkStepId 1
-                steps.add(FakeStep) // conditionalStepId 2
-            }
-        }
-    }
-
     fun addStep(step: Step) {
         if (!isReachable.get()) {
             return
@@ -42,25 +26,18 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
 
         synchronized(steps) {
             // Добавляем новый шаг
-            val addedStepId = insertStep(step)
+            val addedStepId = steps.add(step)
 
             // Добавляем инструкцию с этим шагом
             addChainedInstruction(addedStepId, 0)
         }
     }
 
-    private fun insertStep(step: Step): Int {
-        // Добавляем новый шаг
-        steps.add(step)
-        return steps.size - 1
-    }
-
     private fun addInstruction(stepId: Int, nextInstructionId: Int): Int {
         /// println("addInstruction($stepId, $nextInstructionId) prev $prevInstructionId")
 
         // Добавляем новую инструкцию
-        instructions.add(createInstructionValue(stepId, nextInstructionId))
-        val addedInstructionId = instructions.size - 1
+        val addedInstructionId = instructions.add(createInstructionValue(stepId, nextInstructionId))
 
         lastInstructionId.set(addedInstructionId)
 
@@ -99,7 +76,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         return (gotoInstructionId.toLong() shl 32) + stepId
     }
 
-    fun addInput(description: String): Input {
+    fun addInput(description: String): ConveyorInput {
         synchronized(steps) {
             val input = insertInput(description)
             inputs.add(input)
@@ -114,7 +91,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         return InputImpl(addChainedInstruction(0, 0), description)
     }
 
-    fun terminateByMergingIntoInput(input: Input): Conveyor {
+    fun terminateByMergingIntoInput(input: ConveyorInput): Conveyor {
         if (!isReachable.get()) {
             return this
         }
@@ -124,7 +101,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
                 // Надо добавить инструкцию, у которой goto будет на требуемое место
                 addChainedInstruction(0, input.instructionId)
             } else {
-                // Снаружи зачем-то понадобилось сделать свой Input.
+                // Снаружи зачем-то понадобилось сделать свой ConveyorInput.
                 // Придётся им воспользоваться.
                 addStep(InputStep(input))
             }
@@ -133,7 +110,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         return createRelatedConveyor()
     }
 
-    fun addConditions(conditions: List<Pair<Step, (Conveyor)->Conveyor>>): Conveyor {
+    fun addConditions(conditions: List<Pair<Step, (Conveyor) -> Conveyor>>): Conveyor {
         // conditional step = execute +1, if it dropped goto conditional
         //
         // 0 conditional goto 3
@@ -141,7 +118,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         // 2 (case 1 subcommands) goto Z
         // 3 conditional goto 6
         // 4 (case 2 condition) goto +1
-        // 5 (case 2 subcommands) Z
+        // 5 (case 2 subcommands) goto Z
         // 6 (last case condition) goto +1
         // 7 (last case subcommands) goto +1
         // Z
@@ -176,13 +153,13 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
                     conveyor = conveyor.createRelatedConveyor()
                     conveyor.isReachable.set(true)
 
-                    val addedStepId = conveyor.insertStep(conditionBlock)
+                    val addedStepId = conveyor.steps.add(conditionBlock)
                     conveyor.addChainedInstruction(addedStepId, 0)
                 } else {
                     conveyor = conveyor.createRelatedConveyor()
                     conveyor.isReachable.set(true)
 
-                    val addedStepId = conveyor.insertStep(conditionBlock)
+                    val addedStepId = conveyor.steps.add(conditionBlock)
                     val conditionalInstructionId = conveyor.addChainedInstruction(addedStepId, 0)
 
                     if (prevConditionalInstructionId != 0) {
@@ -228,13 +205,16 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         = Conveyor(this)
 
     fun dumpInstructions() {
-        for (id in instructions.indices.drop(1)) {
+        if (instructions.getSize() <= 1) {
+            return
+        }
+        for (id in 1 until instructions.getSize()) {
             val gotoId = (instructions[id] shr 32).toInt()
             val stepId = (instructions[id] and ((1L shl 32) - 1)).toInt()
 
             for (input in inputs) {
                 if (input.instructionId == id) {
-                    println("[input ${input.descrption}]")
+                    println("[input ${input.description}]")
                 }
             }
 
@@ -252,14 +232,12 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         }
     }
 
-    interface Input {
-        fun addMessage(message: Message)
-    }
-
-    private inner class InputImpl(val instructionId: Int, val descrption: String) : Input {
+    private inner class InputImpl(val instructionId: Int, val description: String) : ConveyorInput {
         override fun addMessage(message: Message) {
             /// if (nest == 0) dumpInstructions()
 
+            val stepsArray = steps.array
+            val instructionsArray = instructions.array
 
             /// nest++
 
@@ -280,7 +258,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
                 /// debug("=== FORK START ===")
 
                 while (gotoInstructionId != 0) {
-                    val instruction = instructions[gotoInstructionId]
+                    val instruction = instructionsArray[gotoInstructionId]
 
                     val currentInstructionId = gotoInstructionId
 
@@ -309,7 +287,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
                             val gotoIfDroppedInstructionId = gotoInstructionId
                             val conditionInstructionId = currentInstructionId + 1
 
-                            val conditionInstruction = instructions[conditionInstructionId]
+                            val conditionInstruction = instructionsArray[conditionInstructionId]
 
                             gotoInstructionId = (conditionInstruction shr 32).toInt()
                             val conditionStepId = (conditionInstruction and ((1L shl 32) - 1)).toInt()
@@ -317,7 +295,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
                             /// debug("~ goto if dropped $gotoIfDroppedInstructionId")
                             /// debug("~ goto if not dropped $gotoInstructionId")
 
-                            val conditionStep = steps[conditionStepId]
+                            val conditionStep = stepsArray[conditionStepId]
                             /// debug("~ condition step $conditionStepId ${conditionStep.getDescription()}")
                             if (conditionStep.execute(currentMessage) == StepResult.DROP) {
                                 /// debug("~ condition returned DROP")
@@ -326,7 +304,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
                         }
                         else -> {
                             // debug("~ lambda")
-                            val step = steps[stepId]
+                            val step = stepsArray[stepId]
                             if (step.execute(currentMessage) == StepResult.DROP) {
                                 // Кончился текущий форк
                                 gotoInstructionId = 0
@@ -351,21 +329,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         }
     }
 
-    interface Step {
-        fun execute(message: Message): StepResult
-        fun getDescription(): String
-            = "step"
-    }
-
-    object FakeStep : Step {
-        override fun execute(message: Message)
-            = StepResult.CONTINUE
-
-        override fun getDescription()
-            = "Fake step"
-    }
-
-    class InputStep(private val input: Input) : Step {
+    private class InputStep(private val input: ConveyorInput) : Step {
         override fun execute(message: Message): StepResult {
             input.addMessage(message)
             return StepResult.CONTINUE
@@ -375,8 +339,60 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
             = "add message into input"
     }
 
-    enum class StepResult {
-        CONTINUE, DROP
+    private class StepList {
+        private val list = mutableListOf<Step>()
+        @Volatile var array: Array<Step> = arrayOf()
+
+        init {
+            // Номера шагов должны начинаться с 1, чтобы проще было определять отсутствие шага
+            add(FakeStep) // id 0
+
+            // Добавляем специальные шаги
+            add(FakeStep) // forkStepId 1
+            add(FakeStep) // conditionalStepId 2
+        }
+
+        fun add(element: Step): Int {
+            return synchronized(this) {
+                list.add(element)
+                array = list.toTypedArray()
+                list.size - 1
+            }
+        }
+
+        operator fun get(id: Int)
+            = synchronized(this) { list[id] }
+    }
+
+    private class InstructionList {
+        private val list = mutableListOf<Long>()
+        @Volatile var array: LongArray = longArrayOf()
+
+        init {
+            // Номера инструкций должны начинаться с 1, чтобы проще было определять отсутствие инструкции
+            add(-1)
+        }
+
+        fun getSize()
+            = synchronized(this) { list.size }
+
+        fun add(element: Long): Int {
+            return synchronized(this) {
+                list.add(element)
+                array = list.toLongArray()
+                list.size - 1
+            }
+        }
+
+        operator fun get(id: Int)
+            = synchronized(this) { list[id] }
+
+        operator fun set(id: Int, value: Long) {
+            synchronized(this) {
+                list[id] = value
+                array = list.toLongArray()
+            }
+        }
     }
 
     companion object {

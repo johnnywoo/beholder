@@ -1,13 +1,14 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Conveyor
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
+import ru.agalkin.beholder.conveyor.ConveyorInput
 
 class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val source: Source
@@ -57,7 +58,7 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
     override fun stop()
         = source.stop()
 
-    private lateinit var conveyorInput: Conveyor.Input
+    private lateinit var conveyorInput: ConveyorInput
 
     override fun buildConveyor(conveyor: Conveyor): Conveyor {
         conveyorInput = conveyor.addInput(getDefinition(includeSubcommands = false))
@@ -101,7 +102,7 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
 
     private inner class TimerSource(intervalSeconds: Int) : Source {
         private var secondsToSkip = 0
-        private val timerInput = object : Conveyor.Input {
+        private val timerInput = object : ConveyorInput {
             override fun addMessage(message: Message) {
                 if (secondsToSkip <= 0) {
                     secondsToSkip = intervalSeconds

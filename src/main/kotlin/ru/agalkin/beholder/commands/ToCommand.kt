@@ -1,12 +1,14 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Conveyor
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
+import ru.agalkin.beholder.conveyor.Step
+import ru.agalkin.beholder.conveyor.StepResult
 import ru.agalkin.beholder.formatters.TemplateFormatter
 
 class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
@@ -62,7 +64,7 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
     }
 
 
-    private abstract inner class Destination : Conveyor.Step {
+    private abstract inner class Destination : Step {
         open fun start() {}
         open fun stop() {}
 
@@ -71,9 +73,9 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
     }
 
     private inner class StdoutDestination(private val template: TemplateFormatter) : Destination() {
-        override fun execute(message: Message): Conveyor.StepResult {
+        override fun execute(message: Message): StepResult {
             print(template.formatMessage(message).withNewlineAtEnd().toString())
-            return Conveyor.StepResult.CONTINUE
+            return StepResult.CONTINUE
         }
     }
 
@@ -82,28 +84,28 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
         private val dataTemplate: TemplateFormatter
     ) : Destination() {
 
-        override fun execute(message: Message): Conveyor.StepResult {
+        override fun execute(message: Message): StepResult {
             val sender = app.fileSenders.getSender(filenameTemplate.formatMessage(message).toString())
             sender.writeMessagePayload(dataTemplate.formatMessage(message).withNewlineAtEnd())
-            return Conveyor.StepResult.CONTINUE
+            return StepResult.CONTINUE
         }
     }
 
     private inner class UdpDestination(address: Address, private val template: TemplateFormatter) : Destination() {
         private val sender = app.udpSenders.getSender(address)
 
-        override fun execute(message: Message): Conveyor.StepResult {
+        override fun execute(message: Message): StepResult {
             sender.writeMessagePayload(template.formatMessage(message))
-            return Conveyor.StepResult.CONTINUE
+            return StepResult.CONTINUE
         }
     }
 
     private inner class TcpDestination(address: Address, private val template: TemplateFormatter) : Destination() {
         private val sender = app.tcpSenders.getSender(address)
 
-        override fun execute(message: Message): Conveyor.StepResult {
+        override fun execute(message: Message): StepResult {
             sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())
-            return Conveyor.StepResult.CONTINUE
+            return StepResult.CONTINUE
         }
 
         override fun start() {
@@ -118,9 +120,9 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
     private inner class ShellDestination(shellCommand: String, private val template: TemplateFormatter) : Destination() {
         private val sender = app.shellSenders.createSender(shellCommand)
 
-        override fun execute(message: Message): Conveyor.StepResult {
+        override fun execute(message: Message): StepResult {
             sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())
-            return Conveyor.StepResult.CONTINUE
+            return StepResult.CONTINUE
         }
     }
 }

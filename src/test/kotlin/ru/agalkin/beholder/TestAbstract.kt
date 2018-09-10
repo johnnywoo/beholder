@@ -5,6 +5,8 @@ import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.expressions.CommandAbstract
 import ru.agalkin.beholder.config.expressions.RootCommand
 import ru.agalkin.beholder.config.parser.ParseException
+import ru.agalkin.beholder.conveyor.Step
+import ru.agalkin.beholder.conveyor.StepResult
 import ru.agalkin.beholder.formatters.DumpFormatter
 import java.net.*
 import kotlin.test.assertEquals
@@ -31,10 +33,10 @@ abstract class TestAbstract {
         return processedMessage
     }
 
-    protected fun conveyorStepOf(block: (Message) -> Any?): Conveyor.Step {
-        return object : Conveyor.Step {
+    protected fun conveyorStepOf(block: (Message) -> Any?): Step {
+        return object : Step {
             override fun execute(message: Message)
-                = if (block(message) == Conveyor.StepResult.DROP) Conveyor.StepResult.DROP else Conveyor.StepResult.CONTINUE
+                = if (block(message) == StepResult.DROP) StepResult.DROP else StepResult.CONTINUE
 
             override fun getDescription()
                 = "test callback"

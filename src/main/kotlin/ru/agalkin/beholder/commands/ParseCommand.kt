@@ -1,11 +1,14 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Conveyor
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
+import ru.agalkin.beholder.conveyor.ConveyorInput
+import ru.agalkin.beholder.conveyor.Step
+import ru.agalkin.beholder.conveyor.StepResult
 import ru.agalkin.beholder.inflaters.*
 import ru.agalkin.beholder.stats.Stats
 
@@ -38,21 +41,21 @@ class ParseCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(ap
         super.stop()
     }
 
-    private inner class ParseInplaceStep : Conveyor.Step {
-        override fun execute(message: Message): Conveyor.StepResult {
+    private inner class ParseInplaceStep : Step {
+        override fun execute(message: Message): StepResult {
             if (!(inflater as InplaceInflater).inflateMessageFieldsInplace(message) && !shouldKeepUnparsed) {
                 Stats.reportUnparsedDropped()
-                return Conveyor.StepResult.DROP
+                return StepResult.DROP
             }
-            return Conveyor.StepResult.CONTINUE
+            return StepResult.CONTINUE
         }
 
         override fun getDescription()
             = getDefinition(includeSubcommands = false)
     }
 
-    private inner class ParseEmitStep(private val input: Conveyor.Input) : Conveyor.Step {
-        override fun execute(message: Message): Conveyor.StepResult {
+    private inner class ParseEmitStep(private val input: ConveyorInput) : Step {
+        override fun execute(message: Message): StepResult {
             val success = inflater.inflateMessageFields(message) {
                 input.addMessage(it)
             }
@@ -63,7 +66,7 @@ class ParseCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(ap
                     Stats.reportUnparsedDropped()
                 }
             }
-            return Conveyor.StepResult.DROP
+            return StepResult.DROP
         }
 
         override fun getDescription()

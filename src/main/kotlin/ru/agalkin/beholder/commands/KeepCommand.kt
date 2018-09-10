@@ -1,10 +1,12 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Conveyor
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
+import ru.agalkin.beholder.conveyor.Step
+import ru.agalkin.beholder.conveyor.StepResult
 
 class KeepCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val fieldsToKeep: Set<String>
@@ -25,12 +27,12 @@ class KeepCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
         fieldsToKeep = fieldNames
     }
 
-    private inner class KeepStep : Conveyor.Step {
-        override fun execute(message: Message): Conveyor.StepResult {
+    private inner class KeepStep : Step {
+        override fun execute(message: Message): StepResult {
             for (field in message.getFieldNames().minus(fieldsToKeep)) {
                 message.remove(field)
             }
-            return Conveyor.StepResult.CONTINUE
+            return StepResult.CONTINUE
         }
 
         override fun getDescription()

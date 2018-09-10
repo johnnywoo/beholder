@@ -1,20 +1,21 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.conveyor.ConveyorInput
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicBoolean
 
 class MessageRouter {
-    private val subscribers = CopyOnWriteArraySet<Conveyor.Input>()
+    private val subscribers = CopyOnWriteArraySet<ConveyorInput>()
     private val hasExactlyOneSubscriber = AtomicBoolean(false)
 
-    fun addSubscriber(subscriber: Conveyor.Input) {
+    fun addSubscriber(subscriber: ConveyorInput) {
         synchronized(subscribers) {
             subscribers.add(subscriber)
             hasExactlyOneSubscriber.set(subscribers.size == 1)
         }
     }
 
-    fun removeSubscriber(subscriber: Conveyor.Input) {
+    fun removeSubscriber(subscriber: ConveyorInput) {
         synchronized(subscribers) {
             subscribers.remove(subscriber)
             hasExactlyOneSubscriber.set(subscribers.size == 1)

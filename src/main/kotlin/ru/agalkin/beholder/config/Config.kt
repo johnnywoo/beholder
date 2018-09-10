@@ -1,7 +1,7 @@
 package ru.agalkin.beholder.config
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Conveyor
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.expressions.RootCommand
 import ru.agalkin.beholder.config.parser.Token

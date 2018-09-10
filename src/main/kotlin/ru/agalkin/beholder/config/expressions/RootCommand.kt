@@ -1,14 +1,15 @@
 package ru.agalkin.beholder.config.expressions
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Conveyor
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.commands.ConveyorCommandAbstract
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
+import ru.agalkin.beholder.conveyor.ConveyorInput
 
 class RootCommand(app: Beholder) : ConveyorCommandAbstract(app, RootArguments) {
-    lateinit var topLevelInput: Conveyor.Input
+    lateinit var topLevelInput: ConveyorInput
     lateinit var topLevelOutput: Conveyor
 
     override fun createSubcommand(args: Arguments): CommandAbstract? {

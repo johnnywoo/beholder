@@ -1,9 +1,11 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.Conveyor
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
+import ru.agalkin.beholder.conveyor.Step
+import ru.agalkin.beholder.conveyor.StepResult
 
 class SwitchDefaultCommand(
     app: Beholder,
@@ -18,15 +20,15 @@ class SwitchDefaultCommand(
         return currentConveyor
     }
 
-    private inner class SwitchDefaultStep : Conveyor.Step {
-        override fun execute(message: Message): Conveyor.StepResult
-            = Conveyor.StepResult.CONTINUE
+    private inner class SwitchDefaultStep : Step {
+        override fun execute(message: Message): StepResult
+            = StepResult.CONTINUE
 
         override fun getDescription()
             = getDefinition(includeSubcommands = false)
     }
 
-    override fun getConditionStep(): Conveyor.Step {
+    override fun getConditionStep(): Step {
         return SwitchDefaultStep()
     }
 }

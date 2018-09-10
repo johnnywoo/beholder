@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.inflaters
 
 import ru.agalkin.beholder.Fieldpack
+import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 
 class FieldpackInflater : Inflater {
@@ -14,6 +15,7 @@ class FieldpackInflater : Inflater {
 
             return true
         } catch (e: Throwable) {
+            InternalLog.exception(e)
             return false
         }
     }

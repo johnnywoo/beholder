@@ -65,6 +65,20 @@ class FlowTest : TestAbstract() {
     }
 
     @Test
+    fun testJoinRoutingInfiniteLoop() {
+        val message = Message()
+        message["path"] = "start"
+
+        val config = "switch cat { case dog {} default {} } " +
+            "join { from udp 3820; } " +
+            "tee { } "
+
+        receiveMessagesWithConfig(config, 1) {
+            sendToUdp(3820, "cat")
+        }
+    }
+
+    @Test
     fun testFlowRouting() {
         val message = Message()
         message["path"] = "start"

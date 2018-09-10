@@ -48,12 +48,6 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         val prevInstructionId = lastInstructionId.get()
         /// println("addChainedInstruction($stepId, $nextInstructionId) prev $prevInstructionId")
 
-        if (prevInstructionId > 0 && instructions[prevInstructionId] == 0L) {
-            // В предыдущей инструкции нет ни шага, ни goto. Можно туда и прописаться.
-            instructions[prevInstructionId] = createInstructionValue(stepId, nextInstructionId)
-            return prevInstructionId
-        }
-
         val addedInstructionId = addInstruction(stepId, nextInstructionId)
 
         // В предыдущую инструкцию этого конвейера теперь можно прописать нашу новую инструкцию в качестве следующей
@@ -62,18 +56,6 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         }
 
         return addedInstructionId
-    }
-
-    private fun createInstructionValue(stepId: Int, gotoInstructionId: Int): Long {
-        val maxStepId = (1L shl 31) - 1 // 1 бит там занят знаком
-        if (stepId > maxStepId) {
-            throw BeholderException("Conveyor step id $stepId is more than $maxStepId")
-        }
-        val maxInstructionId = (1L shl 31) - 1 // 1 бит там занят знаком
-        if (gotoInstructionId > maxInstructionId) {
-            throw BeholderException("Conveyor instruction id $gotoInstructionId is more than $maxInstructionId")
-        }
-        return (gotoInstructionId.toLong() shl 32) + stepId
     }
 
     fun addInput(description: String): ConveyorInput {
@@ -208,7 +190,14 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         if (instructions.getSize() <= 1) {
             return
         }
-        for (id in 1 until instructions.getSize()) {
+        println("=== built ===")
+        dumpInstructionCollection(instructions.toList())
+        println("=== optimized ===")
+        dumpInstructionCollection(instructions.array.toList())
+    }
+
+    private fun dumpInstructionCollection(instructions: List<Long>) {
+        for (id in 1 until instructions.size) {
             val gotoId = (instructions[id] shr 32).toInt()
             val stepId = (instructions[id] and ((1L shl 32) - 1)).toInt()
 
@@ -379,7 +368,7 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         fun add(element: Long): Int {
             return synchronized(this) {
                 list.add(element)
-                array = list.toLongArray()
+                updateArray()
                 list.size - 1
             }
         }
@@ -390,8 +379,47 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
         operator fun set(id: Int, value: Long) {
             synchronized(this) {
                 list[id] = value
-                array = list.toLongArray()
+                updateArray()
             }
+        }
+
+        fun toList()
+            = list
+
+        private fun updateArray() {
+            val optimizedInstructions = list.toLongArray()
+
+            /// println(" @ starting optimizations")
+            var isModified = true
+            while (isModified) {
+                /// println(" @ loop")
+                isModified = false
+
+                for (i in 1 until optimizedInstructions.size) {
+                    val instruction = optimizedInstructions[i]
+                    val gotoId = (instruction shr 32).toInt()
+                    val stepId = (instruction and ((1L shl 32) - 1)).toInt()
+
+                    // Последняя инструкция = оптимизировать нечего
+                    if (gotoId == 0) {
+                        continue
+                    }
+
+                    val nextInstruction = optimizedInstructions[gotoId]
+                    val nextGotoId = (nextInstruction shr 32).toInt()
+                    val nextStepId = (nextInstruction and ((1L shl 32) - 1)).toInt()
+
+                    // Следующая инструкция — просто goto дальше, без шагов.
+                    // Можно её пропустить.
+                    if (nextStepId == 0) {
+                        optimizedInstructions[i] = createInstructionValue(stepId, nextGotoId)
+                        isModified = true
+                        /// println(" @ noop instruction")
+                    }
+                }
+            }
+
+            array = optimizedInstructions
         }
     }
 
@@ -400,5 +428,17 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
 
         fun createInitialConveyor()
             = Conveyor()
+
+        fun createInstructionValue(stepId: Int, gotoInstructionId: Int): Long {
+            val maxStepId = (1L shl 31) - 1 // 1 бит там занят знаком
+            if (stepId > maxStepId) {
+                throw BeholderException("Conveyor step id $stepId is more than $maxStepId")
+            }
+            val maxInstructionId = (1L shl 31) - 1 // 1 бит там занят знаком
+            if (gotoInstructionId > maxInstructionId) {
+                throw BeholderException("Conveyor instruction id $gotoInstructionId is more than $maxInstructionId")
+            }
+            return (gotoInstructionId.toLong() shl 32) + stepId
+        }
     }
 }

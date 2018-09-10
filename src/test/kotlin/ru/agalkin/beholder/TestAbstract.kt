@@ -67,7 +67,7 @@ abstract class TestAbstract {
 
             var timeSpentMillis = 0
             while (timeSpentMillis < 300) {
-                if (processedMessages.size == count) {
+                if (processedMessages.size > count) {
                     break
                 }
                 Thread.sleep(50)

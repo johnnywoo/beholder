@@ -9,6 +9,7 @@ import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.conveyor.ConveyorInput
+import java.util.concurrent.atomic.AtomicLong
 
 class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val source: Source
@@ -101,14 +102,13 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
     }
 
     private inner class TimerSource(intervalSeconds: Int) : Source {
-        private var secondsToSkip = 0
+        private val nextMillis = AtomicLong(System.currentTimeMillis())
         private val timerInput = object : ConveyorInput {
             override fun addMessage(message: Message) {
-                if (secondsToSkip <= 0) {
-                    secondsToSkip = intervalSeconds
+                if (nextMillis.get() <= System.currentTimeMillis()) {
+                    nextMillis.addAndGet(intervalSeconds * 1000L)
                     conveyorInput.addMessage(message)
                 }
-                secondsToSkip--
             }
         }
 

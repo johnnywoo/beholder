@@ -93,13 +93,15 @@ Send internal stats (metrics) into Influx over UDP:
 
     flow {
         from timer 30 seconds;
-        parse beholder-stats;
-        parse each-field-as-message;
-        switch $value { case ~^[0-9]+$~ {} } # drop messages with non-numeric values like $date
+
+        # These fields will become tags in Influx
         set $host host;
-        set $nanos time as unixtime-nanoseconds;
-        set $payload 'beholder,host=$host $key=$value $nanos';
-        to udp influxdb-address:8089;
+        set $tag value;
+        keep $host $tag; # Do not create useless tags like 'date'
+
+        parse beholder-stats;
+        set $payload $influxLineProtocolPayload;
+        to udp influxdb-host:8089;
     }
 
 
@@ -255,7 +257,7 @@ Fields produced by `from internal-log`:
 
 * `$date`     — ISO date when the message was emitted (example: 2017-11-26T16:22:31+03:00)
 * `$from`     — 'beholder://internal-log'
-* `$severity` — Severity of messages
+* `$severity` — Severity of messages (number)
 * `$program`  — 'beholder'
 * `$payload`  — Log message text
 
@@ -315,7 +317,7 @@ incoming messages before passing them into the script. Test your scripts early!
 
     #!/usr/bin/php
     <?php
-    // example log receiver script in PHP
+    // Example log receiver script in PHP
     while ($f = fgets(STDIN)) {
         file_put_contents('receiver.log', date('r') . ' ' . $f, FILE_APPEND);
     }
@@ -432,15 +434,15 @@ Drops the message from processing. Useful inside `switch`:
     switch $format {
         case ~json~ {
             parse json;
-            # message gets out of `switch` into messages.log
+            # Message gets out of `switch` into messages.log
         }
         case ~syslog~ {
             parse syslog;
-            # message gets out of `switch` into messages.log
+            # Message gets out of `switch` into messages.log
         }
         case ~special-case~ {
             to udp 1234;
-            drop; # message does not go to messages.log
+            drop; # Message does not go to messages.log
         }
     }
     to file messages.log;
@@ -554,7 +556,7 @@ An easy way to monitor Beholder status is to feed the stats into InfluxDB and th
     flow {
         from timer 30 seconds;
 
-        # these fields will become tags in Influx
+        # These fields will become tags in Influx
         set $host host;
         set $tag value;
         keep $host $tag; # Do not create useless tags like 'date'
@@ -578,7 +580,7 @@ Subcommands: all commands are allowed.
     from udp 1001;
     to tcp 1.2.3.4:1002;
     from udp 1003;
-    to tcp 1.2.3.4:1004; # receives messages from both ports 1001 AND 1003!
+    to tcp 1.2.3.4:1004; # Receives messages from both ports 1001 AND 1003!
 
     # separate flows
     flow {from udp 1001; to tcp 1.2.3.4:1002}
@@ -588,13 +590,13 @@ Message routing for `flow`:
 
     from udp 1001;
     flow {
-        # incoming messages are only emitted out of `flow`,
-        # subcommands do not receive them
+        # Incoming messages are only emitted out of `flow`,
+        # subcommands do not receive them.
         from udp 1002;
         to file some.log; # receives messages only from port 1002
-        # after last subcommand messages are dropped
+        # After last subcommand messages are dropped
     }
-    to stdout; # receives messages only from port 1001
+    to stdout; # Receives messages only from port 1001
 
 
 ### `tee` — applies commands to copies of messages
@@ -617,7 +619,7 @@ as if nothing ever happened; the copy is passed through subcommands and then dro
     # If we just inserted dump commands here, they would modify the message,
     # which we do not want. Instead, we can use `tee`.
     tee {
-        set $payload dump; # only applied to the copy, not to original message
+        set $payload dump; # Only applied to the copy, not to original message
         to file dump.log;
     }
 
@@ -628,13 +630,13 @@ Message routing for `tee`:
 
     from udp 1001;
     tee {
-        # incoming messages are duplicated:
-        # one is emitted out, one is passed into first subcommand
+        # Incoming messages are duplicated:
+        # one is emitted out, one is passed into first subcommand.
         from udp 1002;
-        to file some.log; # receives messages from ports 1001 AND 1002
-        # after last subcommand messages are dropped
+        to file some.log; # Receives messages from ports 1001 AND 1002
+        # After last subcommand messages are dropped
     }
-    to stdout; # this command receives messages only from port 1001
+    to stdout; # This command receives messages only from port 1001
 
 
 ### `join` — produces messages from subcommands
@@ -653,13 +655,13 @@ Message routing for `join`:
 
     from udp 1001;
     join {
-        # incoming messages are only emitted out of `join`,
-        # subcommands do not receive them
+        # Incoming messages are only emitted out of `join`,
+        # subcommands do not receive them.
         from udp 1002;
-        to file some.log; # receives messages only from port 1002
-        # after last subcommand messages are emitted out of `join`
+        to file some.log; # Receives messages only from port 1002
+        # After last subcommand messages are emitted out of `join`
     }
-    to stdout; # receives messages from ports 1001 AND 1002
+    to stdout; # Receives messages from ports 1001 AND 1002
 
 
 ### `switch` — conditional processing
@@ -734,4 +736,4 @@ there are lots of things on JVM that eat bytes. Watch your metrics!
 
 When a queue chunk is buffered, it is compressed. You can turn off compression with `buffer_compression off`.
 
-    buffer_compression lz4-fast; # one of: lz4-fast, off
+    buffer_compression lz4-fast; # One of: lz4-fast, off

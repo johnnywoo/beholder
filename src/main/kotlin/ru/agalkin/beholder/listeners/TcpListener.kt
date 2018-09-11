@@ -1,6 +1,8 @@
 package ru.agalkin.beholder.listeners
 
-import ru.agalkin.beholder.*
+import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.BeholderException
+import ru.agalkin.beholder.MessageRouter
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.queue.MessageQueue
 import ru.agalkin.beholder.queue.Received

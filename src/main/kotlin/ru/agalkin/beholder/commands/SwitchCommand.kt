@@ -1,10 +1,10 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandAbstract
 import ru.agalkin.beholder.config.expressions.CommandException
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.conveyor.Step
 
 class SwitchCommand(app: Beholder, arguments: Arguments) : CommandAbstract(app, arguments) {

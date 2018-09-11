@@ -2,7 +2,6 @@ package ru.agalkin.beholder
 
 import ru.agalkin.beholder.formatters.TimeFormatter
 import java.time.ZonedDateTime
-import java.time.format.DateTimeParseException
 import java.util.concurrent.atomic.AtomicLong
 
 private val createdMessagesCount = AtomicLong(0)

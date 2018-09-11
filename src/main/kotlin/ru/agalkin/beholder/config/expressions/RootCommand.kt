@@ -1,11 +1,11 @@
 package ru.agalkin.beholder.config.expressions
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.commands.ConveyorCommandAbstract
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.config.parser.Token
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.conveyor.ConveyorInput
 
 class RootCommand(app: Beholder) : ConveyorCommandAbstract(app, RootArguments) {

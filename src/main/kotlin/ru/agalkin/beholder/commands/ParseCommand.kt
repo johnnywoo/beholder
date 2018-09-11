@@ -1,11 +1,11 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.CommandException
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
+import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.conveyor.ConveyorInput
 import ru.agalkin.beholder.conveyor.Step
 import ru.agalkin.beholder.conveyor.StepResult

@@ -1,8 +1,9 @@
 package ru.agalkin.beholder.config.expressions
 
-import ru.agalkin.beholder.*
+import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.config.parser.*
 import ru.agalkin.beholder.conveyor.Conveyor
+import ru.agalkin.beholder.listToString
 
 /**
  * Выражение (команда) из токенов

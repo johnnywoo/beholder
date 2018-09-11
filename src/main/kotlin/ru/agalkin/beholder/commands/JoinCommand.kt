@@ -1,8 +1,8 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.config.expressions.Arguments
+import ru.agalkin.beholder.conveyor.Conveyor
 
 open class JoinCommand(app: Beholder, arguments: Arguments) : ConveyorCommandAbstract(app, arguments.end()) {
     override fun buildConveyor(conveyor: Conveyor): Conveyor {

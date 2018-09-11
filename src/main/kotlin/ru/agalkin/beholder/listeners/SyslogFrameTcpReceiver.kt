@@ -3,27 +3,42 @@ package ru.agalkin.beholder.listeners
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.BeholderException
 import ru.agalkin.beholder.FieldValue
+import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.queue.MessageQueue
 import ru.agalkin.beholder.stats.Stats
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 
-class SyslogFrameTcpReceiver(app: Beholder, queue: MessageQueue) : TcpMessageReceiverAbstract(app, queue) {
-    override fun receiveMessage(socketChannel: SocketChannel) {
-        val lengthStr = readLength(socketChannel)
-        if (lengthStr == null) {
-            return
+class SyslogFrameTcpReceiver(
+    app: Beholder,
+    queue: MessageQueue,
+    private val address: Address
+) : TcpMessageReceiverAbstract(app, queue), SelectorThread.Callback {
+
+    override fun getAddress()
+        = address
+
+    override fun processSocketChannel(channel: SocketChannel) {
+        try {
+            val lengthStr = readLength(channel)
+            if (lengthStr == null) {
+                return
+            }
+            val length = lengthStr.toIntOrNull()
+            if (length == null || length == 0) {
+                return
+            }
+
+            val data = readData(channel, length)
+
+            createMessage(FieldValue.fromByteArray(data, data.size), channel)
+
+            Stats.reportTcpReceived((lengthStr.length + 1 + data.size).toLong())
+        } catch (e: Throwable) {
+            InternalLog.exception(e)
+            channel.close()
         }
-        val length = lengthStr.toIntOrNull()
-        if (length == null || length == 0) {
-            return
-        }
-
-        val data = readData(socketChannel, length)
-
-        createMessage(FieldValue.fromByteArray(data, data.size), socketChannel)
-
-        Stats.reportTcpReceived((lengthStr.length + 1 + data.size).toLong())
     }
 
     private fun readLength(input: SocketChannel): String? {

@@ -12,8 +12,6 @@ abstract class TcpMessageReceiverAbstract(
     private val app: Beholder,
     private val queue: MessageQueue
 ) {
-    abstract fun receiveMessage(socketChannel: SocketChannel)
-
     protected fun createMessage(data: FieldValue, channel: SocketChannel) {
         val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
 

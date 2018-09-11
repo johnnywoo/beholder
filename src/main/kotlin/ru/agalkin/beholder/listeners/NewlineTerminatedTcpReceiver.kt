@@ -2,30 +2,45 @@ package ru.agalkin.beholder.listeners
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.FieldValue
+import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.queue.MessageQueue
 import ru.agalkin.beholder.stats.Stats
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 
-class NewlineTerminatedTcpReceiver(app: Beholder, queue: MessageQueue) : TcpMessageReceiverAbstract(app, queue) {
-    override fun receiveMessage(socketChannel: SocketChannel) {
-        val data = readTerminated(socketChannel, '\n')
-        if (data == null) {
-            return
-        }
-        if (data.isNotEmpty()) {
-            // do not include the newline in payload
-            var newlineLength = 0
-            if (data[data.size - 1].toChar() == '\n') {
-                newlineLength++
-                if (data.size >= 2 && data[data.size - 2].toChar() == '\r') {
-                    newlineLength++
-                }
+class NewlineTerminatedTcpReceiver(
+    app: Beholder,
+    queue: MessageQueue,
+    private val address: Address
+) : TcpMessageReceiverAbstract(app, queue), SelectorThread.Callback {
+
+    override fun getAddress()
+        = address
+
+    override fun processSocketChannel(channel: SocketChannel) {
+        try {
+            val data = readTerminated(channel, '\n')
+            if (data == null) {
+                return
             }
+            if (data.isNotEmpty()) {
+                // do not include the newline in payload
+                var newlineLength = 0
+                if (data[data.size - 1].toChar() == '\n') {
+                    newlineLength++
+                    if (data.size >= 2 && data[data.size - 2].toChar() == '\r') {
+                        newlineLength++
+                    }
+                }
 
-            createMessage(FieldValue.fromByteArray(data, data.size - newlineLength), socketChannel)
+                createMessage(FieldValue.fromByteArray(data, data.size - newlineLength), channel)
 
-            Stats.reportTcpReceived(data.size.toLong())
+                Stats.reportTcpReceived(data.size.toLong())
+            }
+        } catch (e: Throwable) {
+            InternalLog.exception(e)
+            channel.close()
         }
     }
 

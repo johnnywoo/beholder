@@ -45,12 +45,12 @@ class SelectorThread(private val app: Beholder) : Thread("selector${number.incre
         }
     }
 
-    fun addTcpListener(address: Address, block: (SocketChannel) -> Unit) {
+    fun addTcpListener(block: Callback) {
         runOperation {
             val channel = ServerSocketChannel.open()
-            channel.bind(address.toSocketAddress())
+            channel.bind(block.getAddress().toSocketAddress())
             channel.configureBlocking(false)
-            channel.register(selector, SelectionKey.OP_ACCEPT, Callback(address, block))
+            channel.register(selector, SelectionKey.OP_ACCEPT, block)
         }
     }
 
@@ -58,7 +58,7 @@ class SelectorThread(private val app: Beholder) : Thread("selector${number.incre
         runOperation {
             for (key in selector.keys()) {
                 val attachment = key.attachment()
-                if (attachment is Callback && attachment.address == address) {
+                if (attachment is Callback && attachment.getAddress() == address) {
                     try {
                         key.cancel()
                         key.channel().close()
@@ -128,7 +128,7 @@ class SelectorThread(private val app: Beholder) : Thread("selector${number.incre
                     // чтобы он перестал слушать этот канал
                     key.interestOps(0)
                     app.executor.execute {
-                        callback.run(channel)
+                        callback.processSocketChannel(channel)
                         if (key.isValid) {
                             key.interestOps(SelectionKey.OP_READ)
                         }
@@ -140,15 +140,9 @@ class SelectorThread(private val app: Beholder) : Thread("selector${number.incre
         }
     }
 
-    private class Callback(val address: Address, private val block: (SocketChannel) -> Unit) {
-        fun run(channel: SocketChannel) {
-            try {
-                block(channel)
-            } catch (e: Throwable) {
-                InternalLog.exception(e)
-                channel.close()
-            }
-        }
+    interface Callback {
+        fun getAddress(): Address
+        fun processSocketChannel(channel: SocketChannel)
     }
 }
 

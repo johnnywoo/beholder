@@ -19,9 +19,9 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
         Received.OK
     }
 
-    private val receiver = when (isSyslogFrame) {
-        true -> SyslogFrameTcpReceiver(app, queue)
-        else -> NewlineTerminatedTcpReceiver(app, queue)
+    private val receiver: SelectorThread.Callback = when (isSyslogFrame) {
+        true -> SyslogFrameTcpReceiver(app, queue, address)
+        else -> NewlineTerminatedTcpReceiver(app, queue, address)
     }
 
     fun destroy() {
@@ -31,9 +31,7 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
     }
 
     init {
-        app.selectorThread.addTcpListener(address) {
-            receiver.receiveMessage(it)
-        }
+        app.selectorThread.addTcpListener(receiver)
 
         app.afterReloadCallbacks.add(object : () -> Unit {
             override fun invoke() {

@@ -30,7 +30,7 @@ Config syntax, commands, options, behaviour, everything is going to be changed w
 
 For a quick start, use Docker:
 
-    docker run --rm -ti johnnywoo/beholder:0.1.320 beholder --config 'from timer; to stdout'
+    docker run --rm -ti johnnywoo/beholder:0.1.325 beholder --config 'from timer; to stdout'
 
 With that example config you should see Beholder print randomized messages every second.
 

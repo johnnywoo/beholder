@@ -108,7 +108,15 @@ class TimeFormatter(private val format: Format, private val dateSource: Template
 
     private class StableDatetimeFormat : Format("yyyy-MM-dd'T'HH:mm:ssXXX") {
         override fun format(date: ZonedDateTime): String {
-            return super.format(date).replace("Z$".toRegex(), "+00:00")
+            val formatted = super.format(date)
+            if (formatted[indexOfZ] == 'Z') {
+                return formatted.substring(0, indexOfZ) + "+00:00"
+            }
+            return formatted
+        }
+
+        companion object {
+            const val indexOfZ = "yyyy-MM-ddTHH:mm:ss".length
         }
     }
 

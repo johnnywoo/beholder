@@ -18,6 +18,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.atomic.AtomicLong
 
 const val BEHOLDER_SYSLOG_PROGRAM = "beholder"
 
@@ -134,9 +135,16 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
         }
     }
 
-    fun curDate(): ZonedDateTime
-        = ZonedDateTime.now(getTimezoneOption(ConfigOption.CREATE_DATES_IN_TIMEZONE))
+    @Volatile private var currentDateIso = ""
+    private val currentDateExpiresAtMillis = AtomicLong(0)
 
-    fun curDateIso(): String
-        = TimeFormatter.FORMAT_STABLE_DATETIME.format(curDate())
+    fun curDateIso(): String {
+        val millis = System.currentTimeMillis()
+        if (currentDateExpiresAtMillis.get() <= millis) {
+            val now = ZonedDateTime.now(getTimezoneOption(ConfigOption.CREATE_DATES_IN_TIMEZONE))
+            currentDateIso = TimeFormatter.FORMAT_STABLE_DATETIME.format(now)
+            currentDateExpiresAtMillis.set((now.toEpochSecond() + 1) * 1000)
+        }
+        return currentDateIso
+    }
 }

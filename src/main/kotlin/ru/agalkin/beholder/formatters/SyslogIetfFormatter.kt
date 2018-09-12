@@ -23,8 +23,13 @@ class SyslogIetfFormatter(private val app: Beholder) : Formatter {
         sb.append("<").append(facility * 8 + severity).append(">1 ")
 
         // time (received time for now)
-        val date = message.getDateField("date") ?: app.curDate()
-        sb.append(TimeFormatter.FORMAT_STABLE_DATETIME.format(date)).append(' ')
+        val date = message.getDateField("date")
+        if (date == null) {
+            sb.append(app.curDateIso())
+        } else {
+            sb.append(TimeFormatter.FORMAT_STABLE_DATETIME.format(date))
+        }
+        sb.append(' ')
 
         // host
         sb.append(message.getStringField("host", defaultHost)).append(' ')

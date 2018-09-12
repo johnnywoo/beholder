@@ -56,6 +56,8 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     var config: Config = configMaker(this)
 
     fun start() {
+        InternalLog.lastAppInstance.set(this)
+
         config.start()
 
         notifyAfterReload()

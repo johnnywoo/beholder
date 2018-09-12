@@ -7,10 +7,13 @@ import java.io.PrintStream
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.ZonedDateTime
+import java.util.concurrent.atomic.AtomicReference
 
 object InternalLog {
     private var stdout: PrintStream? = System.out
     private var stderr: PrintStream? = System.err
+
+    val lastAppInstance = AtomicReference<Beholder>()
 
     fun setStdout(printStream: PrintStream?) {
         stdout = printStream
@@ -52,27 +55,38 @@ object InternalLog {
             return
         }
 
-        val date    = ZonedDateTime.now()
-        val isoDate = TimeFormatter.FORMAT_STABLE_DATETIME.format(date)
+        // This date goes into stdout and file log.
+        // App config may not exist yet, so we have to use system timezone here.
+        val dateForRawLogging = ZonedDateTime.now()
+
+        // This date goes into messages (`from internal-log`),
+        // so we must respect timezone preferences from the config.
+        val isoDateForMessage: String
+        val app = lastAppInstance.get()
+        if (app != null) {
+            isoDateForMessage = app.curDateIso()
+        } else {
+            isoDateForMessage = TimeFormatter.FORMAT_STABLE_DATETIME.format(ZonedDateTime.now())
+        }
 
         val destination = when (Severity.WARNING.isMoreUrgentThan(severity)) {
             true  -> stdout
             false -> stderr
         }
         destination?.println(
-            TimeFormatter.FORMAT_TIME.format(date)
+            TimeFormatter.FORMAT_TIME.format(dateForRawLogging)
                 + " " + text
         )
 
         logFile?.appendText(
-            isoDate
+            TimeFormatter.FORMAT_STABLE_DATETIME.format(dateForRawLogging)
                 + " " + severity.name
                 + " " + addNewlineIfNeeded(text)
         )
 
         val message = Message()
 
-        message["date"]     = isoDate
+        message["date"]     = isoDateForMessage
         message["from"]     = "beholder://internal-log"
         message["payload"]  = text
         message["program"]  = BEHOLDER_SYSLOG_PROGRAM

@@ -3,31 +3,29 @@ package ru.agalkin.beholder.formatters
 import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.parser.ParseException
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 abstract class TemplateFormatter : Formatter {
     companion object {
-        private val regexp = Pattern.compile("(?>\\{\\$([a-z][a-z0-9_]*)}|\\$([a-z][a-z0-9_]*))", Pattern.CASE_INSENSITIVE)
-
         fun create(template: String): TemplateFormatter {
-            // template does not contain any fields
-            if (!hasTemplates(template)) {
-                return NoVariablesFormatter(template)
-            }
-            // whole template is $fieldName
-            val matcher = regexp.matcher(template)
-            if (matcher.matches()) {
-                return SingleFieldFormatter(matcher.group(1) ?: matcher.group(2))
+            val parsed = TemplateParser.parse(template, true)
+
+            if (parsed.size == 1) {
+                // template does not contain any fields
+                return NoVariablesFormatter(parsed.first())
             }
 
-            return InterpolateStringFormatter(template)
+            // whole template is $fieldName
+            if (parsed.size == 2 && parsed[0].isEmpty()) {
+                return SingleFieldFormatter(parsed[1])
+            }
+
+            return InterpolateStringFormatter(parsed)
         }
 
         val payloadFormatter: TemplateFormatter = PayloadFormatter()
 
         fun hasTemplates(string: String)
-            = regexp.matcher(string).find()
+            = TemplateParser.parse(string, true).size > 1
     }
 
     private class NoVariablesFormatter(template: String) : TemplateFormatter() {
@@ -46,23 +44,29 @@ abstract class TemplateFormatter : Formatter {
             = message.getPayloadValue()
     }
 
-    private class InterpolateStringFormatter(private val template: String) : TemplateFormatter() {
+    private class InterpolateStringFormatter(parsedTemplate: List<String>) : TemplateFormatter() {
+        private val parsedArray = parsedTemplate.toTypedArray()
+
         override fun formatMessage(message: Message): FieldValue {
-            return FieldValue.fromString(
-                regexp.matcher(template).replaceAll({
-                    Matcher.quoteReplacement(
-                        message.getStringField(it.group(1) ?: it.group(2))
-                    )
-                })
-            )
+            val sb = StringBuilder(parsedArray[0])
+            var i = 1
+            val size = parsedArray.size
+            while (i < size) {
+                sb.append(message.getStringField(parsedArray[i]))
+                if (i + 1 < size) {
+                    sb.append(parsedArray[i + 1])
+                }
+                i += 2
+            }
+            return FieldValue.fromString(sb.toString())
         }
     }
 
     object TemplateParser {
-        fun parse(template: String): List<String> {
+        fun parse(template: String, ignoreInvalidSyntaxIfPossible: Boolean): List<String> {
             var state = State.TEXT
-            val chunks = mutableListOf<String>("")
-            var i = 0
+            val chunks = mutableListOf("")
+            var currentCharIndex = 0
             for (char in template) {
                 when (state) {
                     State.TEXT -> {
@@ -74,10 +78,10 @@ abstract class TemplateFormatter : Formatter {
                             '\\' -> {
                                 state = State.ESCAPE
                             }
-//                            '{' -> {
-//                                chunks.add("")
-//                                state = State.OPEN_BRACE
-//                            }
+                            '{' -> {
+                                chunks.add("")
+                                state = State.OPEN_BRACE
+                            }
                             else -> {
                                 chunks[chunks.indices.last] = chunks[chunks.indices.last] + char
                             }
@@ -95,7 +99,12 @@ abstract class TemplateFormatter : Formatter {
                             }
                             else -> {
                                 // после доллара сразу нелепая фигня
-                                throw ParseException("Char '$char' (offset $i) is illegal as field name start: $template")
+                                if (ignoreInvalidSyntaxIfPossible) {
+                                    chunks.removeAt(chunks.indices.last)
+                                    chunks[chunks.indices.last] = chunks[chunks.indices.last] + '$' + char
+                                } else {
+                                    throw ParseException("Char '$char' (offset $currentCharIndex) is illegal as field name start: $template")
+                                }
                             }
                         }
                     }
@@ -111,12 +120,57 @@ abstract class TemplateFormatter : Formatter {
                             }
                         }
                     }
-//                    State.OPEN_BRACE -> {
-//
-//                    }
+                    State.OPEN_BRACE -> {
+                        when (char) {
+                            '$' -> {
+                                state = State.BRACED_FIELD_START
+                            }
+                            else -> {
+                                chunks[chunks.indices.last] = chunks[chunks.indices.last] + '{' + char
+                            }
+                        }
+                    }
+                    State.BRACED_FIELD_START -> {
+                        when (char) {
+                            in 'a'..'z', in 'A'..'Z', '_' -> {
+                                chunks[chunks.indices.last] = chunks[chunks.indices.last] + char
+                                state = State.BRACED_FIELD
+                            }
+                            else -> {
+                                // после доллара сразу нелепая фигня
+                                if (ignoreInvalidSyntaxIfPossible) {
+                                    chunks.removeAt(chunks.indices.last)
+                                    chunks[chunks.indices.last] = chunks[chunks.indices.last] + '{' + '$' + char
+                                } else {
+                                    throw ParseException("Char '$char' (offset $currentCharIndex) is illegal as field name start: $template")
+                                }
+                            }
+                        }
+                    }
+                    State.BRACED_FIELD -> {
+                        when (char) {
+                            in 'a'..'z', in 'A'..'Z', in '0'..'9', '_' -> {
+                                chunks[chunks.indices.last] = chunks[chunks.indices.last] + char
+                            }
+                            '}' -> {
+                                // кончилось название поля
+                                chunks.add("")
+                                state = State.TEXT
+                            }
+                            else -> {
+                                // фигурные скобки ещё не закрылись, а символ не годится для имени поля
+                                throw ParseException("Char '$char' (offset $currentCharIndex) is illegal in field names: $template")
+                            }
+                        }
+                    }
                 }
-                i++
+                currentCharIndex++
             }
+
+            if (chunks.last().isEmpty() && chunks.size > 1) {
+                chunks.removeAt(chunks.indices.last)
+            }
+
             return chunks
         }
 
@@ -124,7 +178,9 @@ abstract class TemplateFormatter : Formatter {
             TEXT,
             UNBRACED_FIELD_START,
             UNBRACED_FIELD,
-//            OPEN_BRACE,
+            OPEN_BRACE,
+            BRACED_FIELD_START,
+            BRACED_FIELD,
             ESCAPE
         }
     }

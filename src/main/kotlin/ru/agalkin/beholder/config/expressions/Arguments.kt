@@ -1,9 +1,7 @@
 package ru.agalkin.beholder.config.expressions
 
-import ru.agalkin.beholder.config.parser.ArgumentToken
-import ru.agalkin.beholder.config.parser.LiteralToken
-import ru.agalkin.beholder.config.parser.QuotedStringToken
-import ru.agalkin.beholder.config.parser.RegexpToken
+import ru.agalkin.beholder.config.TemplateParser
+import ru.agalkin.beholder.config.parser.*
 import ru.agalkin.beholder.formatters.TemplateFormatter
 import java.util.regex.Pattern
 
@@ -39,39 +37,44 @@ abstract class Arguments {
         return this
     }
 
-    private fun shiftStringOrNull(): String? {
-        if (peekNext() == null) {
-            return null
-        }
-        val token = shiftToken("")
-        if (token !is LiteralToken && token !is QuotedStringToken) {
-            return null
-        }
-        return token.getValue()
-    }
-
-    private fun shiftString(errorMessage: String)
-        = shiftStringOrNull() ?: throw CommandException(errorMessage)
-
     // string that has no template variables
     fun shiftFixedString(errorMessage: String): String {
-        val string = shiftString(errorMessage)
-        if (TemplateFormatter.hasTemplates(string)) {
+        val token = shiftToken(errorMessage)
+        try {
+            when (token) {
+                is LiteralToken, is QuotedStringToken -> {
+                    if (TemplateParser.hasTemplates(token)) {
+                        throw CommandException("$errorMessage (message fields are not allowed here)")
+                    }
+                    return token.getValue()
+                }
+                else -> {
+                    throw CommandException(errorMessage)
+                }
+            }
+        } catch (e: ParseException) {
             throw CommandException("$errorMessage (message fields are not allowed here)")
         }
-        return string
     }
 
-    fun shiftStringTemplateOrNull(): TemplateFormatter? {
-        val string = shiftStringOrNull()
-        if (string == null) {
+    private fun shiftStringTemplateOrNull(ignoreInvalidSyntax: Boolean): TemplateFormatter? {
+        val token = peekNext()
+        if (token == null) {
             return null
         }
-        return TemplateFormatter.create(string)
+        val parseResult = TemplateParser.parseToken(token, ignoreInvalidSyntax)
+        if (parseResult == null) {
+            return null
+        }
+        shiftToken("")
+        return TemplateFormatter.create(parseResult)
     }
 
-    fun shiftStringTemplate(errorMessage: String)
-        = shiftStringTemplateOrNull() ?: throw CommandException(errorMessage)
+    fun shiftStringTemplateStrictSyntax(errorMessage: String)
+        = shiftStringTemplateOrNull(false) ?: throw CommandException(errorMessage)
+
+    fun shiftStringTemplateForgivingSyntax(errorMessage: String)
+        = shiftStringTemplateOrNull(true) ?: throw CommandException(errorMessage)
 
     fun shiftFieldName(errorMessage: String): String {
         val arg = shiftAnyLiteral(errorMessage)

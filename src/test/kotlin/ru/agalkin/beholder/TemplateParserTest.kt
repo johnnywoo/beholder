@@ -1,8 +1,8 @@
 package ru.agalkin.beholder
 
 import org.junit.Test
+import ru.agalkin.beholder.config.TemplateParser
 import ru.agalkin.beholder.config.parser.ParseException
-import ru.agalkin.beholder.formatters.TemplateFormatter
 import kotlin.test.assertEquals
 
 class TemplateParserTest : TestAbstract() {
@@ -35,7 +35,7 @@ class TemplateParserTest : TestAbstract() {
         val normalTemplate = template.replace('¥', '$').replace('/', '\\')
         assertEquals(
             result.toList().map { it.replace('¥', '$').replace('/', '\\') },
-            TemplateFormatter.TemplateParser.parse(normalTemplate, false),
+            TemplateParser.parse(normalTemplate, false, true).parts,
             "Invalid parsing of: $normalTemplate"
         )
     }
@@ -43,7 +43,7 @@ class TemplateParserTest : TestAbstract() {
     private fun assertTemplateFails(template: String, message: String) {
         val normalTemplate = template.replace('¥', '$').replace('/', '\\')
         try {
-            TemplateFormatter.TemplateParser.parse(normalTemplate, false)
+            TemplateParser.parse(normalTemplate, false, true)
             assertEquals(false, true, "This should not have parsed correctly: $normalTemplate")
         } catch (e: ParseException) {
             assertEquals(message.replace('¥', '$'), e.message)

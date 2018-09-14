@@ -20,7 +20,7 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
                 "stdout" -> StdoutDestination(TemplateFormatter.payloadFormatter)
 
                 "file" -> FileDestination(
-                    arguments.shiftStringTemplate("`to file` needs a filename"),
+                    arguments.shiftStringTemplateStrictSyntax("`to file` needs a filename"),
                     TemplateFormatter.payloadFormatter
                 )
 

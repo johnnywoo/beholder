@@ -21,7 +21,7 @@ class SwitchCaseCommand(
         if (regexp != null) {
             matcher = RegexpMatcher(regexp)
         } else {
-            matcher = ExactMatcher(arguments.shiftStringTemplate("`case` needs a regexp or a string"))
+            matcher = ExactMatcher(arguments.shiftStringTemplateStrictSyntax("`case` needs a regexp or a string"))
         }
         arguments.end()
     }

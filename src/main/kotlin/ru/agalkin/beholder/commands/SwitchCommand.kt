@@ -8,7 +8,7 @@ import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.conveyor.Step
 
 class SwitchCommand(app: Beholder, arguments: Arguments) : CommandAbstract(app, arguments) {
-    private val template = arguments.shiftStringTemplate("`switch` needs an argument")
+    private val template = arguments.shiftStringTemplateStrictSyntax("`switch` needs an argument")
     init {
         arguments.end()
     }

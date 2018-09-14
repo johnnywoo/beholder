@@ -3,6 +3,7 @@ package ru.agalkin.beholder.commands
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.BeholderException
 import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.config.TemplateParser
 import ru.agalkin.beholder.config.expressions.Arguments
 import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.conveyor.Conveyor
@@ -49,35 +50,35 @@ class SetCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app,
 
                 var dateSource: TemplateFormatter? = null
                 if (arguments.shiftLiteralOrNull("in") != null) {
-                    dateSource = arguments.shiftStringTemplate("`set ... $arg in` needs a string")
+                    dateSource = arguments.shiftStringTemplateStrictSyntax("`set ... $arg in` needs a string")
                 }
 
                 TimeFormatter(format, dateSource)
             }
             "host" -> HostFormatter()
             "env" -> EnvFormatter(arguments.shiftFixedString("`set ... env` needs an environment variable name"))
-            "basename" -> BasenameFormatter(arguments.shiftStringTemplate("`set ... basename` needs a file path"))
+            "basename" -> BasenameFormatter(arguments.shiftStringTemplateStrictSyntax("`set ... basename` needs a file path"))
             "severity-name" -> SeverityNameFormatter(
-                arguments.shiftStringTemplate("`set ... severity-name` needs a severity number"),
+                arguments.shiftStringTemplateStrictSyntax("`set ... severity-name` needs a severity number"),
                 arguments.shiftLiteralOrNull("lowercase") != null
             )
             "json" -> JsonFormatter(nullIfEmpty(scanArgumentsAsFieldNames(arguments, "`set ... json` arguments must be field names")))
             "fieldpack" -> FieldpackFormatter(nullIfEmpty(scanArgumentsAsFieldNames(arguments, "`set ... fieldpack` arguments must be field names")))
             "replace" -> {
                 val regexp = arguments.shiftRegexp("`replace` needs a regexp")
-                val replacementTemplate = arguments.shiftStringTemplate("`replace` needs a replacement string")
+                val replacementTemplate = arguments.shiftStringTemplateForgivingSyntax("`replace` needs a replacement string")
 
                 val subjectTemplate: TemplateFormatter
                 if (arguments.shiftLiteralOrNull("in") != null) {
-                    subjectTemplate = arguments.shiftStringTemplate("`replace ... in` needs a string")
+                    subjectTemplate = arguments.shiftStringTemplateStrictSyntax("`replace ... in` needs a string")
                 } else {
-                    subjectTemplate = TemplateFormatter.create("\$$field")
+                    subjectTemplate = TemplateFormatter.ofField(field)
                 }
 
                 ReplaceFormatter(regexp, replacementTemplate, subjectTemplate)
             }
-            null -> arguments.shiftStringTemplate("`set` needs at least two arguments")
-            else -> TemplateFormatter.create(arg)
+            null -> arguments.shiftStringTemplateStrictSyntax("`set` needs at least two arguments")
+            else -> TemplateFormatter.create(TemplateParser.parse(arg, false, false)) // from an unknown literal
         }
 
         arguments.end()

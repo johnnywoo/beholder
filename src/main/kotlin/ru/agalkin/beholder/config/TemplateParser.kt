@@ -36,7 +36,6 @@ object TemplateParser {
                 State.TEXT -> {
                     when (char) {
                         '$' -> {
-                            chunks.add("")
                             state = State.UNBRACED_FIELD_START
                         }
                         '\\' -> {
@@ -47,7 +46,6 @@ object TemplateParser {
                             }
                         }
                         '{' -> {
-                            chunks.add("")
                             state = State.OPEN_BRACE
                         }
                         else -> {
@@ -62,13 +60,12 @@ object TemplateParser {
                 State.UNBRACED_FIELD_START -> {
                     when (char) {
                         in 'a'..'z', in 'A'..'Z', '_' -> {
-                            chunks[chunks.indices.last] = chunks[chunks.indices.last] + char
+                            chunks.add(char.toString())
                             state = State.UNBRACED_FIELD
                         }
                         else -> {
                             // после доллара сразу нелепая фигня
                             if (ignoreInvalidSyntaxIfPossible) {
-                                chunks.removeAt(chunks.indices.last)
                                 chunks[chunks.indices.last] = chunks[chunks.indices.last] + '$' + char
                             } else {
                                 throw ParseException("Char '$char' (offset $currentCharIndex) is illegal as field name start: $template")
@@ -95,19 +92,19 @@ object TemplateParser {
                         }
                         else -> {
                             chunks[chunks.indices.last] = chunks[chunks.indices.last] + '{' + char
+                            state = State.TEXT
                         }
                     }
                 }
                 State.BRACED_FIELD_START -> {
                     when (char) {
                         in 'a'..'z', in 'A'..'Z', '_' -> {
-                            chunks[chunks.indices.last] = chunks[chunks.indices.last] + char
+                            chunks.add(char.toString())
                             state = State.BRACED_FIELD
                         }
                         else -> {
                             // после доллара сразу нелепая фигня
                             if (ignoreInvalidSyntaxIfPossible) {
-                                chunks.removeAt(chunks.indices.last)
                                 chunks[chunks.indices.last] = chunks[chunks.indices.last] + '{' + '$' + char
                             } else {
                                 throw ParseException("Char '$char' (offset $currentCharIndex) is illegal as field name start: $template")

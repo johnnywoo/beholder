@@ -26,10 +26,14 @@ class TemplateParserTest : TestAbstract() {
     @Test fun testJsonParses16() { assertTemplateParses("¥a ¥b", "", "a", " ", "b") }
     @Test fun testJsonParses17() { assertTemplateParses("{¥a} ¥b", "", "a", " ", "b") }
     @Test fun testJsonParses18() { assertTemplateParses("¥a {¥b}", "", "a", " ", "b") }
+    @Test fun testJsonParses19() { assertTemplateParses("a/{¥b}c", "a{", "b", "}c") }
+    @Test fun testJsonParses20() { assertTemplateParses("a{b}c", "a{b}c") }
+    @Test fun testJsonParses21() { assertTemplateParses("a{b¥c}d", "a{b", "c", "}d") }
 
     @Test fun testJsonFails1()  { assertTemplateFails("¥!", "Char '!' (offset 1) is illegal as field name start: ¥!") }
     @Test fun testJsonFails2()  { assertTemplateFails("{¥!}", "Char '!' (offset 2) is illegal as field name start: {¥!}") }
     @Test fun testJsonFails3()  { assertTemplateFails("{¥}", "Char '}' (offset 2) is illegal as field name start: {¥}") }
+    @Test fun testJsonFails4()  { assertTemplateFails("{a¥}", "Char '}' (offset 3) is illegal as field name start: {a¥}") }
 
     private fun assertTemplateParses(template: String, vararg result: String) {
         val normalTemplate = template.replace('¥', '$').replace('/', '\\')

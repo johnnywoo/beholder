@@ -6,7 +6,7 @@ import ru.agalkin.beholder.config.parser.ParseException
 import kotlin.test.assertEquals
 
 class TemplateParserTest : TestAbstract() {
-    // Поскольку в Котлине нет вменяемых стороковых литералов без эскейпинга,
+    // Поскольку в Котлине нет вменяемых строковых литералов без эскейпинга,
     // мы тут обалденно везде меняем ¥ на $ и / на \
     @Test fun testJsonParses()   { assertTemplateParses("text", "text") }
     @Test fun testJsonParses2()  { assertTemplateParses("¥var", "", "var") }

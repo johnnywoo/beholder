@@ -23,7 +23,7 @@ abstract class TestAbstract {
             root.start()
 
             root.topLevelOutput.addStep(conveyorStepOf {
-                processedMessage = message
+                processedMessage = it
                 null
             })
 

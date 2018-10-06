@@ -44,16 +44,23 @@ class IntegrationTest : TestAbstract() {
         parse json;
 
         set ¥agent_host ¥host;
+        set ¥processed_by_switch 'no';
 
         switch ¥agent_type {
             case ~-syslog¥~ {
                 parse syslog;
+                set ¥processed_by_switch 'syslog';
             }
             case ~-json¥~ {
                 parse json;
+                set ¥processed_by_switch 'json';
             }
             case ~^internal-log¥~ {
                 set ¥program beholder-agent;
+                set ¥processed_by_switch 'internal';
+            }
+            default {
+                set ¥processed_by_switch 'default';
             }
         }
 
@@ -89,8 +96,52 @@ class IntegrationTest : TestAbstract() {
     }
 
     @Test
+    fun testCollectorCyrillicMidpoint() {
+        val messageText = """{"agent_type":"tcp-syslog","date":"2018-05-03T15:32:56+03:00","from":"udp://1.1.1.1:33333","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}"""
+
+        val processedMessage = receiveMessageWithConfig(
+            """
+                from tcp 11000;
+                parse json;
+                set ¥processed_by_switch no;
+                switch ¥agent_type {
+                    case tcp-syslog {
+                        set ¥processed_by_switch case;
+                    }
+                    default {
+                        set ¥processed_by_switch default;
+                    }
+                }
+                set ¥after_switch yes;
+            """.trimIndent().replace('¥', '$')
+        ) {
+            sendToTcp(COLLECTOR_TCP_PORT, messageText + "\n")
+        }
+
+        assertNotNull(processedMessage)
+        if (processedMessage == null) {
+            return
+        }
+        assertEquals(
+            "yes",
+            processedMessage.getStringField("after_switch"),
+            "Invalid value in \$after_switch"
+        )
+        assertEquals(
+            "tcp-syslog",
+            processedMessage.getStringField("agent_type"),
+            "Invalid value in \$agent_type"
+        )
+        assertEquals(
+            "case",
+            processedMessage.getStringField("processed_by_switch"),
+            "Invalid value in \$processed_by_switch"
+        )
+    }
+
+    @Test
     fun testCollectorCyrillic() {
-        val messageText = """{"agent_type":"udp-syslog","date":"2018-05-03T15:32:56+03:00","from":"udp://1.1.1.1:33333","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}"""
+        val messageText = """{"agent_type":"tcp-syslog","date":"2018-05-03T15:32:56+03:00","from":"udp://1.1.1.1:33333","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}"""
 
         val processedMessage = receiveMessageWithConfig(collectorConfig) {
             sendToTcp(COLLECTOR_TCP_PORT, messageText + "\n")
@@ -101,12 +152,24 @@ class IntegrationTest : TestAbstract() {
             return
         }
         assertEquals(
+            "tcp-syslog",
+            processedMessage.getStringField("agent_type"),
+            "Invalid value in \$agent_type"
+        )
+        assertEquals(
+            "syslog",
+            processedMessage.getStringField("processed_by_switch"),
+            "Invalid value in \$processed_by_switch"
+        )
+        assertEquals(
             "2017-03-03T09:26:44+00:00 fake-host 12345 DEBUG Message: поехали!",
-            processedMessage.getPayloadString()
+            processedMessage.getPayloadString(),
+            "Invalid value in \$payload"
         )
         assertEquals(
             "/logs/sender-host/program-name.log",
-            processedMessage.getStringField("file")
+            processedMessage.getStringField("file"),
+            "Invalid value in \$file"
         )
     }
 }

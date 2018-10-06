@@ -82,7 +82,11 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             """
                 parse beholder-stats;
                 parse each-field-as-message;
-                switch ¥value { case ~^[0-9]+¥~ {} }
+
+                switch ¥value {
+                    case ~^[0-9]+¥~ {}
+                    default {drop}
+                }
                 set ¥payload 'beholder,tag=tagval ¥key=¥value';
             """.replace('¥', '$'),
             35,

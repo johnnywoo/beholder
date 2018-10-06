@@ -5,6 +5,11 @@ Beholder is a log processor. Its purpose is to receive, process, transfer and ex
 WARNING: Beholder has no stable version yet.
 Config syntax, commands, options, behaviour, everything is going to be changed without any backwards compatibility.
 
+A somewhat reliable version is 0.1.222. You should disable the misguided manual GC feature when using that version
+(put `extra_gc_interval_seconds 0;` in your config).
+
+More recent versions contain lots of untested code and bugs!
+
  * [Usage](#usage)
  * [Building Beholder](#building-beholder)
  * [Recipes](#recipes)
@@ -689,10 +694,12 @@ There can be multiple `case` blocks, but only one `default`, and it must be the 
 
 The template can be a literal, quoted string or a regexp.
 
-If a message does not match any `case` and there is no `default`, the message will be discarded.
-This way `switch` can work as an if-statement:
+If there is no `default` subcommand, `switch` behaves as if it has an empty `default`.
+Unmatched messages are just emitted out of the `switch` with no modifications.
 
-    switch $host { case ~.~ {} }
+`switch` can work as an if-statement:
+
+    switch $host { case ~.~ {} default {drop} }
     to stdout; # Only prints messages with non-empty $host
 
 Although `from` subcommand is permitted inside `case`/`default`, its use there is discouraged.

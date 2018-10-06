@@ -69,7 +69,7 @@ class FlowTest : TestAbstract() {
         val message = Message()
         message["path"] = "start"
 
-        val config = "switch cat { case dog {} default {} } " +
+        val config = "switch cat { case dog {} } " +
             "join { from udp 3820; } " +
             "tee { } "
 

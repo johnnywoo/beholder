@@ -5,7 +5,6 @@ import ru.agalkin.beholder.BeholderException
 import ru.agalkin.beholder.Message
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 class Conveyor private constructor(baseConveyor: Conveyor? = null) {
@@ -13,17 +12,12 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
     private val instructions: InstructionList = baseConveyor?.instructions ?: InstructionList()
     private val inputs: MutableList<InputImpl> = baseConveyor?.inputs ?: CopyOnWriteArrayList()
 
-    private val isReachable = AtomicBoolean(false)
     private val lastInstructionId = AtomicInteger(0)
 
     private val forkStepId = 1
     private val conditionalStepId = 2
 
     fun addStep(step: Step) {
-        if (!isReachable.get()) {
-            return
-        }
-
         synchronized(steps) {
             // Добавляем новый шаг
             val addedStepId = steps.add(step)
@@ -67,17 +61,11 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
     }
 
     private fun insertInput(description: String): InputImpl {
-        isReachable.set(true)
-
         // Добавляем инструкцию без шага, которая будет служить точкой входа
         return InputImpl(addChainedInstruction(0, 0), description)
     }
 
     fun terminateByMergingIntoInput(input: ConveyorInput): Conveyor {
-        if (!isReachable.get()) {
-            return this
-        }
-
         synchronized(steps) {
             if (input is InputImpl) {
                 // Надо добавить инструкцию, у которой goto будет на требуемое место
@@ -133,13 +121,11 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
                     }
                     prevConditionalInstructionId = conditionalInstructionId
                     conveyor = conveyor.createRelatedConveyor()
-                    conveyor.isReachable.set(true)
 
                     val addedStepId = conveyor.steps.add(conditionBlock)
                     conveyor.addChainedInstruction(addedStepId, 0)
                 } else {
                     conveyor = conveyor.createRelatedConveyor()
-                    conveyor.isReachable.set(true)
 
                     val addedStepId = conveyor.steps.add(conditionBlock)
                     val conditionalInstructionId = conveyor.addChainedInstruction(addedStepId, 0)
@@ -167,10 +153,6 @@ class Conveyor private constructor(baseConveyor: Conveyor? = null) {
     }
 
     fun copyToConveyor(conveyor: Conveyor, description: String) {
-        if (!isReachable.get()) {
-            return
-        }
-
         synchronized(steps) {
             val input = conveyor.insertInput("copy for $description")
 

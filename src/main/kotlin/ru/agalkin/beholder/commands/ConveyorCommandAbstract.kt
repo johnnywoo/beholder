@@ -9,6 +9,7 @@ abstract class ConveyorCommandAbstract(app: Beholder, arguments: Arguments) : Co
     override fun createSubcommand(args: Arguments): CommandAbstract?
         = when (args.getCommandName()) {
             "drop"   -> DropCommand(app, args)
+            "dump"   -> DumpCommand(app, args)
             "flow"   -> FlowCommand(app, args)
             "from"   -> FromCommand(app, args)
             "join"   -> JoinCommand(app, args)

@@ -18,6 +18,7 @@ More recent versions contain lots of untested code and bugs!
  * Config commands for sources and destinations
    * [`from`](#from--produces-messages-from-various-sources) — produces messages from various sources
    * [`to`](#to--sends-messages-to-destinations) — sends messages to destinations
+   * [`dump`](#dump--troubleshooting-output) — troubleshooting output
  * Config commands for message manipulation
    * [`set`](#set--puts-values-into-message-fields) — puts values into message fields
    * [`keep`](#keep--removes-unnecessary-message-fields) — removes unnecessary message fields
@@ -176,6 +177,7 @@ Message sources and destinations:
 
 * `from` — produces messages from various sources
 * `to` — sends messages to destinations
+* `dump` — troubleshooting output
 
 Message manipulation:
 
@@ -325,6 +327,22 @@ incoming messages before passing them into the script. Test your scripts early!
     // Example log receiver script in PHP
     while ($f = fgets(STDIN)) {
         file_put_contents('receiver.log', date('r') . ' ' . $f, FILE_APPEND);
+    }
+
+
+### `dump` — troubleshooting output
+
+    dump [<prefix>];
+
+This command writes full descriptions of incoming messages to stdout.
+This way you can inspect messages at particular places of your config
+if something in there doesn't do what you're expecting it to.
+
+    flow {
+        from timer;
+        dump 'ORIGINAL> ';
+        set $payload json;
+        dump 'JSON> ';
     }
 
 

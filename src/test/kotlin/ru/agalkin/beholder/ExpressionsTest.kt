@@ -1,7 +1,8 @@
 package ru.agalkin.beholder
 
-import org.junit.Test
+import kotlin.test.Test
 import ru.agalkin.beholder.config.parser.Token
+import ru.agalkin.beholder.testutils.TestAbstract
 import kotlin.test.assertEquals
 
 class ExpressionsTest : TestAbstract() {

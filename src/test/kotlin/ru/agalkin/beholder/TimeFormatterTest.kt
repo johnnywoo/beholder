@@ -1,40 +1,45 @@
 package ru.agalkin.beholder
 
-import org.junit.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ArgumentsSource
+import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.TestInputProvider
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class TimeFormatterTest : TestAbstract() {
-    @Test
-    fun testFormat() {
-        val tests = mapOf(
+    private class TimeFormatProvider : TestInputProvider() {
+        init {
             // predefined date formats
-            "date as time" to Pair("2018-06-12T11:26:12+01:00", "11:26:12"),
-            "date as date" to Pair("2018-06-12T11:26:12+01:00", "2018-06-12"),
-            "date as datetime" to Pair("2018-06-12T11:26:12+01:00", "2018-06-12T11:26:12+01:00"),
+            case("date as time", "2018-06-12T11:26:12+01:00", "11:26:12")
+            case("date as date", "2018-06-12T11:26:12+01:00", "2018-06-12")
+            case("date as datetime", "2018-06-12T11:26:12+01:00", "2018-06-12T11:26:12+01:00")
 
             // GMT
-            "date as datetime" to Pair("2018-06-12T11:26:12+00:00", "2018-06-12T11:26:12+00:00"),
-            "date as datetime" to Pair("2018-06-12T11:26:12Z", "2018-06-12T11:26:12+00:00"),
+            case("date as datetime", "2018-06-12T11:26:12+00:00", "2018-06-12T11:26:12+00:00")
+            case("date as datetime", "2018-06-12T11:26:12Z", "2018-06-12T11:26:12+00:00")
 
             // unixtime
-            "date as unixtime-seconds" to Pair("2018-06-12T11:26:12+01:00", "1528799172"),
-            "date as unixtime-milliseconds" to Pair("2018-06-12T11:26:12+01:00", "1528799172000"),
-            "date as unixtime-microseconds" to Pair("2018-06-12T11:26:12+01:00", "1528799172000000"),
-            "date as unixtime-nanoseconds" to Pair("2018-06-12T11:26:12+01:00", "1528799172000000000"),
+            case("date as unixtime-seconds", "2018-06-12T11:26:12+01:00", "1528799172")
+            case("date as unixtime-milliseconds", "2018-06-12T11:26:12+01:00", "1528799172000")
+            case("date as unixtime-microseconds", "2018-06-12T11:26:12+01:00", "1528799172000000")
+            case("date as unixtime-nanoseconds", "2018-06-12T11:26:12+01:00", "1528799172000000000")
 
             // default formats
-            "time" to Pair("2018-06-12T11:26:12+01:00", "11:26:12"),
-            "date" to Pair("2018-06-12T11:26:12+01:00", "2018-06-12")
-        )
-
-        for ((formatDefiniton, pair) in tests) {
-            val message = Message(mapOf("date" to FieldValue.fromString(pair.first)))
-            val processedMessage = processMessageWithConfig(message, "set \$d $formatDefiniton in \$date")
-            assertNotNull(processedMessage)
-            assertFieldNames(processedMessage, "d", "date")
-            assertEquals(pair.second, processedMessage?.getStringField("d"), "Definiftion '$formatDefiniton' input '${pair.first}'")
+            case("time", "2018-06-12T11:26:12+01:00", "11:26:12")
+            case("date", "2018-06-12T11:26:12+01:00", "2018-06-12")
         }
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(TimeFormatProvider::class)
+    fun testFormat(format: String, time: String, result: String) {
+        val message = Message(mapOf("date" to FieldValue.fromString(time)))
+        val processedMessage = processMessageWithConfig(message, "set \$d $format in \$date")
+        assertNotNull(processedMessage)
+        assertFieldNames(processedMessage, "d", "date")
+        assertEquals(result, processedMessage?.getStringField("d"), "Definiftion '$format' input '$time'")
     }
 
     @Test

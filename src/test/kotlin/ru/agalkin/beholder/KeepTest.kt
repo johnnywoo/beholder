@@ -1,6 +1,7 @@
 package ru.agalkin.beholder
 
-import org.junit.Test
+import ru.agalkin.beholder.testutils.TestAbstract
+import kotlin.test.Test
 
 class KeepTest : TestAbstract() {
     @Test

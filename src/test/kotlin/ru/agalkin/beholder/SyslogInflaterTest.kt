@@ -1,7 +1,8 @@
 package ru.agalkin.beholder
 
-import org.junit.Test
+import kotlin.test.Test
 import ru.agalkin.beholder.formatters.DumpFormatter
+import ru.agalkin.beholder.testutils.TestAbstract
 import kotlin.test.assertEquals
 
 class SyslogInflaterTest : TestAbstract() {

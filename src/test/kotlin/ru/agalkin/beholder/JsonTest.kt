@@ -2,7 +2,8 @@ package ru.agalkin.beholder
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import org.junit.Test
+import ru.agalkin.beholder.testutils.TestAbstract
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class JsonTest : TestAbstract() {

@@ -1,24 +1,33 @@
 package ru.agalkin.beholder
 
-import org.junit.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ArgumentsSource
+import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.TestInputProvider
 import kotlin.test.assertEquals
 
 class BasenameFormatterTest : TestAbstract() {
-    @Test fun testBasenameBad1() = runTest("..", "noname")
-    @Test fun testBasenameBad2() = runTest(".", "noname")
-    @Test fun testBasenameBad3() = runTest("/", "noname")
-    @Test fun testBasenameBad4() = runTest("~", "noname")
-    @Test fun testBasenameBad5() = runTest("|", "noname")
+    private class BasenameProvider : TestInputProvider() {
+        init {
+            case("..", "noname")
+            case(".", "noname")
+            case("/", "noname")
+            case("~", "noname")
+            case("|", "noname")
 
-    @Test fun testBasename1() = runTest("a/b/c", "c")
-    @Test fun testBasename2() = runTest("c", "c")
-    @Test fun testBasename3() = runTest("..a", "..a")
-    @Test fun testBasename4() = runTest("a/b/c/", "c")
-    @Test fun testBasename5() = runTest("~user", "user")
-    @Test fun testBasename6() = runTest("/path/filename.ext", "filename.ext")
-    @Test fun testBasename7() = runTest("beholder-collector", "beholder-collector")
+            case("a/b/c", "c")
+            case("c", "c")
+            case("..a", "..a")
+            case("a/b/c/", "c")
+            case("~user", "user")
+            case("/path/filename.ext", "filename.ext")
+            case("beholder-collector", "beholder-collector")
+        }
+    }
 
-    private fun runTest(path: String, expected: String) {
+    @ParameterizedTest
+    @ArgumentsSource(BasenameProvider::class)
+    fun runTest(path: String, expected: String) {
         val message = Message()
         message["path"] = path
 

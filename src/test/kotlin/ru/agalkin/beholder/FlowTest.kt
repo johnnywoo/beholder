@@ -1,6 +1,7 @@
 package ru.agalkin.beholder
 
-import org.junit.Test
+import ru.agalkin.beholder.testutils.TestAbstract
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class FlowTest : TestAbstract() {

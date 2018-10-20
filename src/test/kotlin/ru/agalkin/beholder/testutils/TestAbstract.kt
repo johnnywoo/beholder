@@ -1,6 +1,8 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.testutils
 
-import org.junit.BeforeClass
+import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.InternalLog
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.expressions.CommandAbstract
 import ru.agalkin.beholder.config.expressions.RootCommand
@@ -9,10 +11,7 @@ import ru.agalkin.beholder.conveyor.Step
 import ru.agalkin.beholder.conveyor.StepResult
 import ru.agalkin.beholder.formatters.DumpFormatter
 import java.net.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-import kotlin.test.fail
+import kotlin.test.*
 
 abstract class TestAbstract {
     protected fun processMessageWithConfig(message: Message, config: String): Message? {
@@ -155,11 +154,9 @@ abstract class TestAbstract {
         }
     }
 
-    companion object {
-        @JvmStatic @BeforeClass
-        fun beforeAllTests() {
-            InternalLog.setStdout(null)
-            InternalLog.setStderr(null)
-        }
+    @BeforeTest
+    fun beforeAllTests() {
+        InternalLog.setStdout(null)
+        InternalLog.setStderr(null)
     }
 }

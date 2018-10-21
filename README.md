@@ -98,6 +98,6 @@ Control structures:
 
 ### More docs
 
-[Settings — global configuration options](docs/settings.md)
-[Config structure and syntax](docs/config-syntax.md)
-[Building Beholder](docs/building-beholder.md)
+* [Settings — global configuration options](docs/settings.md)
+* [Config structure and syntax](docs/config-syntax.md)
+* [Building Beholder](docs/building-beholder.md)

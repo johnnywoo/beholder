@@ -5,7 +5,7 @@ It is done in form of a command.
 
 When Beholder creates a datetime (e.g. when a new message is received), it uses system timezone.
 You can override this by setting `create_dates_in_timezone` to a desired timezone.
-See https://docs.oracle.com/javase/9/docs/api/java/time/ZoneId.html#of-java.lang.String- for details.
+See [java.time.ZoneId.of() docs](https://docs.oracle.com/javase/9/docs/api/java/time/ZoneId.html#of-java.lang.String-) for details.
 Example timezones: `UTC`, `Europe/Moscow`.
 When a date is received in a message (not created), Beholder will try to keep its timezone intact.
 

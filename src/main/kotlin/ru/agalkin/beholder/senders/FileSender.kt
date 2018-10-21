@@ -56,6 +56,7 @@ class FileSender(app: Beholder, private val file: File) {
 
         val writer = bufferedWriter
         if (writer != null) {
+            InternalLog.info("Closing file writer: $file")
             writer.close()
             bufferedWriter = null
         }
@@ -79,6 +80,7 @@ class FileSender(app: Beholder, private val file: File) {
                 return false
             }
 
+            InternalLog.info("Starting file writer: $file")
             bufferedWriter = BufferedWriter(FileWriter(file, true))
 
             return true

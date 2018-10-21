@@ -35,13 +35,11 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile "commons-cli:commons-cli:1.4"
-    compile "com.google.code.gson:gson:2.8.2"
-    compile "org.lz4:lz4-java:1.4.1"
+    compile "com.google.code.gson:gson:2.8.5"
+    compile "org.lz4:lz4-java:1.5.0"
 
     testCompile "org.jetbrains.kotlin:kotlin-test-junit5:$kotlin_version"
-    testCompile('org.junit.jupiter:junit-jupiter-api:5.3.1')
-    testCompile('org.junit.jupiter:junit-jupiter-params:5.3.1')
-    testRuntime('org.junit.jupiter:junit-jupiter-engine:5.3.1')
+    testCompile "org.junit.jupiter:junit-jupiter-params:5.3.1"
 }
 
 compileKotlin {

@@ -8,22 +8,26 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
-class DataBuffer(app: Beholder, val id: String = "") {
-    private val maxTotalSize = AtomicInteger(app.getIntOption(ConfigOption.BUFFER_MEMORY_BYTES))
-    @Volatile var compressionName = app.getCompressionOption(ConfigOption.BUFFER_COMPRESSION)
-    @Volatile var compressor = app.createCompressor(ConfigOption.BUFFER_COMPRESSION)
+const val DEFAULT_DATA_BUFFER_SIZE = 128 * 1024 * 1024
+val DEFAULT_DATA_BUFFER_COMPRESSION = ConfigOption.Compression.LZ4_FAST
 
-    init {
-        app.afterReloadCallbacks.add {
-            maxTotalSize.set(app.getIntOption(ConfigOption.BUFFER_MEMORY_BYTES))
-            if (compressionName != app.getCompressionOption(ConfigOption.BUFFER_COMPRESSION)) {
-                compressionName = app.getCompressionOption(ConfigOption.BUFFER_COMPRESSION)
-                compressor = app.createCompressor(ConfigOption.BUFFER_COMPRESSION)
-            }
-        }
-    }
+class DataBuffer(private val app: Beholder, val id: String = "") {
+    private val maxTotalSize = AtomicInteger(DEFAULT_BUFFER_SIZE)
+    @Volatile private var compressionName = DEFAULT_DATA_BUFFER_COMPRESSION
+    @Volatile var compressor = app.createCompressorByName(compressionName)
 
     val currentSizeInMemory = AtomicLong(0)
+
+    fun setMemoryBytes(size: Int) {
+        maxTotalSize.set(size)
+    }
+
+    fun setCompression(newCompressionName: ConfigOption.Compression) {
+        if (compressionName != newCompressionName) {
+            compressionName = newCompressionName
+            compressor = app.createCompressorByName(newCompressionName)
+        }
+    }
 
     private val byteArrays: Deque<ByteArray> = LinkedList<ByteArray>()
 

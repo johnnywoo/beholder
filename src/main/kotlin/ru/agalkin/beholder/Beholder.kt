@@ -124,14 +124,11 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     fun getIntOption(name: ConfigOption)
         = optionValues[name] as Int
 
-    fun getCompressionOption(name: ConfigOption)
-        = optionValues[name] as ConfigOption.Compression
-
     private fun getTimezoneOption(name: ConfigOption)
         = optionValues[name] as ZoneId
 
-    fun createCompressor(name: ConfigOption): Compressor {
-        return when (optionValues[name] as ConfigOption.Compression) {
+    fun createCompressorByName(compressionName: ConfigOption.Compression): Compressor {
+        return when (compressionName) {
             ConfigOption.Compression.OFF -> NoCompressor()
             ConfigOption.Compression.LZ4_FAST -> LZ4FastCompressor()
         }

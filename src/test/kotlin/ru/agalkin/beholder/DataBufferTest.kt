@@ -21,7 +21,7 @@ class DataBufferTest : TestAbstract() {
     @Test
     fun testNowhereToSend() {
         val messageText = "Message: поехали!"
-        val config = "buffer_compression off; queue_chunk_messages 5; from udp 3821; to tcp 1212"
+        val config = "buffer { memory_compression off; } queue_chunk_messages 5; from udp 3821; to tcp 1212"
 
         makeApp(config).use { app ->
             val root = app.config.root

@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.config.expressions
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.commands.BufferCommand
 import ru.agalkin.beholder.commands.ConveyorCommandAbstract
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.config.parser.ParseException
@@ -13,6 +14,12 @@ class RootCommand(app: Beholder) : ConveyorCommandAbstract(app, RootArguments) {
     lateinit var topLevelOutput: Conveyor
 
     override fun createSubcommand(args: Arguments): CommandAbstract? {
+        if (args.getCommandName() == "buffer") {
+            if (subcommands.any { it is BufferCommand }) {
+                throw CommandException("Command `buffer` cannot be duplicated")
+            }
+            return BufferCommand(app, args)
+        }
         if (args.getCommandName() in ConfigOption.values().map { it.name.toLowerCase() }) {
             return ConfigOptionCommand(app, args)
         }

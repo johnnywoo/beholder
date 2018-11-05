@@ -7,8 +7,6 @@ import java.time.zone.ZoneRulesException
 
 enum class ConfigOption(val defaultValue: Any, val type: Type) {
     QUEUE_CHUNK_MESSAGES(500, Type.INT),
-    BUFFER_MEMORY_BYTES(128 * 1024 * 1024, Type.INT),
-    BUFFER_COMPRESSION(Compression.LZ4_FAST, Type.COMPRESSION),
 
     CREATE_DATES_IN_TIMEZONE(ZoneId.systemDefault(), Type.TIMEZONE);
 

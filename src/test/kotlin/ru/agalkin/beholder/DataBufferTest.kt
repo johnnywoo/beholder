@@ -11,7 +11,7 @@ class DataBufferTest : TestAbstract() {
 
         val config = "queue_chunk_messages 5; from udp 3821; to tcp 1212"
 
-        receiveMessagesWithConfig(config, 20) { _ ->
+        receiveMessagesWithConfig(config, 20) {
             repeat(20) {
                 sendToUdp(3821, messageText)
             }

@@ -39,7 +39,7 @@ class TimeFormatterTest : TestAbstract() {
         val processedMessage = processMessageWithConfig(message, "set \$d $format in \$date")
         assertNotNull(processedMessage)
         assertFieldNames(processedMessage, "d", "date")
-        assertEquals(result, processedMessage?.getStringField("d"), "Definiftion '$format' input '$time'")
+        assertEquals(result, processedMessage.getStringField("d"), "Definiftion '$format' input '$time'")
     }
 
     @Test
@@ -50,9 +50,6 @@ class TimeFormatterTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertFieldNames(processedMessage, "date", "from", "payload")
         val dateString = processedMessage.getStringField("date")
         assertEquals("+03:00", dateString.substring(dateString.length - 6))
@@ -66,9 +63,6 @@ class TimeFormatterTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertFieldNames(processedMessage, "date", "from", "payload")
         val dateString = processedMessage.getStringField("date")
         assertEquals("+00:00", dateString.substring(dateString.length - 6))

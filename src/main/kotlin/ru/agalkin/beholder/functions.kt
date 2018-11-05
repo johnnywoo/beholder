@@ -5,8 +5,6 @@ import java.io.InputStreamReader
 import java.net.SocketException
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
-import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KProperty
 
 fun d(message: String) {
     println("[" + Thread.currentThread().name + "] " + message)
@@ -87,15 +85,4 @@ fun getSystemHostname(): String? {
         InternalLog.exception(e)
         return null
     }
-}
-
-fun <T> threadLocal(initializer: () -> T): ThreadLocalDelegate<T> = ThreadLocalDelegate(initializer)
-
-class ThreadLocalDelegate<T>(private val initializer: () -> T) : ReadOnlyProperty<Any, T> {
-    private val holder = object : ThreadLocal<T>() {
-        override fun initialValue()
-            = initializer()
-    }
-    override fun getValue(thisRef: Any, property: KProperty<*>): T
-        = holder.get()
 }

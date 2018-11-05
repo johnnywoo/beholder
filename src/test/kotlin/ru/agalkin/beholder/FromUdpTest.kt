@@ -14,9 +14,6 @@ class FromUdpTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertFieldNames(processedMessage, "date", "from", "payload")
         assertEquals(messageText, processedMessage.getPayloadString())
     }
@@ -40,9 +37,6 @@ class FromUdpTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertFieldNames(processedMessage, "date", "from", "payload")
         assertEquals(messageText, processedMessage.getPayloadString())
     }
@@ -55,9 +49,6 @@ class FromUdpTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertFieldNames(processedMessage, "date", "from", "payload")
         assertByteArraysEqual(messageBytes, messageBytes.slice(0 until messageBytes.size).toByteArray())
         assertByteArraysEqual(messageBytes, getByteArrayField(processedMessage, "payload"))
@@ -71,9 +62,6 @@ class FromUdpTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertFieldNames(processedMessage, "date", "from", "payload")
         assertByteArraysEqual(messageBytes, messageBytes.slice(0 until messageBytes.size).toByteArray())
         assertByteArraysEqual(messageBytes, getByteArrayField(processedMessage, "payload"))
@@ -87,9 +75,6 @@ class FromUdpTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertFieldNames(processedMessage, "date", "from", "payload")
         assertEquals("кошка", processedMessage.getPayloadString())
         assertByteArraysEqual(messageBytes, messageBytes.slice(0 until messageBytes.size).toByteArray())
@@ -104,9 +89,6 @@ class FromUdpTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertEquals("cat-dog", processedMessage.getPayloadString())
     }
 
@@ -118,9 +100,6 @@ class FromUdpTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertEquals("a\u0000b-dog", processedMessage.getPayloadString())
     }
 
@@ -132,9 +111,6 @@ class FromUdpTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertEquals("a�(b-dog", processedMessage.getPayloadString())
     }
 }

@@ -55,7 +55,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("feline", processedMessage!!.getStringField("animal"))
+        assertEquals("feline", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -70,7 +70,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("feline", processedMessage!!.getStringField("animal"))
+        assertEquals("feline", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -86,7 +86,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("canine", processedMessage!!.getStringField("animal"))
+        assertEquals("canine", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -101,7 +101,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("canine", processedMessage!!.getStringField("animal"))
+        assertEquals("canine", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -116,7 +116,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("canine", processedMessage!!.getStringField("animal"))
+        assertEquals("canine", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -132,7 +132,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("initial", processedMessage!!.getStringField("animal"))
+        assertEquals("initial", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -148,7 +148,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("unknown", processedMessage!!.getStringField("animal"))
+        assertEquals("unknown", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -163,7 +163,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("unknown", processedMessage!!.getStringField("animal"))
+        assertEquals("unknown", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -181,7 +181,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("canine", processedMessage!!.getStringField("animal"))
+        assertEquals("canine", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -199,7 +199,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("unknown", processedMessage!!.getStringField("animal"))
+        assertEquals("unknown", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -214,7 +214,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("ok", processedMessage!!.getStringField("animal"))
+        assertEquals("ok", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -229,7 +229,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("ok", processedMessage!!.getStringField("animal"))
+        assertEquals("ok", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -245,7 +245,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("ok", processedMessage!!.getStringField("animal"))
+        assertEquals("ok", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -260,7 +260,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("initial", processedMessage!!.getStringField("animal"))
+        assertEquals("initial", processedMessage.getStringField("animal"))
     }
 
     @Test
@@ -277,7 +277,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("no", processedMessage!!.getStringField("is_default_visited"))
+        assertEquals("no", processedMessage.getStringField("is_default_visited"))
     }
 
     @Test
@@ -294,7 +294,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("no", processedMessage!!.getStringField("is_default_visited"))
+        assertEquals("no", processedMessage.getStringField("is_default_visited"))
     }
 
     @Test
@@ -308,7 +308,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("true", processedMessage!!.getStringField("after"))
+        assertEquals("true", processedMessage.getStringField("after"))
     }
 
     @Test
@@ -325,7 +325,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("true", processedMessage!!.getStringField("after"))
+        assertEquals("true", processedMessage.getStringField("after"))
     }
 
     @Test
@@ -342,7 +342,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("true", processedMessage!!.getStringField("after"))
+        assertEquals("true", processedMessage.getStringField("after"))
     }
 
     @Test
@@ -359,7 +359,7 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("true", processedMessage!!.getStringField("after"))
+        assertEquals("true", processedMessage.getStringField("after"))
     }
 
     @Test
@@ -377,6 +377,6 @@ class SwitchTest : TestAbstract() {
         """.replace('¥', '$'))
 
         assertNotNull(processedMessage)
-        assertEquals("cat", processedMessage!!.getStringField("key"))
+        assertEquals("cat", processedMessage.getStringField("key"))
     }
 }

@@ -64,16 +64,8 @@ abstract class TestAbstract {
 
             senderBlock(root)
 
-            var timeSpentMillis = 0
-            while (timeSpentMillis < 300) {
-                if (processedMessages.size > count) {
-                    break
-                }
-                Thread.sleep(50)
-                timeSpentMillis += 50
-            }
+            Thread.sleep(200)
 
-            root.stop()
             assertEquals(count, processedMessages.size, "Expected number of messages does not match")
         }
 
@@ -106,18 +98,14 @@ abstract class TestAbstract {
 
     protected fun assertFieldNames(message: Message?, vararg names: String) {
         assertNotNull(message)
-        if (message != null) {
-            assertEquals(names.sorted(), message.getFieldNames().sorted())
-        }
+        assertEquals(names.sorted(), message.getFieldNames().sorted())
     }
 
     protected fun assertFieldValues(message: Message?, values: Map<String, String>) {
         assertNotNull(message)
-        if (message != null) {
-            assertEquals(message.getFieldNames().sorted(), values.keys.sorted())
-            for ((key, value) in values) {
-                assertEquals(value, message.getStringField(key))
-            }
+        assertEquals(message.getFieldNames().sorted(), values.keys.sorted())
+        for ((key, value) in values) {
+            assertEquals(value, message.getStringField(key))
         }
     }
 

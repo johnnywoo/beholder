@@ -87,9 +87,6 @@ class IntegrationTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertEquals(
             """{"agent_type":"udp-syslog","date":"NNNN-NN-NNTNN:NN:NN+NN:NN","from":"udp://X.X.X.X:X","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}""",
             processedMessage.getPayloadString()
@@ -120,9 +117,6 @@ class IntegrationTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertEquals(
             "yes",
             processedMessage.getStringField("after_switch"),
@@ -149,9 +143,6 @@ class IntegrationTest : TestAbstract() {
         }
 
         assertNotNull(processedMessage)
-        if (processedMessage == null) {
-            return
-        }
         assertEquals(
             "tcp-syslog",
             processedMessage.getStringField("agent_type"),

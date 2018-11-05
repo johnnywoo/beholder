@@ -7,6 +7,7 @@ import java.io.PrintStream
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.ZonedDateTime
+import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicReference
 
 object InternalLog {
@@ -48,7 +49,7 @@ object InternalLog {
         )
     }
 
-    val listeners = mutableSetOf<InternalLogListener>()
+    val listeners = CopyOnWriteArraySet<InternalLogListener>()
 
     private fun dispatchMessage(text: String?, severity: Severity) {
         if (text == null) {

@@ -1,13 +1,12 @@
-FROM debian:stretch as builder
+FROM debian:buster as builder
 
 RUN set -xe \
-    && echo 'deb http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list.d/stretch-backports.list \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update -qq \
     && apt-get dist-upgrade -qq \
     && apt-get install -qqy --no-install-recommends \
         locales \
-        openjdk-9-jdk-headless \
+        openjdk-11-jdk-headless \
         git-core \
     && echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
     && echo 'LANG="en_US.UTF-8"' > /etc/default/locale \
@@ -33,16 +32,15 @@ RUN set -xe \
 
 
 
-FROM debian:stretch
+FROM debian:buster
 
 RUN set -xe \
-    && echo 'deb http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list.d/stretch-backports.list \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update -qq \
     && apt-get dist-upgrade -qq \
     && apt-get install -qqy --no-install-recommends \
         locales \
-        openjdk-9-jre-headless \
+        openjdk-11-jre-headless \
     && echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
     && echo 'LANG="en_US.UTF-8"' > /etc/default/locale \
     && dpkg-reconfigure --frontend=noninteractive locales \

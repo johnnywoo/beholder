@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-version = "0.1"
-group = "ru.agalkin"
+project.version = "0.1"
+project.group = "ru.agalkin"
 
 plugins {
     kotlin("jvm") version "1.3.0"
@@ -41,3 +41,9 @@ compileKotlin.kotlinOptions.jvmTarget = "1.8"
 
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions.jvmTarget = "1.8"
+
+task("print-version") {
+    doFirst {
+        println(project.version)
+    }
+}

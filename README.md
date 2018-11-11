@@ -13,7 +13,7 @@ More recent versions contain lots of untested code and bugs!
 
 ## Usage
 
-For a quick start, use Docker:
+For a quick start, use [a premade Docker image](https://hub.docker.com/r/johnnywoo/beholder/builds):
 
     docker run --rm -ti johnnywoo/beholder:0.1.366 beholder --config 'from timer; to stdout'
 

@@ -1,6 +1,6 @@
 # Building Beholder
 
-A ready-made Docker image is available at https://hub.docker.com/r/johnnywoo/beholder
+A ready-made Docker image is available at [Docker hub](https://hub.docker.com/r/johnnywoo/beholder).
 
 To use the Docker container, mount your config into it as `/etc/beholder/beholder.conf`.
 

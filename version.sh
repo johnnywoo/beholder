@@ -3,7 +3,7 @@
 set -e
 
 # base version (major and minor) is defined in gradle build script
-baseVersion="$( grep version build.gradle | head -n 1 | cut -d"'" -f2 )"
+baseVersion="$( grep version build.gradle.kts | head -n 1 | cut -d"'" -f2 )"
 
 # patch version is the number of commits
 if [ "x$1" = "x--next" ]; then

@@ -8,10 +8,7 @@ import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.formatters.TimeFormatter
 import ru.agalkin.beholder.listeners.*
 import ru.agalkin.beholder.queue.DataBuffer
-import ru.agalkin.beholder.senders.FileSender
-import ru.agalkin.beholder.senders.ShellSender
-import ru.agalkin.beholder.senders.TcpSender
-import ru.agalkin.beholder.senders.UdpSender
+import ru.agalkin.beholder.senders.*
 import ru.agalkin.beholder.stats.Stats
 import java.io.Closeable
 import java.time.ZoneId
@@ -51,6 +48,9 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val shellSenders by lazy { ShellSender.Factory(this) }
     val tcpSenders   by lazy { TcpSender.Factory(this) }
     val udpSenders   by lazy { UdpSender.Factory(this) }
+
+    val mockListeners = mutableMapOf<String, MockListener>()
+    val mockSenders = mutableMapOf<String, MockSender>()
 
     // тут не ловим никаких ошибок, чтобы при старте с кривым конфигом сразу упасть
     var config: Config = configMaker(this)

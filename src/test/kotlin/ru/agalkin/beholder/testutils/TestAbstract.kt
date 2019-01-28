@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.testutils
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Config
@@ -11,6 +12,8 @@ import ru.agalkin.beholder.conveyor.Step
 import ru.agalkin.beholder.conveyor.StepResult
 import ru.agalkin.beholder.formatters.DumpFormatter
 import java.net.*
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.Exception
 import kotlin.test.*
 
 abstract class TestAbstract {
@@ -47,7 +50,56 @@ abstract class TestAbstract {
     }
 
     protected fun makeApp(config: String)
-        = Beholder({ Config.fromStringWithLog(it, config, "test-config") })
+        = Beholder({ Config.fromStringWithLog(it, config.replace('¥', '$'), "test-config") })
+
+    protected fun makeAppAndMock(config: String, testBlock: (Beholder, Mock) -> Unit) {
+        makeApp(config).use { app ->
+            app.config.start()
+            val mock = Mock(app)
+            testBlock(app, mock)
+            mock.finalize()
+        }
+    }
+
+    class Mock(private val app: Beholder) {
+        fun send(vararg pairs: Pair<String, String>) {
+            val message = Message()
+            for (pair in pairs) {
+                message[pair.first] = pair.second
+            }
+            send(message)
+        }
+
+        fun send(message: Message) {
+            app.mockListeners["default"]!!.queue.add(message)
+        }
+
+        private val receivedNum = AtomicInteger(0)
+
+        fun receive(): FieldValue {
+            val received = app.mockSenders["default"]!!.received
+            for (i in 1..25) {
+                Thread.sleep(2)
+                if (!(received.size < receivedNum.get() + 1)) {
+                    break
+                }
+            }
+            if (received.size < receivedNum.get() + 1) {
+                throw Exception("A message is expected at `from mock`, but there is no message: expected ${receivedNum.get() + 1}, actual ${received.size}")
+            }
+            val fieldValue = received[receivedNum.get()]
+            receivedNum.incrementAndGet()
+            return fieldValue
+        }
+
+        fun finalize() {
+            Thread.sleep(50)
+            val output = app.mockSenders["default"]
+            if (output != null && output.received.size != receivedNum.get()) {
+                throw Exception("Mock received too many messages: expected $receivedNum, actual ${output.received.size}")
+            }
+        }
+    }
 
     protected fun receiveMessagesWithConfig(config: String, count: Int, senderBlock: (RootCommand) -> Unit): List<Message> {
         val processedMessages = mutableListOf<Message>()

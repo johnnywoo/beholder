@@ -10,6 +10,7 @@ import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.conveyor.Step
 import ru.agalkin.beholder.conveyor.StepResult
 import ru.agalkin.beholder.formatters.TemplateFormatter
+import ru.agalkin.beholder.senders.MockSender
 
 class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val destination: Destination
@@ -38,6 +39,8 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
                     arguments.shiftFixedString("`to shell` needs a shell command"),
                     TemplateFormatter.payloadFormatter
                 )
+
+                "mock" -> MockDestination(arguments.shiftLiteralOrNull() ?: "default")
 
                 else -> throw CommandException("Unsupported destination type")
             }
@@ -122,6 +125,18 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
 
         override fun execute(message: Message): StepResult {
             sender.writeMessagePayload(template.formatMessage(message).withNewlineAtEnd())
+            return StepResult.CONTINUE
+        }
+    }
+
+    private inner class MockDestination(name: String) : Destination() {
+        private val mockSender = MockSender(app)
+        init {
+            app.mockSenders[name] = mockSender
+        }
+
+        override fun execute(message: Message): StepResult {
+            mockSender.writeMessagePayload(message.getPayloadValue())
             return StepResult.CONTINUE
         }
     }

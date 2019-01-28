@@ -7,7 +7,7 @@ class TimerListenerThread(private val app: Beholder) : Thread("timer-listener") 
     val router = MessageRouter()
 
     override fun run() {
-        InternalLog.info("Thread $name got started")
+        InternalLog.info("Thread $name was started")
 
         var millis = Date().time
 
@@ -31,7 +31,7 @@ class TimerListenerThread(private val app: Beholder) : Thread("timer-listener") 
                 message
             }
 
-            // выдаём сообщения точно раз в секунду, без накопления ошибки
+            // Выдаём сообщения точно раз в секунду, без накопления ошибки
             val afterLoopTime = Date().time
             while (millis - afterLoopTime <= 0) {
                 millis += 1000

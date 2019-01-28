@@ -63,14 +63,10 @@ abstract class TestAbstract {
 
     class Mock(private val app: Beholder) {
         fun send(vararg pairs: Pair<String, String>) {
-            val message = Message()
-            for (pair in pairs) {
-                message[pair.first] = pair.second
-            }
-            send(message)
+            send(Message.of(*pairs))
         }
 
-        fun send(message: Message) {
+        private fun send(message: Message) {
             app.mockListeners["default"]!!.queue.add(message)
         }
 

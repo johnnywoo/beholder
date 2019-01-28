@@ -7,8 +7,7 @@ import kotlin.test.assertEquals
 class SeverityNameFormatterTest : TestAbstract() {
     @Test
     fun testSeverityNameFormatter() {
-        val message = Message()
-        message["severity"] = "6"
+        val message = Message.of("severity" to "6")
 
         val parsedMessage = processMessageWithConfig(message, "set \$name severity-name \$severity")
 
@@ -17,8 +16,7 @@ class SeverityNameFormatterTest : TestAbstract() {
 
     @Test
     fun testSeverityNameFormatterLowercase() {
-        val message = Message()
-        message["severity"] = "6"
+        val message = Message.of("severity" to "6")
 
         val parsedMessage = processMessageWithConfig(message, "set \$name severity-name \$severity lowercase")
 

@@ -27,8 +27,7 @@ class FlowTest : TestAbstract() {
 
     @Test
     fun testRoutingTrivial() {
-        val message = Message()
-        message["path"] = "start"
+        val message = Message.of("path" to "start")
 
         val processedMessage = processMessageWithConfig(message, "set \$path '\$path, inside'")
 
@@ -37,8 +36,7 @@ class FlowTest : TestAbstract() {
 
     @Test
     fun testFlowNoneRouting() {
-        val message = Message()
-        message["path"] = "start"
+        val message = Message.of("path" to "start")
 
         val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before'; set \$path '\$path, after'")
 
@@ -47,8 +45,7 @@ class FlowTest : TestAbstract() {
 
     @Test
     fun testTeeRouting() {
-        val message = Message()
-        message["path"] = "start"
+        val message = Message.of("path" to "start")
 
         val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; tee {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
 
@@ -57,8 +54,7 @@ class FlowTest : TestAbstract() {
 
     @Test
     fun testJoinRouting() {
-        val message = Message()
-        message["path"] = "start"
+        val message = Message.of("path" to "start")
 
         val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; join {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
 
@@ -67,9 +63,6 @@ class FlowTest : TestAbstract() {
 
     @Test
     fun testJoinRoutingInfiniteLoop() {
-        val message = Message()
-        message["path"] = "start"
-
         val config = "switch cat { case dog {} } " +
             "join { from udp 3820; } " +
             "tee { } "
@@ -81,8 +74,7 @@ class FlowTest : TestAbstract() {
 
     @Test
     fun testFlowRouting() {
-        val message = Message()
-        message["path"] = "start"
+        val message = Message.of("path" to "start")
 
         val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; flow {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
 

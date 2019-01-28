@@ -8,9 +8,10 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
     @Test
     fun testEachFieldAsMessageInflater() {
         val received = receiveMessagesWithConfig("parse each-field-as-message", 2) {
-            val message = Message()
-            message["cat"] = "feline"
-            message["dog"] = "canine"
+            val message = Message.of(
+                "cat" to "feline",
+                "dog" to "canine"
+            )
             it.topLevelInput.addMessage(message)
         }
 
@@ -92,9 +93,10 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
             """.replace('¥', '$'),
             35,
             {
-                val message = Message()
-                message["date"]    = "2017-11-26T16:16:01+03:00"
-                message["payload"] = "lots of irrelevant words"
+                val message = Message.of(
+                    "date" to "2017-11-26T16:16:01+03:00",
+                    "payload" to "lots of irrelevant words"
+                )
                 it.topLevelInput.addMessage(message)
             }
         )

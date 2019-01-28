@@ -34,9 +34,10 @@ class JsonTest : TestAbstract() {
 
     @Test
     fun testJsonWorks() {
-        val message = Message()
-        message["custom"]  = "Custom"
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of(
+            "custom" to "Custom",
+            "payload" to "We've got cats and dogs"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$json json")
 
@@ -45,9 +46,10 @@ class JsonTest : TestAbstract() {
 
     @Test
     fun testJsonMultiline() {
-        val message = Message()
-        message["custom"]  = "Custom\nMore custom"
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of(
+            "custom" to "Custom\nMore custom",
+            "payload" to "We've got cats and dogs"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$json json")
 
@@ -56,9 +58,10 @@ class JsonTest : TestAbstract() {
 
     @Test
     fun testJsonNonexistentField() {
-        val message = Message()
-        message["ignored"] = "Ignored"
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of(
+            "ignored" to "Ignored",
+            "payload" to "We've got cats and dogs"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$json json \$payload \$whatever")
 
@@ -67,8 +70,7 @@ class JsonTest : TestAbstract() {
 
     @Test
     fun testJsonCyrillic() {
-        val message = Message()
-        message["payload"] = "Мама мыла раму"
+        val message = Message.of("payload" to "Мама мыла раму")
 
         val processedMessage = processMessageWithConfig(message, "set \$json json")
 
@@ -77,8 +79,7 @@ class JsonTest : TestAbstract() {
 
     @Test
     fun testJsonMultiCodePoint() {
-        val message = Message()
-        message["payload"] = "\uD83D\uDCA9"
+        val message = Message.of("payload" to "\uD83D\uDCA9")
 
         val processedMessage = processMessageWithConfig(message, "set \$json json")
 

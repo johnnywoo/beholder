@@ -7,9 +7,7 @@ import kotlin.test.assertEquals
 class FieldpackTest : TestAbstract() {
     @Test
     fun testFieldpackUnpackTrivial() {
-        val message = Message(mapOf(
-            "payload" to FieldValue.fromString("cat")
-        ))
+        val message = Message.of("payload" to "cat")
 
         // packing and writing
         val buffer = Fieldpack.writeMessagesToByteArray(listOf(message))
@@ -40,14 +38,14 @@ class FieldpackTest : TestAbstract() {
     @Test
     fun testFieldpackUnpackTwoMessages() {
         val messages = listOf(
-            Message(mapOf(
-                "sound" to FieldValue.fromString("meow"),
-                "claws" to FieldValue.fromString("retracted")
-            )),
-            Message(mapOf(
-                "sound" to FieldValue.fromString("gruff"),
-                "tail" to FieldValue.fromString("wiggling")
-            ))
+            Message.of(
+                "sound" to "meow",
+                "claws" to "retracted"
+            ),
+            Message.of(
+                "sound" to "gruff",
+                "tail" to "wiggling"
+            )
         )
 
         // packing and writing

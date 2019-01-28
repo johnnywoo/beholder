@@ -229,8 +229,7 @@ class ExpressionsTest : TestAbstract() {
 
     @Test
     fun testLiteralField() {
-        val message = Message()
-        message["cat"] = "a gray cat"
+        val message = Message.of("cat" to "a gray cat")
 
         val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in \$cat")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
@@ -238,8 +237,7 @@ class ExpressionsTest : TestAbstract() {
 
     @Test
     fun testQuotedField() {
-        val message = Message()
-        message["cat"] = "a gray cat"
+        val message = Message.of("cat" to "a gray cat")
 
         val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in '\$cat'")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
@@ -247,8 +245,7 @@ class ExpressionsTest : TestAbstract() {
 
     @Test
     fun testDoubleQuotedField() {
-        val message = Message()
-        message["cat"] = "a gray cat"
+        val message = Message.of("cat" to "a gray cat")
 
         val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in \"\$cat\"")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
@@ -264,8 +261,7 @@ class ExpressionsTest : TestAbstract() {
 
     @Test
     fun testCurlyBracedQuotedField() {
-        val message = Message()
-        message["cat"] = "a gray cat"
+        val message = Message.of("cat" to "a gray cat")
 
         val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in '{\$cat}'")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
@@ -273,8 +269,7 @@ class ExpressionsTest : TestAbstract() {
 
     @Test
     fun testCurlyBracedDoubleQuotedField() {
-        val message = Message()
-        message["cat"] = "a gray cat"
+        val message = Message.of("cat" to "a gray cat")
 
         val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in \"{\$cat}\"")
         assertEquals("a gray dog", processedMessage?.getStringField("result"))
@@ -282,8 +277,7 @@ class ExpressionsTest : TestAbstract() {
 
     @Test
     fun testCurlyBracedFieldWithRemainder() {
-        val message = Message()
-        message["cat"] = "a gray cat"
+        val message = Message.of("cat" to "a gray cat")
 
         val processedMessage = processMessageWithConfig(message, "set \$result replace ~cat~ 'dog' in '{\$cat}astrophe'")
         assertEquals("a gray dogastrophe", processedMessage?.getStringField("result"))

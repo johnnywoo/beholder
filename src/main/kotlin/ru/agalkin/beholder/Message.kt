@@ -64,4 +64,14 @@ class Message(initialFields: Map<String, FieldValue>? = null) {
             return default
         }
     }
+
+    companion object {
+        fun of(vararg pairs: Pair<String, String>): Message {
+            val message = Message()
+            for (pair in pairs) {
+                message[pair.first] = pair.second
+            }
+            return message
+        }
+    }
 }

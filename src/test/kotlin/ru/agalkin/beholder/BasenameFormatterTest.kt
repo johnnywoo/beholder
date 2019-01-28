@@ -28,8 +28,7 @@ class BasenameFormatterTest : TestAbstract() {
     @ParameterizedTest
     @ArgumentsSource(BasenameProvider::class)
     fun runTest(path: String, expected: String) {
-        val message = Message()
-        message["path"] = path
+        val message = Message.of("path" to path)
 
         val parsedMessage = processMessageWithConfig(message, "set \$basename basename \$path")
 

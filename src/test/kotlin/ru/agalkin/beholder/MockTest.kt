@@ -40,8 +40,7 @@ class MockTest : TestAbstract() {
 
     @Test
     fun testMockSmoke() {
-        val message = Message()
-        message["cat"] = "feline"
+        val message = Message.of("cat" to "feline")
 
         val config = """from mock; to mock"""
         makeApp(config).use { app ->

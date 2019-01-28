@@ -8,8 +8,9 @@ import kotlin.test.assertEquals
 class SyslogInflaterTest : TestAbstract() {
     @Test
     fun testSyslogInflater() {
-        val message = Message()
-        message["payload"] = "<190>Nov 25 13:46:44 vps nginx: 127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] \"GET /api HTTP/1.1\" 200 47 \"-\" \"curl/7.38.0\""
+        val message = Message.of(
+            "payload" to "<190>Nov 25 13:46:44 vps nginx: 127.0.0.1 - - [25/Nov/2017:13:46:44 +0300] \"GET /api HTTP/1.1\" 200 47 \"-\" \"curl/7.38.0\""
+        )
 
         val processedMessage = processMessageWithConfig(message, "parse syslog")
 
@@ -27,8 +28,9 @@ class SyslogInflaterTest : TestAbstract() {
 
     @Test
     fun testSyslogInflaterMultiline() {
-        val message = Message()
-        message["payload"] = "<190>Nov 25 13:46:44 vps nginx: a\nb"
+        val message = Message.of(
+            "payload" to "<190>Nov 25 13:46:44 vps nginx: a\nb"
+        )
 
         val processedMessage = processMessageWithConfig(message, "parse syslog")
 

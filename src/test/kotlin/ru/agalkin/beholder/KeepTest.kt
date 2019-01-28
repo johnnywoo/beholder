@@ -31,9 +31,10 @@ class KeepTest : TestAbstract() {
 
     @Test
     fun testKeepWorks() {
-        val message = Message()
-        message["removed"] = "Removed"
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of(
+            "removed" to "Removed",
+            "payload" to "We've got cats and dogs"
+        )
 
         val processedMessage = processMessageWithConfig(message, "keep \$payload")
 
@@ -42,9 +43,10 @@ class KeepTest : TestAbstract() {
 
     @Test
     fun testKeepNonexistentField() {
-        val message = Message()
-        message["removed"] = "Removed"
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of(
+            "removed" to "Removed",
+            "payload" to "We've got cats and dogs"
+        )
 
         val processedMessage = processMessageWithConfig(message, "keep \$payload \$whatever")
 
@@ -53,10 +55,11 @@ class KeepTest : TestAbstract() {
 
     @Test
     fun testKeepMultipleFields() {
-        val message = Message()
-        message["removed"] = "Removed"
-        message["kind"]    = "Kind"
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of(
+            "removed" to "Removed",
+            "kind" to "Kind",
+            "payload" to "We've got cats and dogs"
+        )
 
         val processedMessage = processMessageWithConfig(message, "keep \$payload \$kind")
 

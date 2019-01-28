@@ -35,7 +35,7 @@ class TimeFormatterTest : TestAbstract() {
     @ParameterizedTest
     @ArgumentsSource(TimeFormatProvider::class)
     fun testFormat(format: String, time: String, result: String) {
-        val message = Message(mapOf("date" to FieldValue.fromString(time)))
+        val message = Message.of("date" to time)
         val processedMessage = processMessageWithConfig(message, "set \$d $format in \$date")
         assertNotNull(processedMessage)
         assertFieldNames(processedMessage, "d", "date")

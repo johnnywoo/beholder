@@ -60,8 +60,7 @@ class ReplaceTest : TestAbstract() {
             |""".trimMargin().replace('¥', '$')
         )
 
-        val message = Message()
-        message["payload"] = "We've got a cat here"
+        val message = Message.of("payload" to "We've got a cat here")
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ 'huge \$1'")
 
@@ -71,8 +70,7 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceWorks() {
-        val message = Message()
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of("payload" to "We've got cats and dogs")
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat|dog~ animal")
 
@@ -81,8 +79,7 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceNewlines() {
-        val message = Message()
-        message["payload"] = "Line 1\nLine 2"
+        val message = Message.of("payload" to "Line 1\nLine 2")
 
         val processedMessage = processMessageWithConfig(message, """set ¥payload replace ~\n~ '\\\\n'""".replace('¥', '$'))
 
@@ -91,9 +88,10 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceInterpolationSimple() {
-        val message = Message()
-        message["animal"]  = "feline"
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of(
+            "animal" to "feline",
+            "payload" to "We've got cats and dogs"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ '\$animal'")
 
@@ -102,9 +100,10 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceInterpolationAndGroups() {
-        val message = Message()
-        message["size"]    = "huge"
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of(
+            "size" to "huge",
+            "payload" to "We've got cats and dogs"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~(cat|dog)~ '\$size \$1'")
 
@@ -113,8 +112,7 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceWithEmptyString() {
-        val message = Message()
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of("payload" to "We've got cats and dogs")
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cats and ~ ''")
 
@@ -123,8 +121,7 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceWithUnknownField() {
-        val message = Message()
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of("payload" to "We've got cats and dogs")
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cats and ~ \$unknown")
 
@@ -133,8 +130,7 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceInUnknownField() {
-        val message = Message()
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of("payload" to "We've got cats and dogs")
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cats and ~ '' in \$unknown")
 
@@ -143,8 +139,7 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceIn() {
-        val message = Message()
-        message["payload"] = "To be ignored"
+        val message = Message.of("payload" to "To be ignored")
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ 'animal' in 'Zoo has cats'")
 
@@ -153,9 +148,10 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceInField() {
-        val message = Message()
-        message["text"]    = "Zoo has cats"
-        message["payload"] = "To be ignored"
+        val message = Message.of(
+            "text" to "Zoo has cats",
+            "payload" to "To be ignored"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ 'animal' in \$text")
 
@@ -164,9 +160,10 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceInWithFields() {
-        val message = Message()
-        message["animal"]  = "cat"
-        message["payload"] = "To be ignored"
+        val message = Message.of(
+            "animal" to "cat",
+            "payload" to "To be ignored"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ 'feline' in 'Two cats: \$animal \$animal'")
 
@@ -175,10 +172,11 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceInWithFieldsEverywhere() {
-        val message = Message()
-        message["animal"]     = "cat"
-        message["betterName"] = "feline"
-        message["payload"]    = "To be ignored"
+        val message = Message.of(
+            "animal" to "cat",
+            "betterName" to "feline",
+            "payload" to "To be ignored"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~cat~ \$betterName in 'Two cats: \$animal \$animal'")
 
@@ -187,8 +185,9 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceFromHelp1() {
-        val message = Message()
-        message["payload"] = "127.0.0.1 WARN PHP Warning: some warning"
+        val message = Message.of(
+            "payload" to "127.0.0.1 WARN PHP Warning: some warning"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~warn(ing)?~i 'WARNING'")
 
@@ -197,27 +196,31 @@ class ReplaceTest : TestAbstract() {
 
     @Test
     fun testReplaceFromHelp2() {
-        val message = Message()
-        message["subdomain"] = "www"
-        message["domain"]    = "example.com"
+        val message = Message.of(
+            "subdomain" to "www",
+            "domain" to "example.com"
+        )
 
         val processedMessage = processMessageWithConfig(message, "set \$host replace ~^www\\.~ '' in '\$subdomain.\$domain'")
 
         assertEquals("example.com", processedMessage!!.getStringField("host"))
+    }
 
-        val message2 = Message()
-        message2["subdomain"] = "mail"
-        message2["domain"]    = "example.com"
+    @Test
+    fun testReplaceFromHelp4() {
+        val message = Message.of(
+            "subdomain" to "mail",
+            "domain" to "example.com"
+        )
 
-        val processedMessage2 = processMessageWithConfig(message2, "set \$host replace ~^www\\.~ '' in '\$subdomain.\$domain'")
+        val processedMessage = processMessageWithConfig(message, "set \$host replace ~^www\\.~ '' in '\$subdomain.\$domain'")
 
-        assertEquals("mail.example.com", processedMessage2!!.getStringField("host"))
+        assertEquals("mail.example.com", processedMessage!!.getStringField("host"))
     }
 
     @Test
     fun testReplaceFromHelp3() {
-        val message = Message()
-        message["payload"] = "a\nb"
+        val message = Message.of("payload" to "a\nb")
 
         val processedMessage = processMessageWithConfig(message, "set \$payload replace ~\\n~ '\\\\\\\\n'")
 

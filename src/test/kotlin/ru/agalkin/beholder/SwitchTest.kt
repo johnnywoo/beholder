@@ -121,8 +121,7 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchEmptyBlock() {
-        val message = Message()
-        message["animal"] = "initial"
+        val message = Message.of("animal" to "initial")
 
         val processedMessage = processMessageWithConfig(message, """
             switch 'cat' {
@@ -137,8 +136,7 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchEmptyDefault() {
-        val message = Message()
-        message["animal"] = "initial"
+        val message = Message.of("animal" to "initial")
 
         val processedMessage = processMessageWithConfig(message, """
             switch 'dog' {
@@ -153,8 +151,7 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchOnlyDefault() {
-        val message = Message()
-        message["animal"] = "initial"
+        val message = Message.of("animal" to "initial")
 
         val processedMessage = processMessageWithConfig(message, """
             switch 'dog' {
@@ -168,8 +165,7 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchFlowCaseRouting() {
-        val message = Message()
-        message["animal"] = "initial"
+        val message = Message.of("animal" to "initial")
 
         val processedMessage = processMessageWithConfig(message, """
             switch 'dog' {
@@ -186,8 +182,7 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchFlowDefaultRouting() {
-        val message = Message()
-        message["animal"] = "initial"
+        val message = Message.of("animal" to "initial")
 
         val processedMessage = processMessageWithConfig(message, """
             switch 'dog' {
@@ -204,8 +199,7 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchMatchLiteral() {
-        val message = Message()
-        message["animal"] = "initial"
+        val message = Message.of("animal" to "initial")
 
         val processedMessage = processMessageWithConfig(message, """
             switch 'dog' {
@@ -219,8 +213,7 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchMatchQuoted() {
-        val message = Message()
-        message["animal"] = "initial"
+        val message = Message.of("animal" to "initial")
 
         val processedMessage = processMessageWithConfig(message, """
             switch 'dog' {
@@ -234,9 +227,10 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchMatchTemplate() {
-        val message = Message()
-        message["feline"] = "cat"
-        message["animal"] = "cat"
+        val message = Message.of(
+            "feline" to "cat",
+            "animal" to "cat"
+        )
 
         val processedMessage = processMessageWithConfig(message, """
             switch ¥animal {
@@ -250,8 +244,7 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchNoDefaultFallthrough() {
-        val message = Message()
-        message["animal"] = "initial"
+        val message = Message.of("animal" to "initial")
 
         val processedMessage = processMessageWithConfig(message, """
             switch cat {
@@ -265,9 +258,10 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchNoDefaultOnCaseMatch() {
-        val message = Message()
-        message["animal"] = "initial"
-        message["is_default_visited"] = "no"
+        val message = Message.of(
+            "animal" to "initial",
+            "is_default_visited" to "no"
+        )
 
         val processedMessage = processMessageWithConfig(message, """
             switch cat {
@@ -282,9 +276,10 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchNoDefaultOnCaseMatchRegexp() {
-        val message = Message()
-        message["animal"] = "initial"
-        message["is_default_visited"] = "no"
+        val message = Message.of(
+            "animal" to "initial",
+            "is_default_visited" to "no"
+        )
 
         val processedMessage = processMessageWithConfig(message, """
             switch cat {
@@ -364,9 +359,10 @@ class SwitchTest : TestAbstract() {
 
     @Test
     fun testSwitchMultiplicator() {
-        val message = Message()
-        message["cat"] = "feline"
-        message["dog"] = "canine"
+        val message = Message.of(
+            "cat" to "feline",
+            "dog" to "canine"
+        )
 
         val processedMessage = processMessageWithConfig(message, """
             parse each-field-as-message;

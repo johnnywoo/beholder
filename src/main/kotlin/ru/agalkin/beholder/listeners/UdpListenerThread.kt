@@ -18,7 +18,7 @@ class UdpListenerThread(
     private val buffer = ByteArray(FROM_UDP_MAX_MESSAGE_BYTES)
 
     override fun run() {
-        InternalLog.info("Thread $name got started")
+        InternalLog.info("Thread $name was started")
 
         DatagramSocket(udpListener.address.port, udpListener.address.getInetAddress()).use { socket ->
             socket.soTimeout = 100 // millis
@@ -48,6 +48,6 @@ class UdpListenerThread(
             }
         }
 
-        InternalLog.info("Thread $name got deleted")
+        InternalLog.info("Thread $name was stopped")
     }
 }

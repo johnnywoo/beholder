@@ -8,8 +8,7 @@ import kotlin.test.assertNull
 class JsonInflaterTest : TestAbstract() {
     @Test
     fun testJsonInflater() {
-        val message = Message()
-        message["payload"] = """{"field":"value"}"""
+        val message = Message.of("payload" to """{"field":"value"}""")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -24,8 +23,7 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterMultiple() {
-        val message = Message()
-        message["payload"] = """{"field":"value","field2":"value2"}"""
+        val message = Message.of("payload" to """{"field":"value","field2":"value2"}""")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -41,8 +39,7 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterNumber() {
-        val message = Message()
-        message["payload"] = """{"field":123,"field2":0}"""
+        val message = Message.of("payload" to """{"field":123,"field2":0}""")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -58,8 +55,7 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterBoolean() {
-        val message = Message()
-        message["payload"] = """{"field":true,"field2":false}"""
+        val message = Message.of("payload" to """{"field":true,"field2":false}""")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -75,9 +71,10 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterNull() {
-        val message = Message()
-        message["field"]   = "To be removed"
-        message["payload"] = """{"field":null}"""
+        val message = Message.of(
+            "field" to "To be removed",
+            "payload" to """{"field":null}"""
+        )
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -91,8 +88,7 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterParseError() {
-        val message = Message()
-        message["payload"] = """{"field":"""
+        val message = Message.of("payload" to """{"field":""")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -101,8 +97,7 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterNotObject() {
-        val message = Message()
-        message["payload"] = """[]"""
+        val message = Message.of("payload" to "[]")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -111,8 +106,7 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterNestedObject() {
-        val message = Message()
-        message["payload"] = """{"a":{"b":"c"}}"""
+        val message = Message.of("payload" to """{"a":{"b":"c"}}""")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -121,8 +115,7 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterNestedObjectAndOthers() {
-        val message = Message()
-        message["payload"] = """{"z":"z","a":{"b":"c"}}"""
+        val message = Message.of("payload" to """{"z":"z","a":{"b":"c"}}""")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -131,8 +124,7 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterMultiline() {
-        val message = Message()
-        message["payload"] = """{"payload":"Multiple\nlines"}"""
+        val message = Message.of("payload" to """{"payload":"Multiple\nlines"}""")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 
@@ -144,8 +136,7 @@ class JsonInflaterTest : TestAbstract() {
 
     @Test
     fun testJsonInflaterCodePoints() {
-        val message = Message()
-        message["payload"] = """{"payload":"\u041c\u0430\u043c\u0430 \u043c\u044b\u043b\u0430 \u0440\u0430\u043c\u0443"}"""
+        val message = Message.of("payload" to """{"payload":"\u041c\u0430\u043c\u0430 \u043c\u044b\u043b\u0430 \u0440\u0430\u043c\u0443"}""")
 
         val processedMessage = processMessageWithConfig(message, "parse json")
 

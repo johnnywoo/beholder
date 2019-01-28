@@ -62,6 +62,8 @@ class SelectorThread(private val app: Beholder) : Thread("selector${number.incre
     }
 
     override fun run() {
+        InternalLog.info("Thread $name was started")
+
         try {
             while (isRunning.get()) {
                 selector.select()
@@ -143,6 +145,8 @@ class SelectorThread(private val app: Beholder) : Thread("selector${number.incre
                 channel.close()
             }
         }
+
+        InternalLog.info("Thread $name was stopped")
     }
 
     interface Callback {

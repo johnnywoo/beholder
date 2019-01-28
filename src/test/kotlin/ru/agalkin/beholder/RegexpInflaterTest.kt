@@ -8,8 +8,7 @@ import kotlin.test.assertNull
 class RegexpInflaterTest : TestAbstract() {
     @Test
     fun testRegexpInflater() {
-        val message = Message()
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of("payload" to "We've got cats and dogs")
 
         val parsedMessage = processMessageWithConfig(message, "parse ~(?<animal>cat|dog)~")
 
@@ -24,8 +23,7 @@ class RegexpInflaterTest : TestAbstract() {
 
     @Test
     fun testRegexpInflaterNoMatch() {
-        val message = Message()
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of("payload" to "We've got cats and dogs")
 
         val parsedMessage = processMessageWithConfig(message, "parse ~(?<animal>whale)~")
 
@@ -34,8 +32,7 @@ class RegexpInflaterTest : TestAbstract() {
 
     @Test
     fun testRegexpInflaterKeepUnparsed() {
-        val message = Message()
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of("payload" to "We've got cats and dogs")
 
         val parsedMessage = processMessageWithConfig(message, "parse keep-unparsed ~(?<animal>whale)~")
 
@@ -47,8 +44,7 @@ class RegexpInflaterTest : TestAbstract() {
 
     @Test
     fun testRegexpInflaterNumberedGroup() {
-        val message = Message()
-        message["payload"] = "We've got cats and dogs"
+        val message = Message.of("payload" to "We've got cats and dogs")
 
         val parsedMessage = processMessageWithConfig(message, "parse ~(cat)~")
 
@@ -61,9 +57,10 @@ class RegexpInflaterTest : TestAbstract() {
 
     @Test
     fun testRegexpInflaterNoMatchNoOverwrite() {
-        val message = Message()
-        message["payload"] = "We've got cats and dogs"
-        message["animal"]  = "headcrab"
+        val message = Message.of(
+            "payload" to "We've got cats and dogs",
+            "animal" to "headcrab"
+        )
 
         val parsedMessage = processMessageWithConfig(message, "parse keep-unparsed ~(?<animal>whale)~")
 

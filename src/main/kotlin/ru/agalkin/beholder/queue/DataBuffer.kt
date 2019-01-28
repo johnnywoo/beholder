@@ -43,7 +43,9 @@ class DataBuffer(private val app: Beholder, val id: String = "") {
         synchronized(this) {
             while (currentSizeInMemory.get() + bytes.size > maxTotalSize.get()) {
                 val removed = byteArrays.pollFirst()
-                addMemorySize(-removed.size)
+                if (removed != null) {
+                    addMemorySize(-removed.size)
+                }
             }
 
             byteArrays.addLast(bytes)

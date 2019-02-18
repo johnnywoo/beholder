@@ -59,11 +59,12 @@ class SyslogInflater : InplaceInflater {
     }
 
     // <15>1 2018-04-27T17:49:03+03:00 hostname program 73938 - - Message
+    // <30>1 2019-02-18T14:20:22.136325Z linuxkit-025000000001 824c912bb984 1358 824c912bb984 - Message from docker when syslog-format=rfc5424micro
     private val syslogIetfRegex = Pattern.compile(
         """
             ^
             < (?<priority>[0-9]+) >1
-            \s (?<date> \d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d (?: Z | [+-]\d\d:\d\d) )
+            \s (?<date> \d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d ) (?: \.\d* ) (?<tz> Z | [+-]\d\d:\d\d)
             \s (?<host> [^\s]+)
             \s (?<program> [^\s]+)
             \s (?<pid> [^\s]+)
@@ -96,7 +97,12 @@ class SyslogInflater : InplaceInflater {
 
         val date = matcher.group("date")
         if (date != null) {
-            message["date"] = date.replace(Regex("Z$"), "+00:00")
+            val tzMatch = matcher.group("tz")
+            val tz = when (tzMatch) {
+                "Z", null -> "+00:00"
+                else -> tzMatch
+            }
+            message["date"] = date + tz
         }
 
         val host = matcher.group("host")

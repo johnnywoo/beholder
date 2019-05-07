@@ -144,19 +144,6 @@ abstract class TestAbstract {
         else -> DumpFormatter().formatMessage(message).toString().replace(Regex("^.*\n"), "")
     }
 
-    protected fun assertFieldNames(message: Message?, vararg names: String) {
-        assertNotNull(message)
-        assertEquals(names.sorted(), message.getFieldNames().sorted())
-    }
-
-    protected fun assertFieldValues(message: Message?, values: Map<String, String>) {
-        assertNotNull(message)
-        assertEquals(message.getFieldNames().sorted(), values.keys.sorted())
-        for ((key, value) in values) {
-            assertEquals(value, message.getStringField(key))
-        }
-    }
-
     protected fun assertConfigParses(fromText: String, toDefinition: String) {
         makeApp("").use { app ->
             assertEquals(toDefinition, Config(app, fromText, "test-config").getDefinition())
@@ -177,17 +164,6 @@ abstract class TestAbstract {
     protected fun getByteArrayField(message: Message, field: String): ByteArray {
         val fieldValue = message.getFieldValue(field)
         return fieldValue.toByteArray().slice(0 until fieldValue.getByteLength()).toByteArray()
-    }
-
-    protected fun assertByteArraysEqual(a: ByteArray, b: ByteArray) {
-        if (a.size != b.size) {
-            assertTrue(false, "Byte arrays differ in size: ${a.size}, ${b.size}")
-        }
-        for (i in a.indices) {
-            if (a[i] != b[i]) {
-                assertTrue(false, "Different bytes at position $i: '${a[i].toInt()}', '${b[i].toInt()}'")
-            }
-        }
     }
 
     @BeforeTest

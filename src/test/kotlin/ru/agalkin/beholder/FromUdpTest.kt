@@ -1,6 +1,8 @@
 package ru.agalkin.beholder
 
 import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.assertByteArraysEqual
+import ru.agalkin.beholder.testutils.assertFieldNames
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

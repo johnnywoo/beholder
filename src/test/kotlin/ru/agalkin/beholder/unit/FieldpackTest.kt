@@ -1,10 +1,14 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.unit
 
-import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.BeholderException
+import ru.agalkin.beholder.Fieldpack
+import ru.agalkin.beholder.Message
+import ru.agalkin.beholder.testutils.assertByteArraysEqual
+import ru.agalkin.beholder.testutils.assertFieldNames
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class FieldpackTest : TestAbstract() {
+class FieldpackTest {
     @Test
     fun testFieldpackUnpackTrivial() {
         val message = Message.of("payload" to "cat")
@@ -141,7 +145,7 @@ class FieldpackTest : TestAbstract() {
     }
 
     private fun createNumSequence(n: Long): ByteArray {
-        val length = Fieldpack.writeNum(n, {_,_->})
+        val length = Fieldpack.writeNum(n, { _, _ -> })
         val byteArray = ByteArray(length)
         Fieldpack.writeNum(n) { source, readLenth ->
             for (i in 0 until readLenth) {

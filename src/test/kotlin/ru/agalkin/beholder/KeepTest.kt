@@ -1,6 +1,7 @@
 package ru.agalkin.beholder
 
 import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.assertFieldNames
 import kotlin.test.Test
 
 class KeepTest : TestAbstract() {

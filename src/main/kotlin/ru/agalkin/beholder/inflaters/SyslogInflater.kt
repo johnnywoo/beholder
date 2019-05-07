@@ -64,7 +64,7 @@ class SyslogInflater : InplaceInflater {
         """
             ^
             < (?<priority>[0-9]+) >1
-            \s (?<date> \d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d ) (?: \.\d* ) (?<tz> Z | [+-]\d\d:\d\d)
+            \s (?<date> \d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d ) (?: \.\d* )? (?<tz> Z | [+-]\d\d:\d\d)
             \s (?<host> [^\s]+)
             \s (?<program> [^\s]+)
             \s (?<pid> [^\s]+)

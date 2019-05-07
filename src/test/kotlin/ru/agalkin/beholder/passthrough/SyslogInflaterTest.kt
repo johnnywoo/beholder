@@ -37,4 +37,26 @@ class SyslogInflaterTest : TestAbstract() {
 
         assertEquals("a\nb", processedMessage!!.getPayloadString())
     }
+
+    @Test
+    fun testSyslogInflaterIetfNoMillis() {
+        val message = Message.of(
+            "payload" to "<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"
+        )
+
+        val processedMessage = processMessageWithConfig(message, "parse syslog")
+
+        assertEquals("Message: поехали!", processedMessage!!.getPayloadString())
+    }
+
+    @Test
+    fun testSyslogInflaterIetfWithMillis() {
+        val message = Message.of(
+            "payload" to "<15>1 2017-03-03T09:26:44.999+00:00 sender-host program-name 12345 - - Message: поехали!"
+        )
+
+        val processedMessage = processMessageWithConfig(message, "parse syslog")
+
+        assertEquals("Message: поехали!", processedMessage!!.getPayloadString())
+    }
 }

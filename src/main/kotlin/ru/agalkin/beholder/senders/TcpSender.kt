@@ -44,6 +44,10 @@ class TcpSender(app: Beholder, private val address: Address) {
         }
     }
 
+    fun getQueueOnlyForTests(): FieldValueQueue {
+        return queue
+    }
+
     private var socket = Socket()
     private fun connect(): Socket {
         if (socket.isConnected && !socket.isClosed) {

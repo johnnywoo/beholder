@@ -19,6 +19,10 @@ class TcpListener(val app: Beholder, val address: Address, isSyslogFrame: Boolea
         Received.OK
     }
 
+    fun getQueueOnlyForTests(): MessageQueue {
+        return queue
+    }
+
     private val receiver: SelectorThread.Callback = when (isSyslogFrame) {
         true -> SyslogFrameTcpReceiver(app, queue, address)
         else -> NewlineTerminatedTcpReceiver(app, queue, address)

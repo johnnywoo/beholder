@@ -70,6 +70,10 @@ class DataBuffer(private val app: Beholder, val id: String = "") {
         }
     }
 
+    fun getByteArraysForTestingOnly(): Deque<ByteArray> {
+        return byteArrays
+    }
+
     companion object {
         val allBuffersMemoryBytes = AtomicLong(0)
     }

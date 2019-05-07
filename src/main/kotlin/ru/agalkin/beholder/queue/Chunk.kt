@@ -1,5 +1,6 @@
 package ru.agalkin.beholder.queue
 
+import ru.agalkin.beholder.BeholderException
 import ru.agalkin.beholder.stats.Stats
 import java.lang.ref.WeakReference
 import kotlin.math.max
@@ -141,6 +142,26 @@ abstract class Chunk<T>(private val capacity: Int, private val buffer: DataBuffe
                 bufferState = Buffered(reference)
             }
         }
+    }
+
+    fun getBufferedStateOnlyForTests(): String {
+        return when (bufferState) {
+            is NotBuffered -> "not buffered"
+            is BufferingNow -> "buffering now"
+            is Buffered -> "buffered"
+            else -> throw BeholderException("Invalid buffered state")
+        }
+    }
+
+    fun getByteArrayReferenceOnlyForTests(): WeakReference<ByteArray> {
+        return when(val cell = bufferState) {
+            is Buffered -> cell.byteArrayReference
+            else -> throw BeholderException("Cannot access invalid state the center cannot hold")
+        }
+    }
+
+    fun getListOnlyForTests(): MutableList<T> {
+        return list
     }
 
 

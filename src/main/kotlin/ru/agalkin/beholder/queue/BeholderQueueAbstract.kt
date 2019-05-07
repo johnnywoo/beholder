@@ -13,6 +13,10 @@ abstract class BeholderQueueAbstract<T>(
     // linked list is both Queue and List
     private val chunks = LinkedList<Chunk<T>>()
 
+    fun getChunksOnlyForTests(): LinkedList<Chunk<T>> {
+        return chunks
+    }
+
     protected val buffer by lazy { app.defaultBuffer }
 
     private val totalMessagesCount = AtomicLong()

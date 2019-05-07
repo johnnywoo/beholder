@@ -4,7 +4,7 @@ project.version = "0.1"
 project.group = "ru.agalkin"
 
 plugins {
-    kotlin("jvm") version "1.3.20"
+    kotlin("jvm") version "1.3.31"
 }
 
 val kotlinVersion by extra {
@@ -22,10 +22,10 @@ dependencies {
     compile("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     compile("commons-cli:commons-cli:1.4")
     compile("com.google.code.gson:gson:2.8.5")
-    compile("org.lz4:lz4-java:1.5.0")
+    compile("org.lz4:lz4-java:1.5.1")
 
     testCompile("org.jetbrains.kotlin:kotlin-test-junit5:$kotlinVersion")
-    testCompile("org.junit.jupiter:junit-jupiter-params:5.3.1")
+    testCompile("org.junit.jupiter:junit-jupiter-params:5.4.2")
 }
 
 val jar: Jar by tasks

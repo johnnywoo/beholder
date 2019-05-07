@@ -82,7 +82,7 @@ class IntegrationTest : NetworkedTestAbstract() {
     fun testAgentCyrillic() {
         val messageText = "<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"
 
-        val processedMessage = receiveMessageWithConfig(agentConfig) {
+        val processedMessage = feedMessagesIntoConfig(agentConfig) {
             sendToUdp(AGENT_UDP_SYSLOG_PORT, messageText)
         }
 
@@ -97,7 +97,7 @@ class IntegrationTest : NetworkedTestAbstract() {
     fun testCollectorCyrillicMidpoint() {
         val messageText = """{"agent_type":"tcp-syslog","date":"2018-05-03T15:32:56+03:00","from":"udp://1.1.1.1:33333","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}"""
 
-        val processedMessage = receiveMessageWithConfig(
+        val processedMessage = feedMessagesIntoConfig(
             """
                 from tcp 11000;
                 parse json;
@@ -138,7 +138,7 @@ class IntegrationTest : NetworkedTestAbstract() {
     fun testCollectorCyrillic() {
         val messageText = """{"agent_type":"tcp-syslog","date":"2018-05-03T15:32:56+03:00","from":"udp://1.1.1.1:33333","host":"fake-host","payload":"<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"}"""
 
-        val processedMessage = receiveMessageWithConfig(collectorConfig) {
+        val processedMessage = feedMessagesIntoConfig(collectorConfig) {
             sendToTcp(COLLECTOR_TCP_PORT, messageText + "\n")
         }
 

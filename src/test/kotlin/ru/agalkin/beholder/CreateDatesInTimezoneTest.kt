@@ -10,7 +10,7 @@ class CreateDatesInTimezoneTest : NetworkedTestAbstract() {
     @Test
     fun testCreateDatesInTimezoneMoscow() {
         val messageText = "text"
-        val processedMessage = receiveMessageWithConfig("create_dates_in_timezone Europe/Moscow; from udp 3820") {
+        val processedMessage = feedMessagesIntoConfig("create_dates_in_timezone Europe/Moscow; from udp 3820") {
             sendToUdp(3820, messageText)
         }
 
@@ -23,7 +23,7 @@ class CreateDatesInTimezoneTest : NetworkedTestAbstract() {
     @Test
     fun testCreateDatesInTimezoneUtc() {
         val messageText = "text"
-        val processedMessage = receiveMessageWithConfig("create_dates_in_timezone UTC; from udp 3820") {
+        val processedMessage = feedMessagesIntoConfig("create_dates_in_timezone UTC; from udp 3820") {
             sendToUdp(3820, messageText)
         }
 

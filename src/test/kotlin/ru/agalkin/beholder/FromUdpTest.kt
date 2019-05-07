@@ -11,7 +11,7 @@ class FromUdpTest : NetworkedTestAbstract() {
     @Test
     fun testFromUdpSimple() {
         val messageText = "message"
-        val processedMessage = receiveMessageWithConfig("from udp 3820") {
+        val processedMessage = feedMessagesIntoConfig("from udp 3820") {
             sendToUdp(3820, messageText)
         }
 
@@ -34,7 +34,7 @@ class FromUdpTest : NetworkedTestAbstract() {
     @Test
     fun testFromUdpMultiline() {
         val messageText = "first\nsecond"
-        val processedMessage = receiveMessageWithConfig("from udp 3820") {
+        val processedMessage = feedMessagesIntoConfig("from udp 3820") {
             sendToUdp(3820, messageText)
         }
 
@@ -46,7 +46,7 @@ class FromUdpTest : NetworkedTestAbstract() {
     @Test
     fun testFromUdpZeroByte() {
         val messageBytes = byteArrayOf('a'.toByte(), 0.toByte(), 'b'.toByte())
-        val processedMessage = receiveMessageWithConfig("from udp 3820") {
+        val processedMessage = feedMessagesIntoConfig("from udp 3820") {
             sendToUdp(3820, messageBytes)
         }
 
@@ -59,7 +59,7 @@ class FromUdpTest : NetworkedTestAbstract() {
     @Test
     fun testFromInvalidUnicodeBytes() {
         val messageBytes = byteArrayOf('a'.toByte(), 195.toByte(), 40.toByte(), 'b'.toByte())
-        val processedMessage = receiveMessageWithConfig("from udp 3820") {
+        val processedMessage = feedMessagesIntoConfig("from udp 3820") {
             sendToUdp(3820, messageBytes)
         }
 
@@ -72,7 +72,7 @@ class FromUdpTest : NetworkedTestAbstract() {
     @Test
     fun testFromCyrillicSymbols() {
         val messageBytes = "кошка".toByteArray()
-        val processedMessage = receiveMessageWithConfig("from udp 3820") {
+        val processedMessage = feedMessagesIntoConfig("from udp 3820") {
             sendToUdp(3820, messageBytes)
         }
 
@@ -86,7 +86,7 @@ class FromUdpTest : NetworkedTestAbstract() {
     @Test
     fun testStringOperations() {
         val messageText = "cat"
-        val processedMessage = receiveMessageWithConfig("from udp 3820; set \$payload '\$payload-dog'") {
+        val processedMessage = feedMessagesIntoConfig("from udp 3820; set \$payload '\$payload-dog'") {
             sendToUdp(3820, messageText)
         }
 
@@ -97,7 +97,7 @@ class FromUdpTest : NetworkedTestAbstract() {
     @Test
     fun testZeroByteStringOperations() {
         val messageBytes = byteArrayOf('a'.toByte(), 0.toByte(), 'b'.toByte())
-        val processedMessage = receiveMessageWithConfig("from udp 3820; set \$payload '\$payload-dog'") {
+        val processedMessage = feedMessagesIntoConfig("from udp 3820; set \$payload '\$payload-dog'") {
             sendToUdp(3820, messageBytes)
         }
 
@@ -108,7 +108,7 @@ class FromUdpTest : NetworkedTestAbstract() {
     @Test
     fun testInvalidUnicodeBytesStringOperations() {
         val messageBytes = byteArrayOf('a'.toByte(), 195.toByte(), 40.toByte(), 'b'.toByte())
-        val processedMessage = receiveMessageWithConfig("from udp 3820; set \$payload '\$payload-dog'") {
+        val processedMessage = feedMessagesIntoConfig("from udp 3820; set \$payload '\$payload-dog'") {
             sendToUdp(3820, messageBytes)
         }
 

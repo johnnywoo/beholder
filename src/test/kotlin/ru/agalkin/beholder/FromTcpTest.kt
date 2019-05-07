@@ -10,7 +10,7 @@ class FromTcpTest : NetworkedTestAbstract() {
     @Test
     fun testFromTcpSimple() {
         val messageText = "message"
-        val processedMessage = receiveMessageWithConfig("from tcp 3820") {
+        val processedMessage = feedMessagesIntoConfig("from tcp 3820") {
             sendToTcp(3820, (messageText + "\n").toByteArray())
         }
 

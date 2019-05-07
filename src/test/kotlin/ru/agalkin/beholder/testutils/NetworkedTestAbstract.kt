@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 
 abstract class NetworkedTestAbstract : TestAbstract() {
-    protected fun receiveMessageWithConfig(config: String, senderBlock: (CommandAbstract) -> Unit): Message? {
+    protected fun feedMessagesIntoConfig(config: String, senderBlock: (CommandAbstract) -> Unit): Message? {
         return feedMessagesIntoConfig(config, 1, senderBlock).firstOrNull()
     }
 

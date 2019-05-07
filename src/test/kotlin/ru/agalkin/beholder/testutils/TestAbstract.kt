@@ -8,9 +8,7 @@ import ru.agalkin.beholder.config.parser.ParseException
 import ru.agalkin.beholder.conveyor.Step
 import ru.agalkin.beholder.conveyor.StepResult
 import ru.agalkin.beholder.formatters.DumpFormatter
-import kotlin.test.BeforeTest
-import kotlin.test.assertEquals
-import kotlin.test.fail
+import kotlin.test.*
 
 abstract class TestAbstract {
     protected fun processMessageWithConfig(message: Message, config: String): Message? {
@@ -49,23 +47,28 @@ abstract class TestAbstract {
 
     protected fun getMessageDump(message: Message?) = when (message) {
         null -> "null"
-        else -> DumpFormatter().formatMessage(message).toString().replace(Regex("^.*\n"), "")
+        else -> DumpFormatter().formatMessage(message).toString().replace(Regex("^.*\n"), "").replace('$', '¥')
     }
 
     protected fun assertConfigParses(fromText: String, toDefinition: String) {
         makeApp("").use { app ->
-            assertEquals(toDefinition, Config(app, fromText, "test-config").getDefinition())
+            assertEquals(
+                toDefinition.replace('¥', '$'),
+                Config(app, fromText.replace('¥', '$'), "test-config").getDefinition()
+            )
         }
     }
 
     protected fun assertConfigFails(fromText: String, errorMessage: String) {
         try {
             makeApp("").use { app ->
-                val definition = Config(app, fromText, "test-config").getDefinition()
+                val definition = Config(app, fromText.replace('¥', '$'), "test-config").getDefinition()
                 fail("This config should not parse correctly: $fromText\n=== parsed ===\n$definition\n===")
             }
         } catch (e: ParseException) {
-            assertEquals(errorMessage, e.message)
+            val actualMessage = e.message
+            assertTrue(actualMessage != null && '¥' !in actualMessage, "A literal ¥ was found in actual error message, this should never happen; offending message:\n$actualMessage")
+            assertEquals(errorMessage.replace('¥', '$'), actualMessage)
         }
     }
 

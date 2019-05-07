@@ -15,16 +15,16 @@ class DropTest : TestAbstract() {
     @Test
     fun testDropWorksMeta() {
         // no drop = message gets out
-        val message = Message()
-        val processedMessage = processMessageWithConfig(message, "keep \$payload")
-        assertNotNull(processedMessage)
+        assertNotNull(
+            processMessageWithConfig(Message(), "keep ¥payload")
+        )
     }
 
     @Test
     fun testDropWorksReal() {
         // drop = no message gets out
-        val message = Message()
-        val processedMessage = processMessageWithConfig(message, "drop")
-        assertNull(processedMessage)
+        assertNull(
+            processMessageWithConfig(Message(), "drop")
+        )
     }
 }

@@ -30,7 +30,7 @@ class FlowTest : TestAbstract() {
     fun testRoutingTrivial() {
         val message = Message.of("path" to "start")
 
-        val processedMessage = processMessageWithConfig(message, "set \$path '\$path, inside'")
+        val processedMessage = processMessageWithConfig(message, "set ¥path '¥path, inside'")
 
         assertEquals("start, inside", processedMessage!!.getStringField("path"))
     }
@@ -39,7 +39,7 @@ class FlowTest : TestAbstract() {
     fun testFlowNoneRouting() {
         val message = Message.of("path" to "start")
 
-        val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before'; set \$path '\$path, after'")
+        val processedMessage = processMessageWithConfig(message, "set ¥path '¥path, before'; set ¥path '¥path, after'")
 
         assertEquals("start, before, after", processedMessage!!.getStringField("path"))
     }
@@ -48,7 +48,7 @@ class FlowTest : TestAbstract() {
     fun testTeeRouting() {
         val message = Message.of("path" to "start")
 
-        val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; tee {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
+        val processedMessage = processMessageWithConfig(message, "set ¥path '¥path, before-flow'; tee {set ¥path '¥path, inside-flow'} set ¥path '¥path, after-flow'")
 
         assertEquals("start, before-flow, after-flow", processedMessage!!.getStringField("path"))
     }
@@ -57,7 +57,7 @@ class FlowTest : TestAbstract() {
     fun testJoinRouting() {
         val message = Message.of("path" to "start")
 
-        val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; join {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
+        val processedMessage = processMessageWithConfig(message, "set ¥path '¥path, before-flow'; join {set ¥path '¥path, inside-flow'} set ¥path '¥path, after-flow'")
 
         assertEquals("start, before-flow, after-flow", processedMessage!!.getStringField("path"))
     }
@@ -66,7 +66,7 @@ class FlowTest : TestAbstract() {
     fun testFlowRouting() {
         val message = Message.of("path" to "start")
 
-        val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; flow {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
+        val processedMessage = processMessageWithConfig(message, "set ¥path '¥path, before-flow'; flow {set ¥path '¥path, inside-flow'} set ¥path '¥path, after-flow'")
 
         assertEquals("start, before-flow, after-flow", processedMessage!!.getStringField("path"))
     }

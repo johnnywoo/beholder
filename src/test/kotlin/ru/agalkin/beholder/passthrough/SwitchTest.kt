@@ -53,7 +53,7 @@ class SwitchTest : TestAbstract() {
             switch 'cat' {
                 case ~cat~ { set ¥animal 'feline' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("feline", processedMessage.getStringField("animal"))
@@ -68,7 +68,7 @@ class SwitchTest : TestAbstract() {
                 case ~cat~ { set ¥animal 'feline' }
                 case ~dog~ { set ¥animal 'canine' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("feline", processedMessage.getStringField("animal"))
@@ -84,7 +84,7 @@ class SwitchTest : TestAbstract() {
                 case ~dog~ { set ¥animal 'canine' }
                 case ~tiger~ { set ¥animal 'feline' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("canine", processedMessage.getStringField("animal"))
@@ -99,7 +99,7 @@ class SwitchTest : TestAbstract() {
                 case ~cat~ { set ¥animal 'feline' }
                 case ~dog~ { set ¥animal 'canine' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("canine", processedMessage.getStringField("animal"))
@@ -114,7 +114,7 @@ class SwitchTest : TestAbstract() {
                 case ~cat~ { set ¥animal 'feline' }
                 default { set ¥animal 'canine' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("canine", processedMessage.getStringField("animal"))
@@ -129,7 +129,7 @@ class SwitchTest : TestAbstract() {
                 case ~cat~ {}
                 default { set ¥animal 'unknown' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("initial", processedMessage.getStringField("animal"))
@@ -144,7 +144,7 @@ class SwitchTest : TestAbstract() {
                 case ~cat~ {}
                 default { set ¥animal 'unknown' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("unknown", processedMessage.getStringField("animal"))
@@ -158,7 +158,7 @@ class SwitchTest : TestAbstract() {
             switch 'dog' {
                 default { set ¥animal 'unknown' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("unknown", processedMessage.getStringField("animal"))
@@ -175,7 +175,7 @@ class SwitchTest : TestAbstract() {
                     tee {set ¥animal 'error'}
                 }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("canine", processedMessage.getStringField("animal"))
@@ -192,7 +192,7 @@ class SwitchTest : TestAbstract() {
                     tee {set ¥animal 'error'}
                 }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("unknown", processedMessage.getStringField("animal"))
@@ -206,7 +206,7 @@ class SwitchTest : TestAbstract() {
             switch 'dog' {
                 case dog { set ¥animal 'ok' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("ok", processedMessage.getStringField("animal"))
@@ -220,7 +220,7 @@ class SwitchTest : TestAbstract() {
             switch 'dog' {
                 case 'dog' { set ¥animal 'ok' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("ok", processedMessage.getStringField("animal"))
@@ -237,7 +237,7 @@ class SwitchTest : TestAbstract() {
             switch ¥animal {
                 case ¥feline { set ¥animal 'ok' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("ok", processedMessage.getStringField("animal"))
@@ -251,7 +251,7 @@ class SwitchTest : TestAbstract() {
             switch cat {
                 case dog { set ¥animal 'error' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("initial", processedMessage.getStringField("animal"))
@@ -269,7 +269,7 @@ class SwitchTest : TestAbstract() {
                 case cat { set ¥animal 'feline' }
                 default { set ¥is_default_visited 'yes' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("no", processedMessage.getStringField("is_default_visited"))
@@ -287,7 +287,7 @@ class SwitchTest : TestAbstract() {
                 case ~cat~ { set ¥animal 'feline' }
                 default { set ¥is_default_visited 'yes' }
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("no", processedMessage.getStringField("is_default_visited"))
@@ -301,7 +301,7 @@ class SwitchTest : TestAbstract() {
             set ¥before true;
             switch cat { case cat {set ¥case true;} }
             set ¥after true;
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("true", processedMessage.getStringField("after"))
@@ -318,7 +318,7 @@ class SwitchTest : TestAbstract() {
                 default {set ¥default true;}
             }
             set ¥after true;
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("true", processedMessage.getStringField("after"))
@@ -335,7 +335,7 @@ class SwitchTest : TestAbstract() {
                 case dog {drop}
             }
             set ¥after true;
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("true", processedMessage.getStringField("after"))
@@ -352,7 +352,7 @@ class SwitchTest : TestAbstract() {
                 default {drop}
             }
             set ¥after true;
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("true", processedMessage.getStringField("after"))
@@ -371,7 +371,7 @@ class SwitchTest : TestAbstract() {
                 case cat {}
                 default {drop}
             }
-        """.replace('¥', '$'))
+        """)
 
         assertNotNull(processedMessage)
         assertEquals("cat", processedMessage.getStringField("key"))

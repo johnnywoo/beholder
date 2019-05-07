@@ -8,12 +8,12 @@ import kotlin.test.Test
 class KeepTest : TestAbstract() {
     @Test
     fun testKeepParses() {
-        assertConfigParses("keep \$a", "keep \$a;\n")
+        assertConfigParses("keep ¥a", "keep ¥a;\n")
     }
 
     @Test
     fun testKeepParsesMultiple() {
-        assertConfigParses("keep \$a \$b", "keep \$a \$b;\n")
+        assertConfigParses("keep ¥a ¥b", "keep ¥a ¥b;\n")
     }
 
     @Test
@@ -23,12 +23,12 @@ class KeepTest : TestAbstract() {
 
     @Test
     fun testKeepFailsStringArg() {
-        assertConfigFails("keep \$a 'b'", "All arguments of `keep` must be field names: keep \$a 'b' [test-config:1]")
+        assertConfigFails("keep ¥a 'b'", "All arguments of `keep` must be field names: keep ¥a 'b' [test-config:1]")
     }
 
     @Test
     fun testKeepFailsRegexpArg() {
-        assertConfigFails("keep \$a ~b~", "All arguments of `keep` must be field names: keep \$a ~b~ [test-config:1]")
+        assertConfigFails("keep ¥a ~b~", "All arguments of `keep` must be field names: keep ¥a ~b~ [test-config:1]")
     }
 
     @Test
@@ -38,7 +38,7 @@ class KeepTest : TestAbstract() {
             "payload" to "We've got cats and dogs"
         )
 
-        val processedMessage = processMessageWithConfig(message, "keep \$payload")
+        val processedMessage = processMessageWithConfig(message, "keep ¥payload")
 
         assertFieldNames(processedMessage, "payload")
     }
@@ -50,7 +50,7 @@ class KeepTest : TestAbstract() {
             "payload" to "We've got cats and dogs"
         )
 
-        val processedMessage = processMessageWithConfig(message, "keep \$payload \$whatever")
+        val processedMessage = processMessageWithConfig(message, "keep ¥payload ¥whatever")
 
         assertFieldNames(processedMessage, "payload")
     }
@@ -63,7 +63,7 @@ class KeepTest : TestAbstract() {
             "payload" to "We've got cats and dogs"
         )
 
-        val processedMessage = processMessageWithConfig(message, "keep \$payload \$kind")
+        val processedMessage = processMessageWithConfig(message, "keep ¥payload ¥kind")
 
         assertFieldNames(processedMessage, "kind", "payload")
     }

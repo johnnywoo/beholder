@@ -17,8 +17,8 @@ class RegexpInflaterTest : TestAbstract() {
             """
             |¥animal=cat
             |¥payload=We've got cats and dogs
-            """.trimMargin().replace('¥', '$'),
-            getMessageDump(parsedMessage!!)
+            """.trimMargin(),
+            getMessageDump(parsedMessage)
         )
     }
 
@@ -38,8 +38,8 @@ class RegexpInflaterTest : TestAbstract() {
         val parsedMessage = processMessageWithConfig(message, "parse keep-unparsed ~(?<animal>whale)~")
 
         assertEquals(
-            "\$payload=We've got cats and dogs",
-            getMessageDump(parsedMessage!!)
+            "¥payload=We've got cats and dogs",
+            getMessageDump(parsedMessage)
         )
     }
 
@@ -51,8 +51,8 @@ class RegexpInflaterTest : TestAbstract() {
 
         // there are no named groups, so nothing should change
         assertEquals(
-            "\$payload=We've got cats and dogs",
-            getMessageDump(parsedMessage!!)
+            "¥payload=We've got cats and dogs",
+            getMessageDump(parsedMessage)
         )
     }
 
@@ -69,8 +69,8 @@ class RegexpInflaterTest : TestAbstract() {
             """
             |¥animal=headcrab
             |¥payload=We've got cats and dogs
-            """.trimMargin().replace('¥', '$'),
-            getMessageDump(parsedMessage!!)
+            """.trimMargin(),
+            getMessageDump(parsedMessage)
         )
     }
 }

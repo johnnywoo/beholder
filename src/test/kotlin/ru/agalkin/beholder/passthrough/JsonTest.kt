@@ -10,27 +10,27 @@ import kotlin.test.assertEquals
 class JsonTest : TestAbstract() {
     @Test
     fun testJsonParses() {
-        assertConfigParses("set \$json json", "set \$json json;\n")
+        assertConfigParses("set ¥json json", "set ¥json json;\n")
     }
 
     @Test
     fun testJsonParsesSingle() {
-        assertConfigParses("set \$json json \$a", "set \$json json \$a;\n")
+        assertConfigParses("set ¥json json ¥a", "set ¥json json ¥a;\n")
     }
 
     @Test
     fun testJsonParsesMultiple() {
-        assertConfigParses("set \$json json \$a \$b", "set \$json json \$a \$b;\n")
+        assertConfigParses("set ¥json json ¥a ¥b", "set ¥json json ¥a ¥b;\n")
     }
 
     @Test
     fun testJsonFailsStringArg() {
-        assertConfigFails("set \$json json \$a 'b'", "`set ... json` arguments must be field names: set \$json json \$a 'b' [test-config:1]")
+        assertConfigFails("set ¥json json ¥a 'b'", "`set ... json` arguments must be field names: set ¥json json ¥a 'b' [test-config:1]")
     }
 
     @Test
     fun testJsonFailsRegexpArg() {
-        assertConfigFails("set \$json json \$a ~b~", "`set ... json` arguments must be field names: set \$json json \$a ~b~ [test-config:1]")
+        assertConfigFails("set ¥json json ¥a ~b~", "`set ... json` arguments must be field names: set ¥json json ¥a ~b~ [test-config:1]")
     }
 
     @Test
@@ -40,7 +40,7 @@ class JsonTest : TestAbstract() {
             "payload" to "We've got cats and dogs"
         )
 
-        val processedMessage = processMessageWithConfig(message, "set \$json json")
+        val processedMessage = processMessageWithConfig(message, "set ¥json json")
 
         assertEquals("""{"custom":"Custom","payload":"We've got cats and dogs"}""", processedMessage!!.getStringField("json"))
     }
@@ -52,7 +52,7 @@ class JsonTest : TestAbstract() {
             "payload" to "We've got cats and dogs"
         )
 
-        val processedMessage = processMessageWithConfig(message, "set \$json json")
+        val processedMessage = processMessageWithConfig(message, "set ¥json json")
 
         assertEquals("""{"custom":"Custom\nMore custom","payload":"We've got cats and dogs"}""", processedMessage!!.getStringField("json"))
     }
@@ -64,7 +64,7 @@ class JsonTest : TestAbstract() {
             "payload" to "We've got cats and dogs"
         )
 
-        val processedMessage = processMessageWithConfig(message, "set \$json json \$payload \$whatever")
+        val processedMessage = processMessageWithConfig(message, "set ¥json json ¥payload ¥whatever")
 
         assertEquals("""{"payload":"We've got cats and dogs","whatever":""}""", processedMessage!!.getStringField("json"))
     }
@@ -73,7 +73,7 @@ class JsonTest : TestAbstract() {
     fun testJsonCyrillic() {
         val message = Message.of("payload" to "Мама мыла раму")
 
-        val processedMessage = processMessageWithConfig(message, "set \$json json")
+        val processedMessage = processMessageWithConfig(message, "set ¥json json")
 
         assertEquals("""{"payload":"Мама мыла раму"}""", processedMessage!!.getStringField("json"))
     }
@@ -82,7 +82,7 @@ class JsonTest : TestAbstract() {
     fun testJsonMultiCodePoint() {
         val message = Message.of("payload" to "\uD83D\uDCA9")
 
-        val processedMessage = processMessageWithConfig(message, "set \$json json")
+        val processedMessage = processMessageWithConfig(message, "set ¥json json")
 
         assertEquals("""{"payload":"💩"}""", processedMessage!!.getStringField("json"))
 

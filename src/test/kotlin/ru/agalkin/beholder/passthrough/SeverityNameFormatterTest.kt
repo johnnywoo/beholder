@@ -10,7 +10,7 @@ class SeverityNameFormatterTest : TestAbstract() {
     fun testSeverityNameFormatter() {
         val message = Message.of("severity" to "6")
 
-        val parsedMessage = processMessageWithConfig(message, "set \$name severity-name \$severity")
+        val parsedMessage = processMessageWithConfig(message, "set ¥name severity-name ¥severity")
 
         assertEquals("INFO", parsedMessage?.getStringField("name"))
     }
@@ -19,7 +19,7 @@ class SeverityNameFormatterTest : TestAbstract() {
     fun testSeverityNameFormatterLowercase() {
         val message = Message.of("severity" to "6")
 
-        val parsedMessage = processMessageWithConfig(message, "set \$name severity-name \$severity lowercase")
+        val parsedMessage = processMessageWithConfig(message, "set ¥name severity-name ¥severity lowercase")
 
         assertEquals("info", parsedMessage?.getStringField("name"))
     }

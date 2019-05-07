@@ -38,7 +38,7 @@ class TimeFormatterTest : TestAbstract() {
     @ArgumentsSource(TimeFormatProvider::class)
     fun testFormat(format: String, time: String, result: String) {
         val message = Message.of("date" to time)
-        val processedMessage = processMessageWithConfig(message, "set \$d $format in \$date")
+        val processedMessage = processMessageWithConfig(message, "set ¥d $format in ¥date")
         assertNotNull(processedMessage)
         assertFieldNames(processedMessage, "d", "date")
         assertEquals(result, processedMessage.getStringField("d"), "Definiftion '$format' input '$time'")

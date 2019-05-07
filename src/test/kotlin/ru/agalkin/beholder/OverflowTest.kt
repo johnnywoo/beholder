@@ -1,12 +1,13 @@
 package ru.agalkin.beholder
 
+import ru.agalkin.beholder.compressors.NoCompressor
 import ru.agalkin.beholder.queue.DataBuffer
+import ru.agalkin.beholder.queue.FieldValueQueue
+import ru.agalkin.beholder.queue.Received
 import ru.agalkin.beholder.testutils.NetworkedTestAbstract
 import java.net.*
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.test.*
 
 class OverflowTest : NetworkedTestAbstract() {
     @Test
@@ -34,11 +35,104 @@ class OverflowTest : NetworkedTestAbstract() {
     }
 
     @Test
+    fun testQueueOverflow() {
+        makeApp("buffer { memory_compression off; memory_bytes 1000; } queue_chunk_messages 5;").use { app ->
+            assertFalse(app.defaultBuffer.compressor is NoCompressor)
+            app.config.root.start()
+            assertTrue(app.defaultBuffer.compressor is NoCompressor)
+
+            val shouldReceive = AtomicBoolean(false)
+            val received = mutableListOf<FieldValue>()
+
+            val queue = FieldValueQueue(app) { fieldValue ->
+                if (shouldReceive.get()) {
+                    received.add(fieldValue)
+                    return@FieldValueQueue Received.OK
+                } else {
+                    Thread.sleep(10)
+                    return@FieldValueQueue Received.RETRY
+                }
+            }
+
+            // Пихаем в очередь 100 значений. Они все не влезут.
+            repeat(100) {
+                // Пихаем 99 байт данных + 1 байт на длину. В буфер 1000 байт должны влезть только 10 значений.
+                queue.add(FieldValue.fromString(String.format("%04d", it) + "~".repeat(95)))
+            }
+
+            // 10 значений влезло, по 5 на кусок, получаем 2 куска в буфере.
+            val byteArrays = app.defaultBuffer.getByteArraysOnlyForTests()
+            assertEquals(2, byteArrays.size)
+
+            // Уничтожаем лишние byte arrays в буфере, некоторые weak ref остаются пустыми.
+            Runtime.getRuntime().gc()
+
+            // Пихали 100 сообщений, по 5 на чанк, получаем 20 чанков.
+            val chunks = queue.getChunksOnlyForTests()
+            assertEquals(20, chunks.size)
+
+            for (chunkNumber in chunks.indices) {
+                val chunk = chunks[chunkNumber]
+                when (chunkNumber) {
+                    0, 19 -> {
+                        assertEquals("not buffered", chunk.getBufferedStateOnlyForTests(), "Invalid state for chunk $chunkNumber")
+                    }
+                    in 1..16 -> {
+                        // Данные умерли в буфере
+                        assertEquals("buffered", chunk.getBufferedStateOnlyForTests(), "Invalid state for chunk $chunkNumber")
+                        assertNull(chunk.getByteArrayReferenceOnlyForTests().get(), "Invalid weak ref for chunk $chunkNumber")
+                    }
+                    else -> {
+                        // Данные выжили в буфере
+                        assertEquals("buffered", chunk.getBufferedStateOnlyForTests(), "Invalid state for chunk $chunkNumber")
+                        assertNotNull(chunk.getByteArrayReferenceOnlyForTests().get(), "Invalid weak ref for chunk $chunkNumber")
+                    }
+                }
+            }
+
+            // Включаем режим приёма сообщений и ждём, пока они приедут.
+            shouldReceive.set(true)
+            Thread.sleep(100)
+
+            // Сейчас выживают следующие записи:
+            // 0..4 первый чанк не попадает в буфер, его начинают сразу же читать, поэтому он выживает
+            // 85..94 данные, которые выжили в буфере
+            // 95..99 последний чанк не попадает в буфер (система надеется, что мы читаем быстрее, чем пишем, и тогда ничего не поедет в буфер вообще — оптимизация)
+            val dump = received.joinToString("\n")
+            assertEquals(
+                """
+                    0000~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0001~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0002~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0003~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0004~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0085~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0086~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0087~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0088~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0089~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0090~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0091~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0092~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0093~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0094~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0095~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0096~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0097~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0098~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    0099~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """.trimIndent(),
+                dump,
+                "Unexpected messages survived in the queue"
+            )
+        }
+    }
+
+    @Test
     fun testSendAndOverflow() {
         val config = "buffer { memory_compression off; memory_bytes 500; } queue_chunk_messages 5; from tcp 1211; to tcp 1212"
 
         val numberOfMessagesSent = 150
-        val numberOfMessagesReceived = 100
 
         makeApp(config).use { app ->
             val root = app.config.root
@@ -74,7 +168,7 @@ class OverflowTest : NetworkedTestAbstract() {
             // Каждый кусок содержит 5 сообщений, сообщение = 5 байт, это всего 25 байт.
             // Максимальный размер буфера 500 байт, то есть туда влезет 20 кусков, то есть 100 сообщений.
             val sb = StringBuilder()
-            var i = 45
+            var i = 45 // 150 отправили, последние 5 штук не в буфере, получаем 150 - 5 - 100 = 45
             repeat(100 / 5) {
                 repeat(5) {
                     sb.append("<04>").append(String.format("%03d", i)).append("\\n")
@@ -140,14 +234,19 @@ class OverflowTest : NetworkedTestAbstract() {
 
             // Теперь поднимаем TCP-сервер и принимаем накопленные в очереди сообщения.
             val payloads = receivePayloadsByTcpServer(1212)
-            println("Received some messages at TCP 1212:")
-            println(payloads)
-            assertEquals(numberOfMessagesReceived, payloads.size, "Expected number of received messages does not match")
+            // println("Received some messages at TCP 1212:")
+            // println(payloads)
+
+            // Если мы всё правильно понимаем в жизни, приехать должны следующие сообщения:
+            // 0..4 первый чанк
+            // 45..144 буфер (500 байт хватило на 100 сообщений)
+            // 145..149 последний чанк
+            assertEquals(110, payloads.size, "Expected number of received messages does not match")
         }
     }
 
     private fun getBufferContentDump(dataBuffer: DataBuffer): List<String> {
-        return dataBuffer.getByteArraysForTestingOnly()
+        return dataBuffer.getByteArraysOnlyForTests()
             .toList()
             .map {
                 it.joinToString("") { byte ->
@@ -176,9 +275,9 @@ class OverflowTest : NetworkedTestAbstract() {
 
     private fun sendPayloadsByTcpClient(port: Int, payloads: List<String>) {
         Socket().use {
-            println("test socket client on port $port: created")
+            // println("test socket client on port $port: created")
             it.connect(InetSocketAddress(InetAddress.getLocalHost(), port))
-            println("test socket client on port $port: connected")
+            // println("test socket client on port $port: connected")
             for (payload in payloads) {
                 it.getOutputStream().write(payload.toByteArray())
                 // Если тут не будет задержки, то сервер не принимает все отправленные сообщения.
@@ -186,18 +285,18 @@ class OverflowTest : NetworkedTestAbstract() {
                 Thread.sleep(0, 1)
             }
             Thread.sleep(100)
-            println("test socket client on port $port: closing")
+            // println("test socket client on port $port: closing")
         }
-        println("test socket client on port $port: closed")
+        // println("test socket client on port $port: closed")
     }
 
     private fun receivePayloadsByTcpServer(port: Int): List<String> {
         val list = mutableListOf<String>()
         ServerSocket(port).use { server ->
-            println("test socket server on port $port: started")
+            // println("test socket server on port $port: started")
             try {
                 server.accept().use { connection ->
-                    println("test socket server on port $port: connected")
+                    // println("test socket server on port $port: connected")
                     connection.soTimeout = 100 // millis
                     connection.getInputStream().reader().forEachLine {
                         list.add(it)

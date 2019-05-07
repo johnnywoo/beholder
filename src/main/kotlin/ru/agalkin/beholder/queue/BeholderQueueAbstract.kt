@@ -40,7 +40,7 @@ abstract class BeholderQueueAbstract<T>(
     private fun poll(): T? {
         synchronized(this) {
             // убираем израсходованные куски
-            while (chunks.peekFirst()?.isUsedCompletely() == true) {
+            while (chunks.peekFirst()?.isReadable() == false) {
                 val droppedChunk = chunks.pollFirst()
                 val unusedItemsNumber = droppedChunk.getUnusedItemsNumber().toLong()
                 totalMessagesCount.addAndGet(-unusedItemsNumber)
@@ -119,9 +119,6 @@ abstract class BeholderQueueAbstract<T>(
                             break
                         }
                         // Received.RETRY
-                        if (result.waitMillis > 0) {
-                            Thread.sleep(result.waitMillis)
-                        }
                     }
                     isExecuting.set(false)
                     executeNext()

@@ -31,6 +31,10 @@ class DataBuffer(private val app: Beholder, val id: String = "") {
 
     private val byteArrays: Deque<ByteArray> = LinkedList<ByteArray>()
 
+    fun getByteArraysOnlyForTests(): Deque<ByteArray> {
+        return byteArrays
+    }
+
     private fun addMemorySize(n: Int) {
         val cur = currentSizeInMemory.addAndGet(n.toLong())
         val all = allBuffersMemoryBytes.addAndGet(n.toLong())
@@ -68,10 +72,6 @@ class DataBuffer(private val app: Beholder, val id: String = "") {
                 addMemorySize(-byteArray.size)
             }
         }
-    }
-
-    fun getByteArraysForTestingOnly(): Deque<ByteArray> {
-        return byteArrays
     }
 
     companion object {

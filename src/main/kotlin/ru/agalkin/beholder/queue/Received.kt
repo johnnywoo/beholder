@@ -1,6 +1,6 @@
 package ru.agalkin.beholder.queue
 
-enum class Received(val waitMillis: Long = 0) {
+enum class Received {
     OK,
     RETRY
 }

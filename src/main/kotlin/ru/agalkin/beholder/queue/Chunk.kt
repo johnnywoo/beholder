@@ -62,9 +62,19 @@ abstract class Chunk<T>(private val capacity: Int, private val buffer: DataBuffe
         }
     }
 
-    fun isUsedCompletely(): Boolean {
+    fun isReadable(): Boolean {
         synchronized(this) {
-            return nextIndexToRead >= addedItemsCount && isFull()
+            if (nextIndexToRead >= addedItemsCount && isFull()) {
+                return false
+            }
+            // Если данные уехали в буфер и там умерли, прочитать ничего не получится.
+            val cell = bufferState
+            if (cell is Buffered && cell.byteArrayReference.get() == null) {
+                // Проставляем всякие статистические числа
+                next()
+                return false
+            }
+            return true
         }
     }
 

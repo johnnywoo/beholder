@@ -1,15 +1,14 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.unit
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import ru.agalkin.beholder.config.TemplateParser
 import ru.agalkin.beholder.config.parser.ParseException
-import ru.agalkin.beholder.testutils.TestAbstract
 import ru.agalkin.beholder.testutils.TestInputProvider
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class TemplateParserTest : TestAbstract() {
+class TemplateParserTest {
     private class GoodTemplateParserProvider : TestInputProvider() {
         init {
             // Поскольку в Котлине нет вменяемых строковых литералов без эскейпинга,
@@ -38,7 +37,7 @@ class TemplateParserTest : TestAbstract() {
         }
 
         private fun good(template: String, vararg result: String)
-            = case(decrap(template), result.map(::decrap))
+            = case(decrap(template), result.map(Companion::decrap))
     }
 
     private class BadTemplateParserProvider : TestInputProvider() {

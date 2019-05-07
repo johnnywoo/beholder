@@ -1,7 +1,8 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.passthrough
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.testutils.TestAbstract
 import ru.agalkin.beholder.testutils.TestInputProvider
 import ru.agalkin.beholder.testutils.assertFieldNames
@@ -41,32 +42,6 @@ class TimeFormatterTest : TestAbstract() {
         assertNotNull(processedMessage)
         assertFieldNames(processedMessage, "d", "date")
         assertEquals(result, processedMessage.getStringField("d"), "Definiftion '$format' input '$time'")
-    }
-
-    @Test
-    fun testCreateDatesInTimezoneMoscow() {
-        val messageText = "text"
-        val processedMessage = receiveMessageWithConfig("create_dates_in_timezone Europe/Moscow; from udp 3820") {
-            sendToUdp(3820, messageText)
-        }
-
-        assertNotNull(processedMessage)
-        assertFieldNames(processedMessage, "date", "from", "payload")
-        val dateString = processedMessage.getStringField("date")
-        assertEquals("+03:00", dateString.substring(dateString.length - 6))
-    }
-
-    @Test
-    fun testCreateDatesInTimezoneUtc() {
-        val messageText = "text"
-        val processedMessage = receiveMessageWithConfig("create_dates_in_timezone UTC; from udp 3820") {
-            sendToUdp(3820, messageText)
-        }
-
-        assertNotNull(processedMessage)
-        assertFieldNames(processedMessage, "date", "from", "payload")
-        val dateString = processedMessage.getStringField("date")
-        assertEquals("+00:00", dateString.substring(dateString.length - 6))
     }
 
     @Test

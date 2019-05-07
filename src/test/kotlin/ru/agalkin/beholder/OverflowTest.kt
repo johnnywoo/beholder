@@ -1,12 +1,12 @@
 package ru.agalkin.beholder
 
 import org.junit.jupiter.api.Disabled
-import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.NetworkedTestAbstract
 import java.net.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class OverflowTest : TestAbstract() {
+class OverflowTest : NetworkedTestAbstract() {
     @Test
     fun testSendAndReceive() {
         val config = "buffer { memory_compression off; } queue_chunk_messages 5; from udp 3821; to tcp 1212"

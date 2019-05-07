@@ -1,7 +1,8 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.passthrough
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.testutils.TestAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals

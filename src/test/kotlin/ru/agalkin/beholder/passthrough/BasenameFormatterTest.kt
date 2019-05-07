@@ -1,7 +1,8 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.passthrough
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.testutils.TestAbstract
 import ru.agalkin.beholder.testutils.TestInputProvider
 import kotlin.test.assertEquals

@@ -1,12 +1,12 @@
 package ru.agalkin.beholder
 
-import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.NetworkedTestAbstract
 import ru.agalkin.beholder.testutils.assertFieldNames
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class FromTcpTest : TestAbstract() {
+class FromTcpTest : NetworkedTestAbstract() {
     @Test
     fun testFromTcpSimple() {
         val messageText = "message"
@@ -21,7 +21,7 @@ class FromTcpTest : TestAbstract() {
 
     @Test
     fun testFromTcpTwoMessages() {
-        val processedMessages = receiveMessagesWithConfig("from tcp 3820", 2) {
+        val processedMessages = feedMessagesIntoConfig("from tcp 3820", 2) {
             sendToTcp(3820, "cat\ndog\n".toByteArray())
         }
 

@@ -1,6 +1,6 @@
 package ru.agalkin.beholder
 
-import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.NetworkedTestAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -8,7 +8,7 @@ import kotlin.test.assertNotNull
 const val AGENT_UDP_SYSLOG_PORT = 10002
 const val COLLECTOR_TCP_PORT    = 11000
 
-class IntegrationTest : TestAbstract() {
+class IntegrationTest : NetworkedTestAbstract() {
     private val agentConfig = """
         # Access log from nginx
         # access_log syslog:server=172.17.0.1:10000,tag=robot_dvru;

@@ -1,15 +1,15 @@
 package ru.agalkin.beholder
 
-import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.NetworkedTestAbstract
 import ru.agalkin.beholder.testutils.assertFieldNames
 import ru.agalkin.beholder.testutils.assertFieldValues
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class EachFieldAsMessageInflaterTest : TestAbstract() {
+class EachFieldAsMessageInflaterTest : NetworkedTestAbstract() {
     @Test
     fun testEachFieldAsMessageInflater() {
-        val received = receiveMessagesWithConfig("parse each-field-as-message", 2) {
+        val received = feedMessagesIntoConfig("parse each-field-as-message", 2) {
             val message = Message.of(
                 "cat" to "feline",
                 "dog" to "canine"
@@ -30,7 +30,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
 
     @Test
     fun testStats() {
-        val received = receiveMessagesWithConfig(
+        val received = feedMessagesIntoConfig(
             "parse beholder-stats",
             1,
             { it.topLevelInput.addMessage(Message()) }
@@ -53,7 +53,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
 
     @Test
     fun testStatsLineProtocolNoTags() {
-        val received = receiveMessagesWithConfig(
+        val received = feedMessagesIntoConfig(
             "parse beholder-stats",
             1,
             { it.topLevelInput.addMessage(Message()) }
@@ -68,7 +68,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
 
     @Test
     fun testStatsLineProtocolTags() {
-        val received = receiveMessagesWithConfig(
+        val received = feedMessagesIntoConfig(
             "set \$host somehost; set \$animal cat; parse beholder-stats",
             1,
             { it.topLevelInput.addMessage(Message()) }
@@ -82,7 +82,7 @@ class EachFieldAsMessageInflaterTest : TestAbstract() {
 
     @Test
     fun testStatsInfluxizer() {
-        val received = receiveMessagesWithConfig(
+        val received = feedMessagesIntoConfig(
             """
                 parse beholder-stats;
                 parse each-field-as-message;

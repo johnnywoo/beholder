@@ -1,5 +1,6 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.passthrough
 
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.testutils.TestAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -59,17 +60,6 @@ class FlowTest : TestAbstract() {
         val processedMessage = processMessageWithConfig(message, "set \$path '\$path, before-flow'; join {set \$path '\$path, inside-flow'} set \$path '\$path, after-flow'")
 
         assertEquals("start, before-flow, after-flow", processedMessage!!.getStringField("path"))
-    }
-
-    @Test
-    fun testJoinRoutingInfiniteLoop() {
-        val config = "switch cat { case dog {} } " +
-            "join { from udp 3820; } " +
-            "tee { } "
-
-        receiveMessagesWithConfig(config, 1) {
-            sendToUdp(3820, "cat")
-        }
     }
 
     @Test

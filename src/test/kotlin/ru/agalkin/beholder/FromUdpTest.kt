@@ -1,13 +1,13 @@
 package ru.agalkin.beholder
 
-import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.NetworkedTestAbstract
 import ru.agalkin.beholder.testutils.assertByteArraysEqual
 import ru.agalkin.beholder.testutils.assertFieldNames
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class FromUdpTest : TestAbstract() {
+class FromUdpTest : NetworkedTestAbstract() {
     @Test
     fun testFromUdpSimple() {
         val messageText = "message"
@@ -22,7 +22,7 @@ class FromUdpTest : TestAbstract() {
 
     @Test
     fun testFromUdpTwoMessages() {
-        val processedMessages = receiveMessagesWithConfig("from udp 3820", 2) {
+        val processedMessages = feedMessagesIntoConfig("from udp 3820", 2) {
             sendToUdp(3820, "cat")
             sendToUdp(3820, "dog")
         }

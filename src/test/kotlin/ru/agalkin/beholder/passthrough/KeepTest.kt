@@ -1,5 +1,6 @@
-package ru.agalkin.beholder
+package ru.agalkin.beholder.passthrough
 
+import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.testutils.TestAbstract
 import ru.agalkin.beholder.testutils.assertFieldNames
 import kotlin.test.Test

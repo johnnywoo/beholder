@@ -1,17 +1,17 @@
 package ru.agalkin.beholder
 
-import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.NetworkedTestAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class DataBufferTest : TestAbstract() {
+class DataBufferTest : NetworkedTestAbstract() {
     @Test
     fun testSmoke() {
         val messageText = "<15>1 2017-03-03T09:26:44+00:00 sender-host program-name 12345 - - Message: поехали!"
 
         val config = "queue_chunk_messages 5; from udp 3821; to tcp 1212"
 
-        receiveMessagesWithConfig(config, 20) {
+        feedMessagesIntoConfig(config, 20) {
             repeat(20) {
                 sendToUdp(3821, messageText)
             }

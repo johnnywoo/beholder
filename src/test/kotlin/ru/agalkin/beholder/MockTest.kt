@@ -1,13 +1,13 @@
 package ru.agalkin.beholder
 
 import org.junit.jupiter.api.assertThrows
-import ru.agalkin.beholder.testutils.TestAbstract
+import ru.agalkin.beholder.testutils.NetworkedTestAbstract
 import java.lang.Exception
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class MockTest : TestAbstract() {
+class MockTest : NetworkedTestAbstract() {
     @Test
     fun testMockTrivial() {
         val config = """from mock; to mock"""

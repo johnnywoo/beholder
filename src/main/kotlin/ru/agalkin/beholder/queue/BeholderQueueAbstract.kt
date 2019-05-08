@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.removeMatching
 import ru.agalkin.beholder.stats.Stats
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -24,6 +25,10 @@ abstract class BeholderQueueAbstract<T>(
     // перед тем, как заменять конфиг приложения,
     // мы хотим поставить приём сообщений на паузу
     private val isPaused = AtomicBoolean(false)
+
+    fun getIsPausedOnlyForTests(): AtomicBoolean {
+        return isPaused
+    }
 
     init {
         app.beforeReloadCallbacks.add {
@@ -71,6 +76,10 @@ abstract class BeholderQueueAbstract<T>(
                 // последний кусок закончился, будем добавлять новый
                 chunk = createChunk()
                 chunks.add(chunk)
+
+                // Убираем дохлые чанки
+                chunks.removeMatching { !it.isReadable() }
+
                 wasChunkAdded = true
             } else {
                 chunk = lastChunk

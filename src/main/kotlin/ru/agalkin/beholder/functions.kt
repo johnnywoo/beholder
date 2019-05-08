@@ -86,3 +86,12 @@ fun getSystemHostname(): String? {
         return null
     }
 }
+
+inline fun <T> MutableList<T>.removeMatching(shouldRemove: (T) -> Boolean) {
+    var removedNum = 0
+    for (i in indices) {
+        if (shouldRemove(get(i - removedNum))) {
+            removeAt(i - removedNum++)
+        }
+    }
+}

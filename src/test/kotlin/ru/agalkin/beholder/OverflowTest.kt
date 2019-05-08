@@ -68,6 +68,7 @@ class OverflowTest : NetworkedTestAbstract() {
             Runtime.getRuntime().gc()
 
             // Пихали 100 сообщений, по 5 на чанк, получаем 20 чанков.
+            // Поскольку мы больше добавлять чанки не будем, очистка их не произойдёт и дохлые чанки не удалятся.
             val chunks = queue.getChunksOnlyForTests()
             assertEquals(20, chunks.size)
 
@@ -125,6 +126,49 @@ class OverflowTest : NetworkedTestAbstract() {
                 dump,
                 "Unexpected messages survived in the queue"
             )
+        }
+    }
+
+    @Test
+    fun testQueueOverflowChunkCleanup() {
+        makeApp("buffer { memory_compression off; memory_bytes 1000; } queue_chunk_messages 5;").use { app ->
+            assertFalse(app.defaultBuffer.compressor is NoCompressor)
+            app.config.root.start()
+            assertTrue(app.defaultBuffer.compressor is NoCompressor)
+
+            val queue = FieldValueQueue(app) {
+                // Ничего не вынимаем из очереди, только пихаем
+                return@FieldValueQueue Received.RETRY
+            }
+            // Ставим раздачу значений на паузу, чтобы очередь не пыталась отправить полученные данные.
+            // Нам здесь нужно, чтобы очередь только наполнялась.
+            queue.getIsPausedOnlyForTests().set(true)
+
+            // Пихаем в очередь 100 значений. Они все не влезут.
+            repeat(100) {
+                // Пихаем 99 байт данных + 1 байт на длину. В буфер 1000 байт должны влезть только 10 значений.
+                queue.add(FieldValue.fromString(String.format("%04d", it) + "~".repeat(95)))
+            }
+
+            // Пихали 100 сообщений, по 5 на чанк, получаем 20 чанков.
+            assertEquals(20, queue.getChunksOnlyForTests().size)
+
+            // Уничтожаем лишние byte arrays в буфере, некоторые weak ref остаются пустыми.
+            Runtime.getRuntime().gc()
+
+            // Теперь всё ещё все чанки на месте, потому что после GC не было нового чанка.
+            assertEquals(20, queue.getChunksOnlyForTests().size)
+
+            // Пихаем ещё одно значение. Должен создаться новый чанк, что приведёт к очистке мёртвых чанков.
+            queue.add(FieldValue.fromString("last added value"))
+
+            // Вот теперь количество чанков уменьшилось.
+            // 1 чанк первый, он не буферизуется
+            // 2 чанка в буфере
+            // 1 чанк был последний на момент GC
+            // 1 чанк вот только что добавили
+            // Всего в очереди 5 чанков.
+            assertEquals(5, queue.getChunksOnlyForTests().size)
         }
     }
 

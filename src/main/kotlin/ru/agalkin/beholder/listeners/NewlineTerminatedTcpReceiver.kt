@@ -20,9 +20,9 @@ class NewlineTerminatedTcpReceiver(
         = address
 
     override fun processSocketChannel(channel: SocketChannel) {
-        val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
-
         try {
+            val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
+
             val data = readTerminated(channel, '\n')
             if (data == null) {
                 return
@@ -37,7 +37,7 @@ class NewlineTerminatedTcpReceiver(
                     }
                 }
 
-                createMessage(FieldValue.fromByteArray(data, data.size - newlineLength), channel)
+                createMessage(FieldValue.fromByteArray(data, data.size - newlineLength), remoteSocketAddress)
 
                 Stats.reportTcpReceived(data.size.toLong())
             }

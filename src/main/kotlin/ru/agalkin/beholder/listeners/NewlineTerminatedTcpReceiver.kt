@@ -6,6 +6,7 @@ import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.queue.MessageQueue
 import ru.agalkin.beholder.stats.Stats
+import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 
@@ -19,6 +20,8 @@ class NewlineTerminatedTcpReceiver(
         = address
 
     override fun processSocketChannel(channel: SocketChannel) {
+        val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
+
         try {
             val data = readTerminated(channel, '\n')
             if (data == null) {

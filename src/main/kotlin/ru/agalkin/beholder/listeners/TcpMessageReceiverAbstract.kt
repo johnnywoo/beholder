@@ -12,9 +12,7 @@ abstract class TcpMessageReceiverAbstract(
     private val app: Beholder,
     private val queue: MessageQueue
 ) {
-    protected fun createMessage(data: FieldValue, channel: SocketChannel) {
-        val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
-
+    protected fun createMessage(data: FieldValue, remoteSocketAddress: InetSocketAddress?) {
         val message = Message()
 
         message.setFieldValue("payload", data)

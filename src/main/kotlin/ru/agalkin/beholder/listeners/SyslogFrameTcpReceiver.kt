@@ -7,6 +7,7 @@ import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.queue.MessageQueue
 import ru.agalkin.beholder.stats.Stats
+import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 
@@ -21,6 +22,8 @@ class SyslogFrameTcpReceiver(
 
     override fun processSocketChannel(channel: SocketChannel) {
         try {
+            val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
+
             val lengthStr = readLength(channel)
             if (lengthStr == null) {
                 return
@@ -32,7 +35,7 @@ class SyslogFrameTcpReceiver(
 
             val data = readData(channel, length)
 
-            createMessage(FieldValue.fromByteArray(data, data.size), channel)
+            createMessage(FieldValue.fromByteArray(data, data.size), remoteSocketAddress)
 
             Stats.reportTcpReceived((lengthStr.length + 1 + data.size).toLong())
         } catch (e: Throwable) {

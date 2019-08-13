@@ -83,10 +83,8 @@ class TcpSender(app: Beholder, private val address: Address) {
         } finally {
             if (!socket.isConnected) {
                 // socket was not connected
-                // increase the waiting interval
-                val newIntervalSeconds = (reconnectIntervalSeconds.get() * 2).coerceIn(1, 60)
-                reconnectIntervalSeconds.set(newIntervalSeconds)
-                InternalLog.info("Will reconnect to TCP $address after $newIntervalSeconds seconds")
+                reconnectIntervalSeconds.set(1)
+                InternalLog.info("Will reconnect to TCP $address in 1 second")
             }
         }
     }
@@ -108,7 +106,7 @@ class TcpSender(app: Beholder, private val address: Address) {
     init {
         app.afterReloadCallbacks.add {
             // Пока система работает, она пытается переподключить тухлое соединение
-            // с нарастающим интервалом.
+            // с интервалом 1 сек.
             // После перезагрузки конфига надо сразу пробовать переподключиться заново.
             reconnectIntervalSeconds.set(0)
 

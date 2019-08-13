@@ -44,13 +44,8 @@ abstract class BeholderQueueAbstract<T>(
 
     private fun poll(): T? {
         synchronized(this) {
-            // убираем израсходованные куски
-            while (chunks.peekFirst()?.isReadable() == false) {
-                val droppedChunk = chunks.pollFirst()
-                val unusedItemsNumber = droppedChunk.getUnusedItemsNumber().toLong()
-                totalMessagesCount.addAndGet(-unusedItemsNumber)
-                Stats.reportQueueOverflow(unusedItemsNumber)
-            }
+            cleanupDroppedChunks()
+
             val firstChunk = chunks.peekFirst()
             if (firstChunk == null) {
                 return null
@@ -59,7 +54,8 @@ abstract class BeholderQueueAbstract<T>(
             val nextValue = firstChunk.next()
 
             if (nextValue != null) {
-                totalMessagesCount.decrementAndGet()
+                val size = totalMessagesCount.decrementAndGet()
+                Stats.reportQueueSize(size)
             }
 
             return nextValue
@@ -77,9 +73,6 @@ abstract class BeholderQueueAbstract<T>(
                 chunk = createChunk()
                 chunks.add(chunk)
 
-                // Убираем дохлые чанки
-                chunks.removeMatching { !it.isReadable() }
-
                 wasChunkAdded = true
             } else {
                 chunk = lastChunk
@@ -89,6 +82,9 @@ abstract class BeholderQueueAbstract<T>(
         }
 
         if (wasChunkAdded) {
+            // Убираем дохлые чанки, чтобы меньше накапливать фигни.
+            cleanupDroppedChunks()
+
             app.executor.execute {
                 Stats.reportChunkCreated()
                 compressChunksIfNeeded()
@@ -96,7 +92,6 @@ abstract class BeholderQueueAbstract<T>(
         }
 
         val size = totalMessagesCount.incrementAndGet()
-
         Stats.reportQueueSize(size)
 
         executeNext()
@@ -111,7 +106,23 @@ abstract class BeholderQueueAbstract<T>(
                         chunk.moveToBuffer()
                     }
                 }
+                // Убираем дохлые чанки, потому что moveToBuffer() мог вытеснить старые данные из буфера.
+                cleanupDroppedChunks()
             }
+        }
+    }
+
+    private fun cleanupDroppedChunks() {
+        // убираем израсходованные куски
+        chunks.removeMatching {
+            if (!it.isReadable()) {
+                val unusedItemsNumber = it.getUnusedItemsNumber().toLong()
+                val size = totalMessagesCount.addAndGet(-unusedItemsNumber)
+                Stats.reportQueueSize(size)
+                Stats.reportQueueOverflow(unusedItemsNumber)
+                return@removeMatching true
+            }
+            return@removeMatching false
         }
     }
 

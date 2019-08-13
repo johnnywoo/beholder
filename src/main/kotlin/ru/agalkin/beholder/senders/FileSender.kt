@@ -97,15 +97,14 @@ class FileSender(app: Beholder, private val file: File) {
     class Factory(private val app: Beholder) {
         private val senders = ConcurrentHashMap<String, FileSender>()
 
-        fun getSender(filename: String): FileSender {
-            val canonicalPath = File(filename).canonicalPath
-            val sender = senders[canonicalPath]
+        fun getSender(canonicalFilename: String): FileSender {
+            val sender = senders[canonicalFilename]
             if (sender != null) {
                 return sender
             }
             synchronized(senders) {
-                val newSender = senders[canonicalPath] ?: FileSender(app, File(canonicalPath))
-                senders[canonicalPath] = newSender
+                val newSender = senders[canonicalFilename] ?: FileSender(app, File(canonicalFilename))
+                senders[canonicalFilename] = newSender
                 return newSender
             }
         }

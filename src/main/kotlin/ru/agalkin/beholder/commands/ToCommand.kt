@@ -1,6 +1,7 @@
 package ru.agalkin.beholder.commands
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.Message
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.expressions.Arguments
@@ -11,6 +12,8 @@ import ru.agalkin.beholder.conveyor.Step
 import ru.agalkin.beholder.conveyor.StepResult
 import ru.agalkin.beholder.formatters.TemplateFormatter
 import ru.agalkin.beholder.senders.MockSender
+import java.io.File
+import java.io.IOException
 
 class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
     private val destination: Destination
@@ -88,7 +91,15 @@ class ToCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, 
     ) : Destination() {
 
         override fun execute(message: Message): StepResult {
-            val sender = app.fileSenders.getSender(filenameTemplate.formatMessage(message).toString())
+            val filename = filenameTemplate.formatMessage(message).toString()
+            val canonicalPath: String
+            try {
+                canonicalPath = File(filename).canonicalPath
+            } catch (e: IOException) {
+                InternalLog.err("Trying to resolve filename $filename got IOException: ${e.message}")
+                return StepResult.CONTINUE
+            }
+            val sender = app.fileSenders.getSender(canonicalPath)
             sender.writeMessagePayload(dataTemplate.formatMessage(message).withNewlineAtEnd())
             return StepResult.CONTINUE
         }

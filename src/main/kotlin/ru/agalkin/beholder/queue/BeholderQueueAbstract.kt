@@ -112,13 +112,14 @@ abstract class BeholderQueueAbstract<T>(
     }
 
     private fun cleanupDroppedChunks() {
-        // убираем израсходованные куски
-        var droppedChunksNum = 0
-        for (i in chunks.indices) {
-            val chunk = chunks[i - droppedChunksNum]
+        if (chunks.size < 1) {
+            return
+        }
+        // Идём с конца списка, чтобы удаление элементов не портило порядковые номера.
+        for (i in (chunks.size - 1) downTo 0) {
+            val chunk = chunks[i]
             if (!chunk.isReadable()) {
-                chunks.removeAt(i - droppedChunksNum)
-                droppedChunksNum++
+                chunks.removeAt(i)
 
                 val unusedItemsNumber = chunk.getUnusedItemsNumber().toLong()
                 val size = totalMessagesCount.addAndGet(-unusedItemsNumber)

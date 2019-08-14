@@ -56,8 +56,8 @@ Use this with `from timer` to create a health log.
 
 Fields produced by `parse beholder-stats`:
 
-* `$allBuffersAllocatedBytes`     — Total amount of bytes allocated in all buffers (does not decrease when memory is released)
-* `$allBuffersMaxBytes`           — Maximum individual allocation size in all buffers
+* `$allBuffersAllocatedBytes`     — Total amount of bytes added to all buffers (does not decrease when memory is released)
+* `$allBuffersMaxBytes`           — Maximum buffer size, total for all buffers
 * `$compressAfterTotalBytes`      — Total size of all data fed into compressors
 * `$compressBeforeTotalBytes`     — Total size of data produced by compressors
 * `$compressCount`                — Number of compress operations (chunk moves from queue to buffer)
@@ -67,8 +67,8 @@ Fields produced by `parse beholder-stats`:
 * `$decompressCount`              — Number of decompress operations (chunk moves from buffer to queue)
 * `$decompressDurationMaxNanos`   — Max duration of a decompress
 * `$decompressDurationTotalNanos` — Total duration of all decompress operations
-* `$defaultBufferAllocatedBytes`  — Total amount of bytes allocated in the default buffer (does not decrease when memory is released)
-* `$defaultBufferMaxBytes`        — Maximum individual allocation size in the default buffer
+* `$defaultBufferAllocatedBytes`  — Total amount of bytes added to the default buffer (does not decrease when memory is released)
+* `$defaultBufferMaxBytes`        — Maximum size of the default buffer
 * `$fromTcpMaxBytes`              — Maximum length of a message received over TCP
 * `$fromTcpMessages`              — Number of messages received over TCP
 * `$fromTcpNewConnections`        — Number of accepted TCP connections
@@ -76,10 +76,23 @@ Fields produced by `parse beholder-stats`:
 * `$fromUdpMaxBytes`              — Maximum length of a packet received over UDP
 * `$fromUdpMessages`              — Number of messages received over UDP
 * `$fromUdpTotalBytes`            — Summed length of all packets received over UDP
+* `$toTcpMaxBytes`                — Maximum length of a message sent over TCP
+* `$toTcpMessages`                — Number of messages sent over TCP
+* `$toTcpTotalBytes`              — Total number of bytes sent over TCP
+* `$toUdpMaxBytes`                — Maximum length of a packet sent over UDP
+* `$toUdpMessages`                — Number of messages sent over UDP
+* `$toUdpTotalBytes`              — Summed length of all packets sent over UDP
+* `$toFileMaxBytes`               — Maximum length that was written into a file
+* `$toFileMessages`               — Number of messages written into files
+* `$toFileTotalBytes`             — Summed length of all messages written into files
+* `$toShellMaxBytes`              — Maximum length that was written into a shell command
+* `$toShellMessages`              — Number of messages written into shell commands
+* `$toShellTotalBytes`            — Summed length of all messages written into shell commands
 * `$heapBytes`                    — Current heap size in bytes (memory usage)
 * `$heapMaxBytes`                 — Maximal heap size
 * `$heapUsedBytes`                — Used memory in the heap
 * `$messagesReceived`             — Count of received messages
+* `$messagesSent`                 — Count of sent messages
 * `$packCount`                    — Number of pack operations (chunk moves from queue to buffer)
 * `$packDurationMaxNanos`         — Max duration of a pack
 * `$packDurationTotalNanos`       — Total duration of all pack operations
@@ -106,12 +119,15 @@ An easy way to monitor Beholder status is to feed the stats into InfluxDB and th
     flow {
         from timer 30 seconds;
 
-        # These fields will become tags in Influx
-        set $host host;
-        set $tag value;
-        keep $host $tag; # Do not create useless tags like 'date'
-
         parse beholder-stats;
-        set $payload $influxLineProtocolPayload;
+        parse each-field-as-message;
+
+        switch $value {
+            case ~^[0-9]+$~ {}
+            default {drop}
+        }
+        set $host host;
+        set $payload 'beholder,host=$host,tag=tagval $key=$value';
+
         to udp influxdb-host:8089;
     }

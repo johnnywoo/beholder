@@ -18,6 +18,22 @@ class StatsHolder {
 
         "fromTcpNewConnections" to AtomicLong(),
 
+        "toUdpMessages" to AtomicLong(),
+        "toUdpMaxBytes" to AtomicLong(),
+        "toUdpTotalBytes" to AtomicLong(),
+
+        "toTcpMessages" to AtomicLong(),
+        "toTcpMaxBytes" to AtomicLong(),
+        "toTcpTotalBytes" to AtomicLong(),
+
+        "toFileMessages" to AtomicLong(),
+        "toFileMaxBytes" to AtomicLong(),
+        "toFileTotalBytes" to AtomicLong(),
+
+        "toShellMessages" to AtomicLong(),
+        "toShellMaxBytes" to AtomicLong(),
+        "toShellTotalBytes" to AtomicLong(),
+
         "packCount" to AtomicLong(),
         "packDurationMaxNanos" to AtomicLong(),
         "packDurationTotalNanos" to AtomicLong(),
@@ -34,6 +50,7 @@ class StatsHolder {
         "decompressDurationTotalNanos" to AtomicLong(),
 
         "messagesReceived" to AtomicLong(),
+        "messagesSent" to AtomicLong(),
         "queueOverflows" to AtomicLong(),
         "queueMaxSize" to AtomicLong(),
         "queueChunksCreated" to AtomicLong(),
@@ -63,6 +80,34 @@ class StatsHolder {
         stats["fromTcpNewConnections"]?.incrementAndGet()
     }
 
+    fun reportUdpSent(size: Long) {
+        stats["messagesSent"]?.incrementAndGet()
+        stats["toUdpMessages"]?.incrementAndGet()
+        stats["toUdpMaxBytes"]?.updateAndGet { max(it, size) }
+        stats["toUdpTotalBytes"]?.addAndGet(size)
+    }
+
+    fun reportTcpSent(size: Long) {
+        stats["messagesSent"]?.incrementAndGet()
+        stats["toTcpMessages"]?.incrementAndGet()
+        stats["toTcpMaxBytes"]?.updateAndGet { max(it, size) }
+        stats["toTcpTotalBytes"]?.addAndGet(size)
+    }
+
+    fun reportFileSent(size: Long) {
+        stats["messagesSent"]?.incrementAndGet()
+        stats["toFileMessages"]?.incrementAndGet()
+        stats["toFileMaxBytes"]?.updateAndGet { max(it, size) }
+        stats["toFileTotalBytes"]?.addAndGet(size)
+    }
+
+    fun reportShellSent(size: Long) {
+        stats["messagesSent"]?.incrementAndGet()
+        stats["toShellMessages"]?.incrementAndGet()
+        stats["toShellMaxBytes"]?.updateAndGet { max(it, size) }
+        stats["toShellTotalBytes"]?.addAndGet(size)
+    }
+
     fun reportQueueOverflow(droppedNumber: Long) {
         stats["queueOverflows"]?.addAndGet(droppedNumber)
     }
@@ -81,10 +126,14 @@ class StatsHolder {
 
     fun reportBufferSizeChange(buffer: DataBuffer, currentMemoryBytes: Long, allBuffersMemoryBytes: Long, allocatedBytes: Long) {
         stats["allBuffersMaxBytes"]?.updateAndGet { max(it, allBuffersMemoryBytes) }
-        stats["allBuffersAllocatedBytes"]?.addAndGet(allocatedBytes)
+        if (allocatedBytes > 0) {
+            stats["allBuffersAllocatedBytes"]?.addAndGet(allocatedBytes)
+        }
         if (buffer.id == "") {
             stats["defaultBufferMaxBytes"]?.updateAndGet { max(it, currentMemoryBytes) }
-            stats["defaultBufferAllocatedBytes"]?.addAndGet(allocatedBytes)
+            if (allocatedBytes > 0) {
+                stats["defaultBufferAllocatedBytes"]?.addAndGet(allocatedBytes)
+            }
         }
     }
 

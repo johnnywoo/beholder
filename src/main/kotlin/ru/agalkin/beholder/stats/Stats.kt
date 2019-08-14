@@ -34,6 +34,30 @@ object Stats {
         }
     }
 
+    fun reportUdpSent(size: Long) {
+        for (holder in holders) {
+            holder.reportUdpSent(size)
+        }
+    }
+
+    fun reportTcpSent(size: Long) {
+        for (holder in holders) {
+            holder.reportTcpSent(size)
+        }
+    }
+
+    fun reportFileSent(size: Long) {
+        for (holder in holders) {
+            holder.reportFileSent(size)
+        }
+    }
+
+    fun reportShellSent(size: Long) {
+        for (holder in holders) {
+            holder.reportShellSent(size)
+        }
+    }
+
     fun reportQueueOverflow(droppedNumber: Long) {
         for (holder in holders) {
             holder.reportQueueOverflow(droppedNumber)

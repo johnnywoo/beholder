@@ -30,12 +30,12 @@ abstract class FieldValue {
         = ModifiedFieldValue(prefix, this)
 
     fun withNewlineAtEnd()
-        = FieldValue.fromString(addNewlineIfNeeded(toString()))
+        = fromString(addNewlineIfNeeded(toString()))
 
 
     private class StringFieldValue(private val string: String) : FieldValue() {
         override fun getByteLength()
-            = string.toByteArray().size
+            = toByteArray().size
 
         override fun toByteArray()
             = string.toByteArray()

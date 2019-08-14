@@ -62,13 +62,16 @@ Send internal stats (metrics) into Influx over UDP:
     flow {
         from timer 30 seconds;
 
-        # These fields will become tags in Influx
-        set $host host;
-        set $tag value;
-        keep $host $tag; # Do not create useless tags like 'date'
-
         parse beholder-stats;
-        set $payload $influxLineProtocolPayload;
+        parse each-field-as-message;
+
+        switch $value {
+            case ~^[0-9]+$~ {}
+            default {drop}
+        }
+        set $host host;
+        set $payload 'beholder,host=$host,tag=tagval $key=$value';
+
         to udp influxdb-host:8089;
     }
 

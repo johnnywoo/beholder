@@ -5,6 +5,7 @@ import ru.agalkin.beholder.FieldValue
 import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.queue.FieldValueQueue
 import ru.agalkin.beholder.queue.Received
+import ru.agalkin.beholder.stats.Stats
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -31,6 +32,8 @@ class FileSender(app: Beholder, private val file: File) {
 
             if (writer == null) {
                 InternalLog.err("Skipped writing to $file")
+            } else {
+                Stats.reportFileSent(fieldValue.getByteLength().toLong())
             }
         } catch (e: Throwable) {
             InternalLog.exception(e)

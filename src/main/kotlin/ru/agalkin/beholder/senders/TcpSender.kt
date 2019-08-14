@@ -7,6 +7,7 @@ import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.queue.FieldValueQueue
 import ru.agalkin.beholder.queue.Received
 import ru.agalkin.beholder.readInputStreamAndDiscard
+import ru.agalkin.beholder.stats.Stats
 import java.net.ConnectException
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -26,8 +27,10 @@ class TcpSender(app: Beholder, private val address: Address) {
         try {
             val socket = connect()
             val outputStream = socket.getOutputStream()
-            outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
+            val byteLength = fieldValue.getByteLength()
+            outputStream.write(fieldValue.toByteArray(), 0, byteLength)
             outputStream.flush()
+            Stats.reportTcpSent(byteLength.toLong())
             Received.OK
         } catch (e: ConnectException) {
             socket.close()

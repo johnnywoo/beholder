@@ -6,6 +6,7 @@ import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.queue.FieldValueQueue
 import ru.agalkin.beholder.queue.Received
 import ru.agalkin.beholder.readInputStreamAndDiscard
+import ru.agalkin.beholder.stats.Stats
 import java.io.File
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicLong
@@ -15,8 +16,10 @@ class ShellSender(app: Beholder, private val shellCommand: String) {
         val process = startProcess()
         try {
             val outputStream = process.outputStream
-            outputStream.write(fieldValue.toByteArray(), 0, fieldValue.getByteLength())
+            val byteLength = fieldValue.getByteLength()
+            outputStream.write(fieldValue.toByteArray(), 0, byteLength)
             outputStream.flush()
+            Stats.reportShellSent(byteLength.toLong())
             Received.OK
         } catch (e: Throwable) {
             InternalLog.exception(e)

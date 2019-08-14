@@ -6,6 +6,7 @@ import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.queue.FieldValueQueue
 import ru.agalkin.beholder.queue.Received
+import ru.agalkin.beholder.stats.Stats
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -16,15 +17,16 @@ class UdpSender(app: Beholder, address: Address) {
     private val inetAddress = address.getInetAddress()
 
     private val queue = FieldValueQueue(app) { fieldValue ->
+        val byteLength = fieldValue.getByteLength()
         try {
             socket.send(DatagramPacket(
                 fieldValue.toByteArray(),
-                fieldValue.getByteLength(),
+                byteLength,
                 inetAddress,
                 address.port
             ))
         } catch (e: IOException) {
-            InternalLog.err("Trying to send UDP packet of ${fieldValue.getByteLength()} bytes to $inetAddress got IOException: ${e.message}")
+            InternalLog.err("Trying to send UDP packet of $byteLength bytes to $inetAddress got IOException: ${e.message}")
             socket.use { it.close() }
             socket = DatagramSocket()
         } catch (e: Throwable) {
@@ -32,6 +34,7 @@ class UdpSender(app: Beholder, address: Address) {
             socket.use { it.close() }
             socket = DatagramSocket()
         }
+        Stats.reportUdpSent(byteLength.toLong())
         Received.OK
     }
 

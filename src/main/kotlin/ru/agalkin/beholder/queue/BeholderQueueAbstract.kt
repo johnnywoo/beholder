@@ -1,9 +1,8 @@
 package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.removeMatching
 import ru.agalkin.beholder.stats.Stats
-import java.util.*
+import java.util.LinkedList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -114,15 +113,18 @@ abstract class BeholderQueueAbstract<T>(
 
     private fun cleanupDroppedChunks() {
         // убираем израсходованные куски
-        chunks.removeMatching {
-            if (!it.isReadable()) {
-                val unusedItemsNumber = it.getUnusedItemsNumber().toLong()
+        var droppedChunksNum = 0
+        for (i in chunks.indices) {
+            val chunk = chunks[i - droppedChunksNum]
+            if (!chunk.isReadable()) {
+                chunks.removeAt(i - droppedChunksNum)
+                droppedChunksNum++
+
+                val unusedItemsNumber = chunk.getUnusedItemsNumber().toLong()
                 val size = totalMessagesCount.addAndGet(-unusedItemsNumber)
                 Stats.reportQueueSize(size)
                 Stats.reportQueueOverflow(unusedItemsNumber)
-                return@removeMatching true
             }
-            return@removeMatching false
         }
     }
 

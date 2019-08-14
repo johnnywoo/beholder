@@ -64,9 +64,9 @@ object Stats {
         }
     }
 
-    fun reportBufferAllocation(buffer: DataBuffer, currentMemoryBytes: Long, allBuffersMemoryBytes: Long, allocatedBytes: Long) {
+    fun reportBufferSizeChange(buffer: DataBuffer, currentMemoryBytes: Long, allBuffersMemoryBytes: Long, allocatedBytes: Long) {
         for (holder in holders) {
-            holder.reportBufferAllocation(buffer, currentMemoryBytes, allBuffersMemoryBytes, allocatedBytes)
+            holder.reportBufferSizeChange(buffer, currentMemoryBytes, allBuffersMemoryBytes, allocatedBytes)
         }
     }
 

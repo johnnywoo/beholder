@@ -38,9 +38,7 @@ class DataBuffer(private val app: Beholder, val id: String = "") {
     private fun addMemorySize(n: Int) {
         val cur = currentSizeInMemory.addAndGet(n.toLong())
         val all = allBuffersMemoryBytes.addAndGet(n.toLong())
-        if (n > 0) {
-            Stats.reportBufferAllocation(this, cur, all, n.toLong())
-        }
+        Stats.reportBufferSizeChange(this, cur, all, n.toLong())
     }
 
     fun allocate(bytes: ByteArray): WeakReference<ByteArray> {

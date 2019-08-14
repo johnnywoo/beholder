@@ -79,7 +79,7 @@ class StatsHolder {
         stats["unparsedDropped"]?.incrementAndGet()
     }
 
-    fun reportBufferAllocation(buffer: DataBuffer, currentMemoryBytes: Long, allBuffersMemoryBytes: Long, allocatedBytes: Long) {
+    fun reportBufferSizeChange(buffer: DataBuffer, currentMemoryBytes: Long, allBuffersMemoryBytes: Long, allocatedBytes: Long) {
         stats["allBuffersMaxBytes"]?.updateAndGet { max(it, allBuffersMemoryBytes) }
         stats["allBuffersAllocatedBytes"]?.addAndGet(allocatedBytes)
         if (buffer.id == "") {

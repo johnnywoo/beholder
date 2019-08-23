@@ -48,15 +48,17 @@ class SyslogFrameTcpReceiver(
 
     private fun readLength(input: SocketChannel): String? {
         val buffer = ByteBuffer.allocate(1)
-        buffer.rewind()
         var sb = StringBuilder()
         while (true) {
+            buffer.clear()
             val number = readCarefully(input, buffer)
-            if (number < 1) {
+            if (number < 0) {
                 return null
             }
+            if (number == 0) {
+                continue
+            }
             val char = buffer[0].toChar()
-            buffer.rewind()
 
             if (char == ' ') {
                 return sb.toString()
@@ -74,10 +76,9 @@ class SyslogFrameTcpReceiver(
 
     private fun readData(input: SocketChannel, length: Int): ByteArray {
         val buffer = ByteBuffer.allocate(length)
-        buffer.rewind()
+        buffer.clear()
         while (buffer.hasRemaining()) {
             if (readCarefully(input, buffer) < 0) {
-                input.close()
                 break
             }
         }

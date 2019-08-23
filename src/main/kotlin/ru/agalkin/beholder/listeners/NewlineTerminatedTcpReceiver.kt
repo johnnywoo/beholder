@@ -60,13 +60,16 @@ class NewlineTerminatedTcpReceiver(
         val bytes = mutableListOf<Byte>()
         val buffer = ByteBuffer.allocate(1)
         while (true) {
-            buffer.rewind()
+            buffer.clear()
             val number = readCarefully(input, buffer)
             if (number < 0) {
                 if (bytes.isEmpty()) {
                     return null
                 }
                 return bytes.toByteArray()
+            }
+            if (number == 0) {
+                continue
             }
             val byte = buffer[0]
             bytes.add(byte)

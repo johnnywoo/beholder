@@ -1,7 +1,6 @@
 package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
-import ru.agalkin.beholder.InternalLog
 import ru.agalkin.beholder.stats.Stats
 import java.util.LinkedList
 import java.util.concurrent.atomic.AtomicBoolean
@@ -74,6 +73,9 @@ abstract class BeholderQueueAbstract<T>(
                 chunks.add(chunk)
 
                 wasChunkAdded = true
+
+                // Убираем дохлые чанки, чтобы меньше накапливать фигни.
+                cleanupDroppedChunks()
             } else {
                 chunk = lastChunk
             }
@@ -82,9 +84,6 @@ abstract class BeholderQueueAbstract<T>(
         }
 
         if (wasChunkAdded) {
-            // Убираем дохлые чанки, чтобы меньше накапливать фигни.
-            cleanupDroppedChunks()
-
             app.executor.execute {
                 Stats.reportChunkCreated()
                 compressChunksIfNeeded()
@@ -118,18 +117,8 @@ abstract class BeholderQueueAbstract<T>(
         }
         // Идём с конца списка, чтобы удаление элементов не портило порядковые номера.
         for (i in (chunks.size - 1) downTo 0) {
-            if (i >= chunks.size) {
-                InternalLog.err("Weird case with invalid chunk size (bad index): i=$i chunks.size=${chunks.size}")
-                continue
-            }
-            val chunk = chunks[i]
-            @Suppress("SENSELESS_COMPARISON")
-            if (chunk == null) {
-                InternalLog.err("Weird case with invalid chunk size (null): i=$i chunks.size=${chunks.size}")
-                continue
-            }
-            if (!chunk.isReadable()) {
-                chunks.removeAt(i)
+            if (!chunks[i].isReadable()) {
+                val chunk = chunks.removeAt(i)
 
                 val unusedItemsNumber = chunk.getUnusedItemsNumber().toLong()
                 val size = totalMessagesCount.addAndGet(-unusedItemsNumber)

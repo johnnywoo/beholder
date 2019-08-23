@@ -21,26 +21,28 @@ class SyslogFrameTcpReceiver(
         = address
 
     override fun processSocketChannel(channel: SocketChannel) {
-        try {
-            val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
+        synchronized(channel) {
+            try {
+                val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
 
-            val lengthStr = readLength(channel)
-            if (lengthStr == null) {
-                return
+                val lengthStr = readLength(channel)
+                if (lengthStr == null) {
+                    return
+                }
+                val length = lengthStr.toIntOrNull()
+                if (length == null || length == 0) {
+                    return
+                }
+
+                val data = readData(channel, length)
+
+                createMessage(FieldValue.fromByteArray(data, data.size), remoteSocketAddress)
+
+                Stats.reportTcpReceived((lengthStr.length + 1 + data.size).toLong())
+            } catch (e: Throwable) {
+                InternalLog.exception(e)
+                channel.close()
             }
-            val length = lengthStr.toIntOrNull()
-            if (length == null || length == 0) {
-                return
-            }
-
-            val data = readData(channel, length)
-
-            createMessage(FieldValue.fromByteArray(data, data.size), remoteSocketAddress)
-
-            Stats.reportTcpReceived((lengthStr.length + 1 + data.size).toLong())
-        } catch (e: Throwable) {
-            InternalLog.exception(e)
-            channel.close()
         }
     }
 

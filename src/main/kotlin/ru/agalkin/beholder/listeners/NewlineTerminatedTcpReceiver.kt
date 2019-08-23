@@ -20,30 +20,32 @@ class NewlineTerminatedTcpReceiver(
         = address
 
     override fun processSocketChannel(channel: SocketChannel) {
-        try {
-            val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
+        synchronized(channel) {
+            try {
+                val remoteSocketAddress = channel.remoteAddress as? InetSocketAddress
 
-            val data = readTerminated(channel, '\n')
-            if (data == null) {
-                return
-            }
-            if (data.isNotEmpty()) {
-                // do not include the newline in payload
-                var newlineLength = 0
-                if (data[data.size - 1].toChar() == '\n') {
-                    newlineLength++
-                    if (data.size >= 2 && data[data.size - 2].toChar() == '\r') {
-                        newlineLength++
-                    }
+                val data = readTerminated(channel, '\n')
+                if (data == null) {
+                    return
                 }
+                if (data.isNotEmpty()) {
+                    // do not include the newline in payload
+                    var newlineLength = 0
+                    if (data[data.size - 1].toChar() == '\n') {
+                        newlineLength++
+                        if (data.size >= 2 && data[data.size - 2].toChar() == '\r') {
+                            newlineLength++
+                        }
+                    }
 
-                createMessage(FieldValue.fromByteArray(data, data.size - newlineLength), remoteSocketAddress)
+                    createMessage(FieldValue.fromByteArray(data, data.size - newlineLength), remoteSocketAddress)
 
-                Stats.reportTcpReceived(data.size.toLong())
+                    Stats.reportTcpReceived(data.size.toLong())
+                }
+            } catch (e: Throwable) {
+                InternalLog.exception(e)
+                channel.close()
             }
-        } catch (e: Throwable) {
-            InternalLog.exception(e)
-            channel.close()
         }
     }
 

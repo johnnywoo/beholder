@@ -74,10 +74,6 @@ class FileSender(app: Beholder, private val file: File) {
                 InternalLog.err("Cannot locate file: $file")
                 return false
             }
-            if (!file.isFile) {
-                InternalLog.err("Not a file: $file")
-                return false
-            }
             if (!file.canWrite()) {
                 InternalLog.err("Cannot write to a file: $file")
                 return false

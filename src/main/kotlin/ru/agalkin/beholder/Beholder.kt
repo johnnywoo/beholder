@@ -43,6 +43,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
     val udpListeners by lazy { UdpListener.Factory(this) }
     val internalLogListener by lazy { InternalLogListener(this) }
     val timerListener by lazy { TimerListener(this) }
+    val infinityListeners by lazy { InfinityListener.Factory(this) }
 
     val fileSenders  by lazy { FileSender.Factory(this) }
     val shellSenders by lazy { ShellSender.Factory(this) }
@@ -79,6 +80,7 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
 
         needsWaiting += tcpListeners.destroyAllListeners()
         needsWaiting += udpListeners.destroyAllListeners()
+        needsWaiting += infinityListeners.destroyAllListeners()
 
         executor.destroy()
 

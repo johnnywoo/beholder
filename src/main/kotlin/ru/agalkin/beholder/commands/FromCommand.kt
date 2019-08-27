@@ -10,7 +10,6 @@ import ru.agalkin.beholder.config.expressions.LeafCommandAbstract
 import ru.agalkin.beholder.conveyor.Conveyor
 import ru.agalkin.beholder.conveyor.ConveyorInput
 import ru.agalkin.beholder.listeners.MockListener
-import java.awt.event.MouseListener
 import java.util.concurrent.atomic.AtomicLong
 
 class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app, arguments) {
@@ -45,6 +44,7 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
                         "Correct syntax is `from timer 10 seconds`"
                     ) ?: 1
                 )
+                "infinity" -> InfinitySource((arguments.shiftAnyLiteralOrNull() ?: "100").toInt())
                 "internal-log" -> InternalLogSource()
                 "mock" -> MockSource(arguments.shiftAnyLiteralOrNull() ?: "default")
                 else -> throw CommandException("Cannot understand arguments of `from` command")
@@ -123,6 +123,20 @@ class FromCommand(app: Beholder, arguments: Arguments) : LeafCommandAbstract(app
         override fun stop() {
             InternalLog.info("${this::class.simpleName} stop: disconnecting from timer")
             app.timerListener.messageRouter.removeSubscriber(timerInput)
+        }
+    }
+
+    private inner class InfinitySource(private val messageLengthBytes: Int) : Source {
+        private val listener by lazy {app.infinityListeners.addListener(messageLengthBytes)}
+
+        override fun start() {
+            InternalLog.info("${this::class.simpleName} start: connecting to infinity")
+            listener.router.addSubscriber(conveyorInput)
+        }
+
+        override fun stop() {
+            InternalLog.info("${this::class.simpleName} stop: disconnecting from infinity")
+            listener.router.removeSubscriber(conveyorInput)
         }
     }
 

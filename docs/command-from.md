@@ -3,6 +3,7 @@
     from udp [<address>:]<port>;
     from tcp [<address>:]<port> [as syslog-frame];
     from timer [<n> seconds];
+    from infinity [<message-length-bytes>];
     from internal-log;
 
 This command produces messages.
@@ -59,6 +60,8 @@ Fields produced by `from timer`:
 * `$from`    — 'beholder://timer'
 * `$program` — 'beholder'
 * `$payload` — A short random message
+
+`from infinity` is a debug source that simply emits messages in an infinite loop.
 
 `from internal-log` emits messages from the internal Beholder log. These are the same messages
 Beholder writes to stdout/stderr and its log file (see also CLI options `--log` and `--quiet`).

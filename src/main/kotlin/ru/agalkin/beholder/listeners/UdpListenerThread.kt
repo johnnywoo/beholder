@@ -22,6 +22,7 @@ class UdpListenerThread(
 
         DatagramSocket(udpListener.address.port, udpListener.address.getInetAddress()).use { socket ->
             socket.soTimeout = 100 // millis
+            socket.receiveBufferSize = 655_070
 
             // лисенер останавливается, когда подписчики кончились
             while (!udpListener.isListenerDeleted.get()) {

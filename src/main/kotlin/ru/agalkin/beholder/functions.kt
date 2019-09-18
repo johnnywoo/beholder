@@ -4,6 +4,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.SocketException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 fun d(message: String) {
@@ -44,7 +45,7 @@ fun substringUpTo(string: String, maxLength: Int): String {
     return string
 }
 
-fun readInputStreamAndDiscard(inputStream: InputStream, threadName: String) {
+fun readInputStreamAndDiscard(inputStream: InputStream, threadName: String, whenEndReached: () -> Unit = {}) {
     // ignore any input from the process
     thread(isDaemon = true, name = threadName) {
         val devNull = ByteArray(1024)
@@ -62,6 +63,7 @@ fun readInputStreamAndDiscard(inputStream: InputStream, threadName: String) {
                 break
             }
         }
+        whenEndReached()
     }
 }
 

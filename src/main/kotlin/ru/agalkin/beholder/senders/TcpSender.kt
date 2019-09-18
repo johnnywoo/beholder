@@ -58,7 +58,8 @@ class TcpSender(app: Beholder, private val address: Address) {
         }
 
         socket.close()
-        socket = Socket()
+        val connection = Socket()
+        socket = connection
 
         try {
             val sleepChunkMillis = 50L
@@ -80,7 +81,13 @@ class TcpSender(app: Beholder, private val address: Address) {
             socket.keepAlive = true
 
             // ignore any input from the connection
-            readInputStreamAndDiscard(socket.getInputStream(), "tcp-skipper")
+            readInputStreamAndDiscard(socket.getInputStream(), "tcp-skipper") {
+                try {
+                    connection.close()
+                } catch (e: Throwable) {
+                    InternalLog.exception(e)
+                }
+            }
 
             return socket
         } finally {

@@ -82,6 +82,7 @@ class TcpSender(app: Beholder, private val address: Address) {
 
             // ignore any input from the connection
             readInputStreamAndDiscard(socket.getInputStream(), "tcp-skipper") {
+                InternalLog.info("Closing client connection to TCP $address: input stream ended")
                 try {
                     connection.close()
                 } catch (e: Throwable) {

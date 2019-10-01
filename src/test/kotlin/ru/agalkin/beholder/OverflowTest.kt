@@ -162,6 +162,10 @@ class OverflowTest : NetworkedTestAbstract() {
             // Пихаем ещё одно значение. Должен создаться новый чанк, что приведёт к очистке мёртвых чанков.
             queue.add(FieldValue.fromString("last added value"))
 
+            // queue.getChunksOnlyForTests().forEachIndexed { k, v ->
+            //     println("$k ${v.isReadable()}")
+            // }
+
             // Вот теперь количество чанков уменьшилось.
             // 1 чанк первый, он не буферизуется
             // 2 чанка в буфере

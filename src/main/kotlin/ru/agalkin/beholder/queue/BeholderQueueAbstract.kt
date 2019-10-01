@@ -2,7 +2,7 @@ package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.stats.Stats
-import java.util.LinkedList
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -10,10 +10,9 @@ abstract class BeholderQueueAbstract<T>(
     protected val app: Beholder,
     private val receive: (T) -> Received
 ) {
-    // linked list is both Queue and List
-    private val chunks = LinkedList<Chunk<T>>()
+    private val chunks = CopyOnWriteArrayList<Chunk<T>>()
 
-    fun getChunksOnlyForTests(): LinkedList<Chunk<T>> {
+    fun getChunksOnlyForTests(): List<Chunk<T>> {
         return chunks
     }
 
@@ -43,9 +42,9 @@ abstract class BeholderQueueAbstract<T>(
 
     private fun poll(): T? {
         synchronized(this) {
-            cleanupDroppedChunks()
+            removeDroppedChunksFromHead()
 
-            val firstChunk = chunks.peekFirst()
+            val firstChunk = chunks.firstOrNull()
             if (firstChunk == null) {
                 return null
             }
@@ -65,7 +64,7 @@ abstract class BeholderQueueAbstract<T>(
         var wasChunkAdded = false
         synchronized(this) {
             // добавляем сообщения в последний кусок
-            val lastChunk = chunks.peekLast()
+            val lastChunk = chunks.lastOrNull()
             val chunk: Chunk<T>
             if (lastChunk == null || !lastChunk.canAdd()) {
                 // последний кусок закончился, будем добавлять новый
@@ -75,7 +74,7 @@ abstract class BeholderQueueAbstract<T>(
                 wasChunkAdded = true
 
                 // Убираем дохлые чанки, чтобы меньше накапливать фигни.
-                cleanupDroppedChunks()
+                removeBufferableDroppedChunks()
             } else {
                 chunk = lastChunk
             }
@@ -99,32 +98,40 @@ abstract class BeholderQueueAbstract<T>(
     private fun compressChunksIfNeeded() {
         synchronized(this) {
             if (chunks.size > 2) {
-                val notForBuffer = setOf(chunks.peekFirst(), chunks.peekLast())
+                val notForBuffer = setOf(chunks.firstOrNull(), chunks.lastOrNull())
                 for (chunk in chunks) {
                     if (chunk !in notForBuffer) {
                         chunk.moveToBuffer()
                     }
                 }
                 // Убираем дохлые чанки, потому что moveToBuffer() мог вытеснить старые данные из буфера.
-                cleanupDroppedChunks()
+                removeBufferableDroppedChunks()
             }
         }
     }
 
-    private fun cleanupDroppedChunks() {
-        if (chunks.size < 1) {
+    private fun removeDroppedChunksFromHead() {
+        cleanupDroppedChunks(0)
+    }
+
+    private fun removeBufferableDroppedChunks() {
+        cleanupDroppedChunks(1)
+    }
+
+    private tailrec fun cleanupDroppedChunks(index: Int) {
+        if (chunks.size <= index) {
             return
         }
-        // Идём с конца списка, чтобы удаление элементов не портило порядковые номера.
-        for (i in (chunks.size - 1) downTo 0) {
-            if (!chunks[i].isReadable()) {
-                val chunk = chunks.removeAt(i)
+        val chunk = chunks[index]
+        if (!chunk.isReadable()) {
+            chunks.removeAt(index)
 
-                val unusedItemsNumber = chunk.getUnusedItemsNumber().toLong()
-                val size = totalMessagesCount.addAndGet(-unusedItemsNumber)
-                Stats.reportQueueSize(size)
-                Stats.reportQueueOverflow(unusedItemsNumber)
-            }
+            val unusedItemsNumber = chunk.getUnusedItemsNumber().toLong()
+            val size = totalMessagesCount.addAndGet(-unusedItemsNumber)
+            Stats.reportQueueSize(size)
+            Stats.reportQueueOverflow(unusedItemsNumber)
+
+            cleanupDroppedChunks(index)
         }
     }
 

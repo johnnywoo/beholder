@@ -1,6 +1,7 @@
 package ru.agalkin.beholder
 
 import ru.agalkin.beholder.testutils.NetworkedTestAbstract
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -66,6 +67,7 @@ class DataBufferTest : NetworkedTestAbstract() {
     }
 
     @Test
+    @Ignore
     fun testNowhereToSendCompressed() {
         val messageText = "Message: поехали!"
         val config = "queue_chunk_messages 5; from udp 3821; to tcp 1212"

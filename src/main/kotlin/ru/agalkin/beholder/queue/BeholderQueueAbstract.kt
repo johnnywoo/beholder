@@ -1,8 +1,12 @@
 package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.BeholderException
+import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.stats.Stats
-import java.util.concurrent.CopyOnWriteArrayList
+import java.lang.ref.WeakReference
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -10,12 +14,6 @@ abstract class BeholderQueueAbstract<T>(
     protected val app: Beholder,
     private val receive: (T) -> Received
 ) {
-    private val chunks = CopyOnWriteArrayList<Chunk<T>>()
-
-    fun getChunksOnlyForTests(): List<Chunk<T>> {
-        return chunks
-    }
-
     protected val buffer by lazy { app.defaultBuffer }
 
     private val totalMessagesCount = AtomicLong()
@@ -34,114 +32,137 @@ abstract class BeholderQueueAbstract<T>(
         }
         app.afterReloadCallbacks.add {
             isPaused.set(false)
-            executeNext()
+            startPolling()
         }
     }
 
-    abstract fun createChunk(): Chunk<T>
+    abstract fun pack(list: List<T>): ByteArray
+    abstract fun unpack(bytes: ByteArray): List<T>
 
-    private fun poll(): T? {
-        synchronized(this) {
-            removeDroppedChunksFromHead()
-
-            val firstChunk = chunks.firstOrNull()
-            if (firstChunk == null) {
-                return null
-            }
-
-            val nextValue = firstChunk.next()
-
-            if (nextValue != null) {
-                val size = totalMessagesCount.decrementAndGet()
-                Stats.reportQueueSize(size)
-            }
-
-            return nextValue
-        }
+    private fun createChunkQueue(capacity: Int? = null): ArrayBlockingQueue<T> {
+        return ArrayBlockingQueue(capacity ?: app.getIntOption(ConfigOption.QUEUE_CHUNK_MESSAGES))
     }
+
+    @Volatile private var inboundQueue = createChunkQueue()
+    @Volatile private var outboundQueue = inboundQueue
+
+    private val bufferedQueue = ConcurrentLinkedQueue<Buffered>()
+
+    private class Buffered(val allocated: WeakReference<ByteArray>, val messageCount: Int)
 
     fun add(message: T) {
-        var wasChunkAdded = false
-        synchronized(this) {
-            // добавляем сообщения в последний кусок
-            val lastChunk = chunks.lastOrNull()
-            val chunk: Chunk<T>
-            if (lastChunk == null || !lastChunk.canAdd()) {
-                // последний кусок закончился, будем добавлять новый
-                chunk = createChunk()
-                chunks.add(chunk)
+        val queue = inboundQueue
+        if (!queue.offer(message)) {
+            // Не удалось засунуть элемент в очередь. Значит она наполнилась.
+            // Надо сделать новую.
+            synchronized(this) {
+                // Возможно, другой тред уже создал новую очередь тут.
+                if (inboundQueue.offer(message)) {
+                    return@synchronized
+                }
 
-                wasChunkAdded = true
+                // Очередь всё ещё пуста, создаём новый кусок и пихаем сообщение в него.
 
-                // Убираем дохлые чанки, чтобы меньше накапливать фигни.
-                removeBufferableDroppedChunks()
-            } else {
-                chunk = lastChunk
-            }
+                if (inboundQueue !== outboundQueue) {
+                    // Мы пытаемся создать третий кусок очереди.
+                    // Тут надо поработать с буфером.
+                    val list = inboundQueue.toList()
+                    val bytes = pack(list)
+                    val allocated = app.defaultBuffer.allocate(bytes)
+                    bufferedQueue.offer(Buffered(allocated, list.count()))
+                }
 
-            chunk.add(message)
-        }
-
-        if (wasChunkAdded) {
-            app.executor.execute {
-                Stats.reportChunkCreated()
-                compressChunksIfNeeded()
+                // Поскольку две параллельные записи пришли из разных тредов,
+                // мы всё равно не знаем, какая вставка должна была быть раньше,
+                // так что делаем вывод, что между ними порядок вставки можно не соблюдать.
+                inboundQueue = createChunkQueue()
+                if (!inboundQueue.offer(message)) {
+                    throw BeholderException("Fresh queue chunk is immediately full")
+                }
             }
         }
 
         val size = totalMessagesCount.incrementAndGet()
         Stats.reportQueueSize(size)
 
-        executeNext()
+        startPolling()
     }
 
-    private fun compressChunksIfNeeded() {
+    private fun switchOutboundQueue(): Boolean {
         synchronized(this) {
-            if (chunks.size > 2) {
-                val notForBuffer = setOf(chunks.firstOrNull(), chunks.lastOrNull())
-                for (chunk in chunks) {
-                    if (chunk !in notForBuffer) {
-                        chunk.moveToBuffer()
-                    }
-                }
-                // Убираем дохлые чанки, потому что moveToBuffer() мог вытеснить старые данные из буфера.
-                removeBufferableDroppedChunks()
+            if (inboundQueue === outboundQueue) {
+                return false
             }
+
+            // Пытаемся восстановить кусок из буфера.
+            while (true) {
+                val buffered = bufferedQueue.poll()
+                if (buffered == null) {
+                    // В буфере пусто.
+                    break
+                }
+
+                val bytes = buffered.allocated.get()
+                if (bytes == null) {
+                    // В буфере что-то было, но не выжило.
+                    // Корректируем метрики и пробуем достать следующий буферизованный кусок.
+                    val unusedItemsNumber = buffered.messageCount.toLong()
+                    val size = totalMessagesCount.addAndGet(-unusedItemsNumber)
+                    Stats.reportQueueSize(size)
+                    Stats.reportQueueOverflow(unusedItemsNumber)
+
+                    continue
+                }
+
+                buffer.release(buffered.allocated)
+
+                // Достали байты из буфера. Делаем из них кусок очереди.
+                val list = unpack(bytes)
+                outboundQueue = createChunkQueue(list.count())
+                if (!outboundQueue.addAll(list)) {
+                    throw BeholderException("Could not fit buffered data into queue chunk")
+                }
+                return true
+            }
+
+            // Буфер пустой, значит просто пихаем входную очередь на выход.
+            outboundQueue = inboundQueue
+            return true
         }
     }
 
-    private fun removeDroppedChunksFromHead() {
-        cleanupDroppedChunks(0)
-    }
+    private val isPolling = AtomicBoolean(false)
 
-    private fun removeBufferableDroppedChunks() {
-        cleanupDroppedChunks(1)
-    }
-
-    private tailrec fun cleanupDroppedChunks(index: Int) {
-        if (chunks.size <= index) {
+    private fun startPolling() {
+        // Пауза = ничего не делаем (снятие с паузы вызовет startPolling() заново)
+        if (isPaused.get()) {
             return
         }
-        val chunk = chunks[index]
-        if (!chunk.isReadable()) {
-            chunks.removeAt(index)
 
-            val unusedItemsNumber = chunk.getUnusedItemsNumber().toLong()
-            val size = totalMessagesCount.addAndGet(-unusedItemsNumber)
-            Stats.reportQueueSize(size)
-            Stats.reportQueueOverflow(unusedItemsNumber)
-
-            cleanupDroppedChunks(index)
+        // Если уже есть запущенный цикл обработки сообщений, ничего не делаем
+        if (isPolling.compareAndExchange(false, true)) {
+            return
         }
-    }
 
-    private val isExecuting = AtomicBoolean(false)
+        // Мы включили isPolling и теперь запускаем цикл разбора очереди.
+        // Будем разбирать до пустой очереди либо до постановки разбора на паузу.
+        app.executor.execute {
+            try {
+                while (!isPaused.get()) {
+                    val message = outboundQueue.poll()
+                    if (message == null) {
+                        // Очередь пуста. Посмотрим, есть ли у нас другая очередь.
+                        if (switchOutboundQueue()) {
+                            // Удалось подключить новую очередь, можно разгребать сообщения дальше.
+                            continue
+                        }
 
-    private fun executeNext() {
-        if (!isPaused.get() && !isExecuting.compareAndExchange(false, true)) {
-            app.executor.execute {
-                val message = poll()
-                if (message != null) {
+                        // Новой очереди не нашлось, значит сообщения кончились совсем.
+                        // Выключаем isPolling. Добавление нового сообщения включит его обратно.
+                        isPolling.set(false)
+                        return@execute
+                    }
+
                     while (true) {
                         val result = receive(message)
                         if (result == Received.OK) {
@@ -149,13 +170,38 @@ abstract class BeholderQueueAbstract<T>(
                         }
                         // Received.RETRY
                     }
-                    isExecuting.set(false)
-                    executeNext()
-                } else {
-                    isExecuting.set(false)
+
+                    // Сообщение успешно уехало из очереди = обновляем метрики.
+                    val size = totalMessagesCount.decrementAndGet()
+                    Stats.reportQueueSize(size)
+
+                    // Теперь можно брать новое сообщение из очереди и работать с ним.
                 }
+            } finally {
+                isPolling.set(false)
             }
         }
     }
 
+//    private val compressor = buffer.compressor
+//
+//    private fun packAndCompress(list: List<T>): WeakReference<ByteArray> {
+//        val bytes = Stats.timePackProcess { pack(list) }
+//        val compressedBytes = Stats.timeCompressProcess(bytes.size) { compressor.compress(bytes) }
+//        val reference = buffer.allocate(compressedBytes)
+//        originalLengths[reference] = bytes.size
+//        return reference
+//    }
+//
+//    private fun decompressAndUnpack(allocated: WeakReference<ByteArray>): MutableList<T> {
+//        val originalLength = originalLengths[allocated]
+//        originalLengths.remove(allocated)
+//        if (originalLength == null) {
+//            return mutableListOf()
+//        }
+//
+//        val compressedBytes = allocated.get() ?: return mutableListOf()
+//        val bytes = Stats.timeDecompressProcess { compressor.decompress(compressedBytes, originalLength) }
+//        return Stats.timeUnpackProcess { unpack(bytes) }
+//    }
 }

@@ -2,6 +2,7 @@ package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.BeholderException
+import ru.agalkin.beholder.compressors.Compressor
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.stats.Stats
 import java.lang.ref.WeakReference
@@ -14,7 +15,7 @@ abstract class BeholderQueueAbstract<T>(
     protected val app: Beholder,
     private val receive: (T) -> Received
 ) {
-    protected val buffer by lazy { app.defaultBuffer }
+    private val buffer by lazy { app.defaultBuffer }
 
     private val totalMessagesCount = AtomicLong()
 
@@ -45,10 +46,18 @@ abstract class BeholderQueueAbstract<T>(
 
     @Volatile private var inboundQueue = createChunkQueue()
     @Volatile private var outboundQueue = inboundQueue
+    init {
+        Stats.reportChunkCreated()
+    }
 
     private val bufferedQueue = ConcurrentLinkedQueue<Buffered>()
 
-    private class Buffered(val allocated: WeakReference<ByteArray>, val messageCount: Int)
+    private class Buffered(
+        val allocated: WeakReference<ByteArray>,
+        val originalLength: Int,
+        val compressor: Compressor,
+        val messageCount: Int
+    )
 
     fun add(message: T) {
         val queue = inboundQueue
@@ -67,9 +76,16 @@ abstract class BeholderQueueAbstract<T>(
                     // Мы пытаемся создать третий кусок очереди.
                     // Тут надо поработать с буфером.
                     val list = inboundQueue.toList()
-                    val bytes = pack(list)
-                    val allocated = app.defaultBuffer.allocate(bytes)
-                    bufferedQueue.offer(Buffered(allocated, list.count()))
+                    val bytes = Stats.timePackProcess { pack(list) }
+                    val compressor = buffer.compressor
+                    val compressedBytes = Stats.timeCompressProcess(bytes.size) { compressor.compress(bytes) }
+                    val allocated = buffer.allocate(compressedBytes)
+                    bufferedQueue.offer(Buffered(
+                        allocated,
+                        bytes.size,
+                        compressor,
+                        list.count()
+                    ))
                 }
 
                 // Поскольку две параллельные записи пришли из разных тредов,
@@ -79,6 +95,7 @@ abstract class BeholderQueueAbstract<T>(
                 if (!inboundQueue.offer(message)) {
                     throw BeholderException("Fresh queue chunk is immediately full")
                 }
+                Stats.reportChunkCreated()
             }
         }
 
@@ -102,8 +119,8 @@ abstract class BeholderQueueAbstract<T>(
                     break
                 }
 
-                val bytes = buffered.allocated.get()
-                if (bytes == null) {
+                val compressedBytes = buffered.allocated.get()
+                if (compressedBytes == null) {
                     // В буфере что-то было, но не выжило.
                     // Корректируем метрики и пробуем достать следующий буферизованный кусок.
                     val unusedItemsNumber = buffered.messageCount.toLong()
@@ -117,7 +134,8 @@ abstract class BeholderQueueAbstract<T>(
                 buffer.release(buffered.allocated)
 
                 // Достали байты из буфера. Делаем из них кусок очереди.
-                val list = unpack(bytes)
+                val bytes = Stats.timeDecompressProcess { buffered.compressor.decompress(compressedBytes, buffered.originalLength) }
+                val list = Stats.timeUnpackProcess { unpack(bytes) }
                 outboundQueue = createChunkQueue(list.count())
                 if (!outboundQueue.addAll(list)) {
                     throw BeholderException("Could not fit buffered data into queue chunk")
@@ -182,26 +200,4 @@ abstract class BeholderQueueAbstract<T>(
             }
         }
     }
-
-//    private val compressor = buffer.compressor
-//
-//    private fun packAndCompress(list: List<T>): WeakReference<ByteArray> {
-//        val bytes = Stats.timePackProcess { pack(list) }
-//        val compressedBytes = Stats.timeCompressProcess(bytes.size) { compressor.compress(bytes) }
-//        val reference = buffer.allocate(compressedBytes)
-//        originalLengths[reference] = bytes.size
-//        return reference
-//    }
-//
-//    private fun decompressAndUnpack(allocated: WeakReference<ByteArray>): MutableList<T> {
-//        val originalLength = originalLengths[allocated]
-//        originalLengths.remove(allocated)
-//        if (originalLength == null) {
-//            return mutableListOf()
-//        }
-//
-//        val compressedBytes = allocated.get() ?: return mutableListOf()
-//        val bytes = Stats.timeDecompressProcess { compressor.decompress(compressedBytes, originalLength) }
-//        return Stats.timeUnpackProcess { unpack(bytes) }
-//    }
 }

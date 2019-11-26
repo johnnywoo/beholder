@@ -1,6 +1,8 @@
 package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
+import ru.agalkin.beholder.BeholderException
+import ru.agalkin.beholder.compressors.Compressor
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.stats.Stats
 import java.lang.ref.WeakReference
@@ -29,10 +31,10 @@ class DataBuffer(private val app: Beholder, val id: String = "") {
         }
     }
 
-    private val byteArrays: Deque<ByteArray> = LinkedList<ByteArray>()
+    private val allocatedParts: Deque<Buffered> = ArrayDeque<Buffered>()
 
-    fun getByteArraysOnlyForTests(): Deque<ByteArray> {
-        return byteArrays
+    fun getDataOnlyForTests(): Deque<Buffered> {
+        return allocatedParts
     }
 
     private fun addMemorySize(n: Int) {
@@ -41,34 +43,49 @@ class DataBuffer(private val app: Beholder, val id: String = "") {
         Stats.reportBufferSizeChange(this, cur, all, n.toLong())
     }
 
-    fun allocate(bytes: ByteArray): WeakReference<ByteArray> {
+    fun allocate(compressedBytes: ByteArray, originalSize: Int, compressor: Compressor, onDiscard: () -> Unit): WeakReference<Buffered> {
+        val allocatedSize = compressedBytes.size
+        val totalSize = maxTotalSize.get()
+        if (allocatedSize > totalSize) {
+            throw BeholderException("Trying to allocate $allocatedSize bytes which is bigger than the whole buffer ($totalSize bytes)")
+        }
         synchronized(this) {
-            while (currentSizeInMemory.get() + bytes.size > maxTotalSize.get()) {
-                val removed = byteArrays.pollFirst()
+            while (currentSizeInMemory.get() + allocatedSize > totalSize) {
+                val removed = allocatedParts.pollFirst()
                 if (removed != null) {
-                    addMemorySize(-removed.size)
+                    removed.onDiscard()
+                    addMemorySize(-removed.allocatedSize)
                 }
             }
 
-            byteArrays.addLast(bytes)
-            addMemorySize(bytes.size)
+            val buffered = Buffered(compressedBytes, originalSize, allocatedSize, compressor, onDiscard)
 
-            return WeakReference(bytes)
+            allocatedParts.addLast(buffered)
+            addMemorySize(allocatedSize)
+
+            return WeakReference(buffered)
         }
     }
 
-    fun release(ref: WeakReference<ByteArray>)
-        = release(ref.get())
-
-    private fun release(byteArray: ByteArray?) {
-        if (byteArray == null) {
-            return
-        }
+    private fun releaseData(buffered: Buffered) {
         synchronized(this) {
-            val isRemoved = byteArrays.remove(byteArray)
+            val isRemoved = allocatedParts.remove(buffered)
             if (isRemoved) {
-                addMemorySize(-byteArray.size)
+                addMemorySize(-buffered.allocatedSize)
             }
+        }
+    }
+
+    inner class Buffered(
+        val compressedBytes: ByteArray,
+        val originalSize: Int,
+        val allocatedSize: Int,
+        val compressor: Compressor,
+        val onDiscard: () -> Unit
+    ) {
+        fun release(): ByteArray {
+            releaseData(this)
+            return compressedBytes
         }
     }
 

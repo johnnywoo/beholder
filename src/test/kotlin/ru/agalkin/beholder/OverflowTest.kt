@@ -62,7 +62,7 @@ class OverflowTest : NetworkedTestAbstract() {
             }
 
             // 10 значений влезло, по 5 на кусок, получаем 2 куска в буфере.
-            val byteArrays = app.defaultBuffer.getByteArraysOnlyForTests()
+            val byteArrays = app.defaultBuffer.getDataOnlyForTests()
             assertEquals(2, byteArrays.size)
 
             // Уничтожаем лишние byte arrays в буфере, некоторые weak ref остаются пустыми.
@@ -296,10 +296,10 @@ class OverflowTest : NetworkedTestAbstract() {
     }
 
     private fun getBufferContentDump(dataBuffer: DataBuffer): List<String> {
-        return dataBuffer.getByteArraysOnlyForTests()
+        return dataBuffer.getDataOnlyForTests()
             .toList()
             .map {
-                it.joinToString("") { byte ->
+                it.compressedBytes.joinToString("") { byte ->
                     when (byte) {
                         'c'.toByte() -> "c"
                         'a'.toByte() -> "a"

@@ -4,15 +4,10 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.SocketException
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
-fun d(message: String) {
-    println("[" + Thread.currentThread().name + "] " + message)
-}
-
 fun readTextFromResource(name: String): String {
-    val inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(name)
+    val inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(name)!!
     return InputStreamReader(inputStream).readText()
 }
 
@@ -57,7 +52,6 @@ fun readInputStreamAndDiscard(inputStream: InputStream, threadName: String, when
                 if (inputStream.read(devNull) < 0) {
                     break
                 }
-                InternalLog.info("Wrapping inputStream.read(devNull)")
             } catch (ignored: SocketException) {
                 InternalLog.info("inputStream.read(devNull) made exception ${ignored::class.simpleName} ${ignored.message}")
                 break
@@ -86,14 +80,5 @@ fun getSystemHostname(): String? {
     } catch (e: Throwable) {
         InternalLog.exception(e)
         return null
-    }
-}
-
-inline fun <T> MutableList<T>.removeMatching(shouldRemove: (T) -> Boolean) {
-    var removedNum = 0
-    for (i in indices) {
-        if (shouldRemove(get(i - removedNum))) {
-            removeAt(i - removedNum++)
-        }
     }
 }

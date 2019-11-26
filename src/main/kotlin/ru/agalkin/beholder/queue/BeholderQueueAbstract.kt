@@ -2,7 +2,6 @@ package ru.agalkin.beholder.queue
 
 import ru.agalkin.beholder.Beholder
 import ru.agalkin.beholder.BeholderException
-import ru.agalkin.beholder.compressors.Compressor
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.stats.Stats
 import java.lang.ref.WeakReference
@@ -51,14 +50,7 @@ abstract class BeholderQueueAbstract<T>(
         Stats.reportChunkCreated()
     }
 
-    private val bufferedChunks = ArrayDeque<Buffered>()
-
-    private class Buffered(
-        val compressedBytes: WeakReference<ByteArray>,
-        val originalLength: Int,
-        val compressor: Compressor,
-        val messageCount: Int
-    )
+    private val bufferedChunks: Queue<WeakReference<DataBuffer.Buffered>> = ArrayDeque()
 
     fun add(message: T) {
         if (!inboundChunk.offer(message)) {
@@ -77,14 +69,26 @@ abstract class BeholderQueueAbstract<T>(
                     // Все куски кроме первого и последнего мы пихаем в буфер.
                     // 1. Буфер может выкинуть наш кусок, если там не хватает выделенной под это памяти
                     // 2. В буфере данные можно держать сжатыми и экономить эту самую память
-                    val bytes = Stats.timePackProcess { pack(inboundChunk.toList()) }
+                    val list = inboundChunk.toList()
+                    val messageCount = list.count()
+
+                    val bytes = Stats.timePackProcess { pack(list) }
+                    val originalSize = bytes.size
+
                     val compressor = buffer.compressor
-                    val compressedBytes = Stats.timeCompressProcess(bytes.size) { compressor.compress(bytes) }
-                    bufferedChunks.offer(Buffered(
-                        buffer.allocate(compressedBytes),
-                        bytes.size,
+                    val compressedBytes = Stats.timeCompressProcess(originalSize) { compressor.compress(bytes) }
+
+                    bufferedChunks.offer(buffer.allocate(
+                        compressedBytes,
+                        originalSize,
                         compressor,
-                        inboundChunk.toList().count()
+                        {
+                            // Эта лямбда вызовется, если данные умерли в буфере. Корректируем метрики.
+                            val unusedItemsNumber = messageCount.toLong()
+                            Stats.reportQueueOverflow(unusedItemsNumber)
+                            val size = totalMessagesCount.addAndGet(-unusedItemsNumber)
+                            Stats.reportQueueSize(size)
+                        }
                     ))
                 }
 
@@ -113,28 +117,21 @@ abstract class BeholderQueueAbstract<T>(
 
             // Пытаемся восстановить кусок из буфера.
             while (true) {
-                val buffered = bufferedChunks.poll()
-                if (buffered == null) {
+                val bufferedRef = bufferedChunks.poll()
+                if (bufferedRef == null) {
                     // В буфере пусто.
                     break
                 }
 
-                val compressedBytes = buffered.compressedBytes.get()
-                if (compressedBytes == null) {
+                val buffered = bufferedRef.get()
+                if (buffered == null) {
                     // В буфере что-то было, но не выжило.
-                    // Корректируем метрики и пробуем достать следующий буферизованный кусок.
-                    val unusedItemsNumber = buffered.messageCount.toLong()
-                    Stats.reportQueueOverflow(unusedItemsNumber)
-                    val size = totalMessagesCount.addAndGet(-unusedItemsNumber)
-                    Stats.reportQueueSize(size)
-
                     continue
                 }
 
-                buffer.release(buffered.compressedBytes)
-
                 // Достали байты из буфера. Делаем из них кусок очереди.
-                val bytes = Stats.timeDecompressProcess { buffered.compressor.decompress(compressedBytes, buffered.originalLength) }
+                val compressedBytes = buffered.release()
+                val bytes = Stats.timeDecompressProcess { buffered.compressor.decompress(compressedBytes, buffered.originalSize) }
                 val list = Stats.timeUnpackProcess { unpack(bytes) }
                 outboundChunk = createChunk(list.count())
                 if (!outboundChunk.addAll(list)) {

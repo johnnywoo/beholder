@@ -5,15 +5,18 @@ import java.time.DateTimeException
 import java.time.ZoneId
 import java.time.zone.ZoneRulesException
 
-enum class ConfigOption(val defaultValue: Any, val type: Type) {
+enum class ConfigOption(val defaultValue: Any?, val type: Type) {
     QUEUE_CHUNK_MESSAGES(500, Type.INT),
+
+    PROMETHEUS_METRICS_HTTP_ADDRESS(null, Type.ADDRESS),
 
     CREATE_DATES_IN_TIMEZONE(ZoneId.systemDefault(), Type.TIMEZONE);
 
     enum class Type {
         INT,
         TIMEZONE,
-        COMPRESSION
+        COMPRESSION,
+        ADDRESS
     }
 
     enum class Compression {
@@ -51,6 +54,14 @@ enum class ConfigOption(val defaultValue: Any, val type: Type) {
                 throw CommandException("Invalid timezone: $string")
             } catch (e: ZoneRulesException) {
                 throw CommandException("Unknown timezone: $string")
+            }
+        }
+
+        fun serverAddressFromString(string: String): Address? {
+            try {
+                return Address.fromString(string, "0.0.0.0")
+            } catch (e: Address.AddressException) {
+                throw CommandException(e.message ?: "Invalid address: $string")
             }
         }
     }

@@ -55,15 +55,19 @@ class RootCommand(app: Beholder) : ConveyorCommandAbstract(app, RootArguments) {
             when (option.type) {
                 ConfigOption.Type.INT -> {
                     val definition = arguments.shiftFixedString("An integer option value is required")
-                    app.optionValues[option] = ConfigOption.intFromString(definition)
+                    app.setOptionValue(option, ConfigOption.intFromString(definition))
                 }
                 ConfigOption.Type.COMPRESSION -> {
                     val definition = arguments.shiftFixedString("Compression mode name is required")
-                    app.optionValues[option] = ConfigOption.compressionFromString(definition)
+                    app.setOptionValue(option, ConfigOption.compressionFromString(definition))
                 }
                 ConfigOption.Type.TIMEZONE -> {
                     val definition = arguments.shiftFixedString("Timezone name is required")
-                    app.optionValues[option] = ConfigOption.timezoneFromString(definition)
+                    app.setOptionValue(option, ConfigOption.timezoneFromString(definition))
+                }
+                ConfigOption.Type.ADDRESS -> {
+                    val definition = arguments.shiftFixedString("Port number or address:port is required")
+                    app.setOptionValue(option, ConfigOption.serverAddressFromString(definition))
                 }
             }
             arguments.end()

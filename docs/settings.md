@@ -37,3 +37,19 @@ inside `buffer` command.
 
 Note: `memory_bytes` is NOT the total memory limit of Beholder. In addition to unbuffered messages in queues,
 there are lots of things on JVM that eat bytes. Watch your metrics!
+
+## Prometheus metrics
+
+Beholder can report its metrics for Prometheus over HTTP.
+
+    prometheus_metrics_http_address 127.0.0.1:8080;
+
+If the setting is specified at top level of the config, Beholder will start a HTTP server on specified address
+that will respond to `GET` requests (on any URL path) with a subset of internal Beholder stats in Prometheus text format.
+
+Some stats that are available via `parse beholder-stats` only make sense if stat data is reset every time the stat is read.
+For Prometheus, we do not reset stats when they are fetched, an so for example `fromTcpMaxBytes` stat will not
+have any useful information, because it will report maximum packet length from the beginning of time.
+Such stats will not be reported into Prometheus. When metrics are pushed into a database by Beholder itself,
+it is usually done in regular intervals, and therefore all stats will provide useful information
+(for example, maximum packet length received in last 30 seconds).

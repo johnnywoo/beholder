@@ -167,7 +167,67 @@ class StatsHolder {
         stats["decompressDurationTotalNanos"]?.addAndGet(spentNanos)
     }
 
-    fun getStatValuesAndReset(): Map<String, Long> {
+    /**
+     * Names of stats that are counting something (and not reporting gauge-like values)
+     */
+    fun getCountingStatNames(): List<String> {
+        return stats.keys().toList() + "uptimeSeconds"
+    }
+
+    fun getDescriptions(): Map<String, String> {
+        return mapOf(
+            "allBuffersAllocatedBytes" to "Total amount of bytes added to all buffers (does not decrease when memory is released)",
+            "allBuffersMaxBytes" to "Maximum buffer size, total for all buffers",
+            "compressAfterTotalBytes" to "Total size of all data fed into compressors",
+            "compressBeforeTotalBytes" to "Total size of data produced by compressors",
+            "compressCount" to "Number of compress operations (chunk moves from queue to buffer)",
+            "compressDurationMaxNanos" to "Max duration of a compress",
+            "compressDurationTotalNanos" to "Total duration of all compress operations",
+            "configReloads" to "Number of successful config reloads",
+            "decompressCount" to "Number of decompress operations (chunk moves from buffer to queue)",
+            "decompressDurationMaxNanos" to "Max duration of a decompress",
+            "decompressDurationTotalNanos" to "Total duration of all decompress operations",
+            "defaultBufferAllocatedBytes" to "Total amount of bytes added to the default buffer (does not decrease when memory is released)",
+            "defaultBufferMaxBytes" to "Maximum size of the default buffer",
+            "fromTcpMaxBytes" to "Maximum length of a message received over TCP",
+            "fromTcpMessages" to "Number of messages received over TCP",
+            "fromTcpNewConnections" to "Number of accepted TCP connections",
+            "fromTcpTotalBytes" to "Total number of bytes received over TCP",
+            "fromUdpMaxBytes" to "Maximum length of a packet received over UDP",
+            "fromUdpMessages" to "Number of messages received over UDP",
+            "fromUdpTotalBytes" to "Summed length of all packets received over UDP",
+            "toTcpMaxBytes" to "Maximum length of a message sent over TCP",
+            "toTcpMessages" to "Number of messages sent over TCP",
+            "toTcpTotalBytes" to "Total number of bytes sent over TCP",
+            "toUdpMaxBytes" to "Maximum length of a packet sent over UDP",
+            "toUdpMessages" to "Number of messages sent over UDP",
+            "toUdpTotalBytes" to "Summed length of all packets sent over UDP",
+            "toFileMaxBytes" to "Maximum length that was written into a file",
+            "toFileMessages" to "Number of messages written into files",
+            "toFileTotalBytes" to "Summed length of all messages written into files",
+            "toShellMaxBytes" to "Maximum length that was written into a shell command",
+            "toShellMessages" to "Number of messages written into shell commands",
+            "toShellTotalBytes" to "Summed length of all messages written into shell commands",
+            "heapBytes" to "Current heap size in bytes (memory usage)",
+            "heapMaxBytes" to "Maximal heap size",
+            "heapUsedBytes" to "Used memory in the heap",
+            "messagesReceived" to "Count of received messages",
+            "messagesSent" to "Count of sent messages",
+            "packCount" to "Number of pack operations (chunk moves from queue to buffer)",
+            "packDurationMaxNanos" to "Max duration of a pack",
+            "packDurationTotalNanos" to "Total duration of all pack operations",
+            "queueChunksCreated" to "Number of queue chunks created",
+            "queueMaxSize" to "Maximum size of a queue",
+            "queueOverflows" to "Number of messages dropped due to a queue overflow",
+            "unpackCount" to "Number of unpacks (chunk moves from buffer to queue)",
+            "unpackDurationMaxNanos" to "Max duration of an unpack",
+            "unpackDurationTotalNanos" to "Total duration of all unpacks",
+            "unparsedDropped" to "Number of messages dropped due to parse errors",
+            "uptimeSeconds" to "Uptime in seconds"
+        )
+    }
+
+    private fun getNonResettingStatValues(): MutableMap<String, Long> {
         val runtime = Runtime.getRuntime()
 
         val heapSize   = runtime.totalMemory()
@@ -178,12 +238,24 @@ class StatsHolder {
 
         val uptimeSeconds = (System.currentTimeMillis() - uptimeDate.time) / 1000
 
-        val statValues = mutableMapOf(
+        return mutableMapOf(
             "uptimeSeconds" to uptimeSeconds,
             "heapBytes" to heapSize,
             "heapUsedBytes" to heapUsed,
             "heapMaxBytes" to heapMax
         )
+    }
+
+    fun getStatValues(): Map<String, Long> {
+        val statValues = getNonResettingStatValues()
+        for ((k, v) in stats) {
+            statValues[k] = v.get()
+        }
+        return statValues
+    }
+
+    fun getStatValuesAndReset(): Map<String, Long> {
+        val statValues = getNonResettingStatValues()
         for ((k, v) in stats) {
             statValues[k] = v.getAndSet(0)
         }

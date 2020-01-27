@@ -3,6 +3,7 @@ package ru.agalkin.beholder
 import ru.agalkin.beholder.compressors.Compressor
 import ru.agalkin.beholder.compressors.LZ4FastCompressor
 import ru.agalkin.beholder.compressors.NoCompressor
+import ru.agalkin.beholder.config.Address
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.ConfigOption
 import ru.agalkin.beholder.formatters.TimeFormatter
@@ -20,12 +21,19 @@ import java.util.concurrent.atomic.AtomicLong
 const val BEHOLDER_SYSLOG_PROGRAM = "beholder"
 
 class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
-    val optionValues = ConcurrentHashMap<ConfigOption, Any>()
+    private val optionValues = ConcurrentHashMap<ConfigOption, Any>()
     init {
         for (option in ConfigOption.values()) {
-            optionValues[option] = option.defaultValue
+            optionValues[option] = option.defaultValue ?: KindOfNull
         }
     }
+
+    fun setOptionValue(option: ConfigOption, value: Any?) {
+        optionValues[option] = value ?: KindOfNull
+    }
+
+    // Yes, this is crap, and will be refactored in (distant) future
+    private object KindOfNull
 
     val beforeReloadCallbacks = CopyOnWriteArraySet<() -> Unit>()
     val afterReloadCallbacks  = CopyOnWriteArraySet<() -> Unit>()
@@ -125,6 +133,14 @@ class Beholder(private val configMaker: (Beholder) -> Config) : Closeable {
 
     fun getIntOption(name: ConfigOption)
         = optionValues[name] as Int
+
+    fun getAddressOption(name: ConfigOption): Address? {
+        val value = optionValues[name]
+        if (value == KindOfNull) {
+            return null
+        }
+        return value as Address
+    }
 
     private fun getTimezoneOption(name: ConfigOption)
         = optionValues[name] as ZoneId

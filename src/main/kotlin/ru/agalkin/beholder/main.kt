@@ -2,6 +2,7 @@ package ru.agalkin.beholder
 
 import ru.agalkin.beholder.config.Config
 import ru.agalkin.beholder.config.parser.ParseException
+import ru.agalkin.beholder.stats.PrometheusMetricsHttpServer
 import ru.agalkin.beholder.stats.StatsHolder
 import sun.misc.Signal
 import java.io.File
@@ -109,6 +110,8 @@ fun main(args: Array<String>) {
         app.config.initialConveyor.dumpInstructions()
         exitProcess(0)
     }
+
+    PrometheusMetricsHttpServer.init(app)
 
     app.start()
 

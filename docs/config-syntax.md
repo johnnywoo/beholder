@@ -21,6 +21,9 @@ Messages are collections of arbitrary fields.
 
 Command arguments can be expressed as literal words, quoted strings and regexps.
 
+
+### Quoted strings
+
 Quoted strings start with either `'` or `"`. There is no difference between the two.
 Escaping is done with backslashes. Special characters: `\n`, `\r`, `\t`.
 Backslashes prefixing any other characters are stripped off.
@@ -40,6 +43,9 @@ Simple syntax: `'$field'`. To prevent unwanted greediness: `'{$cat}astrophe'`.
 Field names consist of alphanumeric characters (case-sensitive) and underscores.
 Field names cannot start with numbers.
 
+
+### Regexps
+
 Regexps are recognized by a delimiter, which currently can only be `~`.
 The delimiter currently cannot be escaped in the regexp.
 Regexp are written in the form of `~body~modifiers`. Modifiers are optional.
@@ -47,6 +53,9 @@ Regexp are written in the form of `~body~modifiers`. Modifiers are optional.
     ~spaces are allowed~
     ~http://[a-z.]+~
     ~cat|dog~i
+
+
+### Literal words
 
 Literal word is a string of non-whitespace characters that is not a quoted string or regexp.
 Literal words may contain field names, which are replaced with their values.

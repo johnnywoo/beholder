@@ -5,10 +5,8 @@ Beholder is a log processor. Its purpose is to receive, process, transfer and ex
 WARNING: Beholder has no stable version yet.
 Config syntax, commands, options, behaviour, everything is going to be changed without any backwards compatibility.
 
-A somewhat reliable version is 0.1.222. You should disable the misguided manual GC feature when using that version
-(put `extra_gc_interval_seconds 0;` in your config).
-
-More recent versions contain lots of untested code and bugs!
+Latest versions are stable enough for production. Beware that Beholder is not very optimal yet.
+It will generate a significant CPU load.
 
 
 ## Usage

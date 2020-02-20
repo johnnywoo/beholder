@@ -11,6 +11,9 @@ This command sets fields on messages according to chosen format.
 If a message cannot be parsed, by default it will be dropped.
 If `keep-unparsed` option is specified, unparsed messages will be kept unchanged.
 
+
+## `parse syslog`
+
 Format `syslog`: syslog variants currently supported are
 BSD-style syslog format as produced by nginx (with or without hostname),
 and IETF-style syslog without the structured-data section.
@@ -32,16 +35,28 @@ Fields produced by `parse syslog`:
 * `$program`   — program name (nginx calls this "tag")
 * `$payload`   — actual log message (this would've been written to a file by nginx)
 
+
+## `parse json`
+
 Format `json`: parses `$payload` as a JSON object and sets its properties as message fields.
 The JSON object may only contain numbers, strings, booleans and nulls (no nested objects or arrays).
 Boolean values are converted to strings 'true' and 'false'.
 
+
+## `parse fieldpack`
+
 Format `fieldpack`: parses `$payload` as a Fieldpack packet which may contain multiple messages.
 Experimental.
 
+
+## `parse each-field-as-message`
+
 Format `each-field-as-message`: every field of the message becomes a separate new message.
 Original message is dropped. Instead, new messages are produced with fields `$key` and `$value`.
-Fields for new messages are taken in unpredictable order.
+Fields for new messages are taken in random order.
+
+
+## `parse ~regexp-with-named-groups~`
 
 Format `~regexp-with-named-groups~`: if the regexp matches, named groups from it
 become message fields. Group names should not be prefixed with $.
@@ -50,6 +65,9 @@ become message fields. Group names should not be prefixed with $.
 
 This will produce field `$logKind` with either 'access' or 'error' as value,
 if either word occurs in `$payload`. If both words are present, earliest match is used.
+
+
+## `parse beholder-stats`
 
 Format `beholder-stats`: fills the message with internal Beholder stats.
 Use this with `from timer` to create a health log.

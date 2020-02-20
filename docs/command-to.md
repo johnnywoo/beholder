@@ -9,6 +9,9 @@
 This command writes `$payload` field of incoming messages to some destination.
 To format the payload, use `set $payload ...` command.
 
+
+## `to stdout`
+
     flow {
         from timer;
         set $payload '$date Just a repeating text message';
@@ -24,6 +27,9 @@ This example config will produce messages like these:
 `to stdout` simply sends payloads of messages into stdout of beholder process.
 A newline is appended to every payload unless it already ends with a newline.
 
+
+## `to file`
+
 `to file <file>` stores payloads of messages into a file.
 A newline is appended to every payload unless it already ends with a newline.
 Relative filenames are resolved from CWD of beholder process.
@@ -37,12 +43,21 @@ You can use message fields in filenames:
         to file '/var/log/export/$host/$program.log';
     }
 
+
+## `to udp`
+
 `to udp [<address>:]<port>` sends payloads of messages as UDP packets.
 Default address is 127.0.0.1.
+
+
+## `to tcp`
 
 `to tcp [<address>:]<port>` sends payloads of messages over a TCP connection.
 Default address is 127.0.0.1.
 A newline is appended to every payload unless it already ends with a newline.
+
+
+## `to shell`
 
 `to shell <command>` sends payloads of messages into a process started with a shell command.
 The command should not exit immediately, but instead keep reading messages from stdin.

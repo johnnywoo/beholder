@@ -24,6 +24,9 @@ This example will produce messages like these:
 
 To unset a field, set it to an empty string: `set $host ''`.
 
+
+## Functions
+
 When given a built-in function, `set` can construct different values for message fields.
 
 Functions:
@@ -43,6 +46,9 @@ Functions:
 * `fieldpack` — Generates a Fieldpack binary packet with the message. Experimental.
 * `syslog-frame` — Prefixes payload with its length in bytes (for syslog over TCP, see RFC5425 "4.3. Sending Data").
 
+
+### Replace
+
 `set $field replace <regexp> <replacement> [in <subject>];`
 Takes subject string, replaces all occurences of regexp in it with the replacement,
 and stores the new value into $field. Default subject is $field itself.
@@ -55,6 +61,9 @@ Be aware of double-escaping in replacement strings! Example:
     set $payload replace ~\n~ '\\\\n';
 
 This command converts newlines into `\n` sequences.
+
+
+### Date and time
 
 `set $field date ...` and `set $field time ...` support the following options:
 
@@ -81,6 +90,9 @@ Beholder will try to preserve timezone information when it can.
 
 Date parser understands some common formats of datetimes. For now a safe bet is to use
 ISO 8601 full datetime that Beholder produces by default: "2018-06-12T11:26:12+00:00".
+
+
+### JSON
 
 `set $payload json` generates a JSON string with all fields of the message.
 Alternatively you may specify which fields to include: `set $payload json $field $field2`.

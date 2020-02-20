@@ -25,11 +25,17 @@ To receive messages in different formats from different sources, use `join`.
         # and processed syslog messages from port 1002
     }
 
+
+## `from udp`
+
 Fields produced by `from udp`:
 
 * `$date`    — ISO date when the packet was received (example: 2017-11-26T16:22:31+03:00)
 * `$from`    — URI of packet source (example: udp://1.2.3.4:57733)
 * `$payload` — Text as received from UDP
+
+
+## `from tcp`
 
 `from tcp` reads messages from a TCP server socket. Messages should be terminated by newlines.
 To transfer multiline messages over TCP, encode them into a single-line format such as JSON.
@@ -46,6 +52,9 @@ which is length-space-data (see RFC5425 "4.3. Sending Data"). Syslog frame will 
 any characters not conforming to the length-space-data protocol.
 Example: `5 hello5 world` encodes two messages with payloads of 'hello' and 'world'.
 
+
+## `from timer`
+
 `from timer` emits a minimal message every second.
 It is useful for experimenting with beholder configurations.
 
@@ -61,7 +70,13 @@ Fields produced by `from timer`:
 * `$program` — 'beholder'
 * `$payload` — A short random message
 
+
+## `from infinity`
+
 `from infinity` is a debug source that simply emits messages in an infinite loop.
+
+
+## `from internal-log`
 
 `from internal-log` emits messages from the internal Beholder log. These are the same messages
 Beholder writes to stdout/stderr and its log file (see also CLI options `--log` and `--quiet`).
